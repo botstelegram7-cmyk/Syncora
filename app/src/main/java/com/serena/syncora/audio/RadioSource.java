@@ -30,7 +30,8 @@ public final class RadioSource implements PcmSource {
 
     private static final String USER_AGENT = "Syncora/0.2 (Android; Internet radio)";
     private static final int MAX_RETRIES = 6;
-    private static final int SNIFF_BYTES = 24 * 1024;
+    /** How much of the stream is read before deciding whether it is MP3 or AAC (a few seconds of audio). */
+    private static final int SNIFF_BYTES = 48 * 1024;
 
     private final String url;
     private final Listener listener;
@@ -252,7 +253,8 @@ public final class RadioSource implements PcmSource {
         boolean useAac;
         if (mp3Offset < 0 && aacOffset < 0) {
             c.disconnect();
-            throw new IOException("Unrecognised audio format (only MP3 and AAC streams are supported)");
+            String sent = type.isEmpty() ? "an unknown format" : type;
+            throw new IOException("Could not find MP3 or AAC audio in this stream (it sent " + sent + ")");
         } else if (mp3Offset < 0) {
             useAac = true;
         } else if (aacOffset < 0) {
@@ -302,7 +304,7 @@ public final class RadioSource implements PcmSource {
     }
 
     private static boolean isPlaylist(String type, String path) {
-        return type.contains("x-scpls") || type.contains("pls") || type.contains("x-mpegurl") || path.endsWith(".pls")
+        return type.contains("x-scpls") || type.contains("pls+xml") || type.contains("x-mpegurl") || path.endsWith(".pls")
                 || path.endsWith(".m3u");
     }
 

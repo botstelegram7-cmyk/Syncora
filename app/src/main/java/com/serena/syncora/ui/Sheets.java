@@ -44,6 +44,8 @@ public final class Sheets {
                 return R.drawable.ic_cast;
             case MIC:
                 return R.drawable.ic_mic;
+            case YOUTUBE:
+                return R.drawable.ic_play_circle;
             case SPEAKER:
                 return R.drawable.ic_speaker;
             default:

@@ -1,3 +1,24 @@
+## Syncora v0.5.0 — YouTube, Lyrics and Fixes
+
+**New**
+- **YouTube page** — paste a link or video ID. Play a video's **audio in sync** on the phone and every speaker, or save the **video with sound** (MP4), **audio only**, the **thumbnail**, **lyrics** (LRC) or **subtitles** (SRT / VTT).
+- **Background downloads** — a download queue with progress, cancel and *Clear finished*. Files go to `Download/Syncora/YouTube`.
+- **Lyrics** — swipe the cover art to read lyrics. Synced lyrics follow the song and tapping a line jumps to it. Lyrics come from LRCLIB, or from captions for YouTube videos. Speakers show the same lyrics.
+
+**Fixed**
+- **Radio** — tapping a station or adding one now starts it, or tells you why it cannot start, instead of doing nothing.
+- **Media notification** — the seekbar on the lock screen and notification now shows and moves with playback.
+
+**Use responsibly**
+Save only content you have the right to keep: your own uploads, Creative Commons videos, or content YouTube itself lets you download. YouTube's terms still apply. YouTube changes how it serves media often, so YouTube playback and downloads may stop working until an update.
+
+**Install**
+Install `Syncora-v0.5.0.apk` on Android 8.0 (API 26) or newer. Devices must be on the same Wi-Fi or hotspot; the player needs internet for radio, lyrics and YouTube.
+
+> APKs remain signed with Syncora's repository sideload key, so v0.2.0 and later can update in place.
+
+---
+
 ## Syncora v0.4.0 — Tighter Sync, Stronger Connections
 
 This release makes multi-device playback more dependable across real Android hardware and busy local networks, while polishing the player and speaker experience.

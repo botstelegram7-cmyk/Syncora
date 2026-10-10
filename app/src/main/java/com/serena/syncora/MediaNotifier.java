@@ -164,6 +164,15 @@ final class MediaNotifier {
                 .setState(state, s.positionNow(), s.playing ? 1f : 0f, SystemClock.elapsedRealtime()).build());
     }
 
+    /** Re-publishes the playback position to the media session without re-posting the notification. */
+    void refreshSession(SessionState s) {
+        try {
+            updateSession(s);
+        } catch (RuntimeException ignored) {
+            // the session may be released while the service stops
+        }
+    }
+
     void cancel() {
         try {
             manager.cancel(NOTIFICATION_ID);

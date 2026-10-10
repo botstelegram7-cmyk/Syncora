@@ -3,6 +3,7 @@ package com.serena.syncora;
 import android.graphics.Bitmap;
 
 import com.serena.syncora.core.PlayQueue;
+import com.serena.syncora.lyrics.Lyrics;
 import com.serena.syncora.net.RoomDiscovery;
 
 import java.util.ArrayList;
@@ -60,6 +61,13 @@ public final class SessionState {
     public int queueIndex;
     public int queueSize;
     public List<QueueItem> upNext = Collections.emptyList();
+
+    /** Lyrics (or captions) of the current song; null when none were found. */
+    public Lyrics lyrics;
+    /** Identifies the song the lyrics belong to. */
+    public String lyricsKey = "";
+    /** A line for the lyrics page while the lyrics are missing (e.g. "Looking for lyrics…"). */
+    public String lyricsStatus = "";
 
     // group
     public String selfId = "";

@@ -7,30 +7,41 @@ import android.net.Uri;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Decodes a local song (content URI) or an http(s) file (DLNA) to PCM. */
 public final class TrackDecoder implements PcmSource {
     private final Context context;
     private final Uri uri;
     private final String url;
+    private final Map<String, String> headers;
     private MediaExtractor extractor;
     private PcmCodec codec;
     private boolean inputDone;
     private long durationMs = -1;
     private volatile boolean aborted;
 
-    private TrackDecoder(Context context, Uri uri, String url) {
+    private TrackDecoder(Context context, Uri uri, String url, Map<String, String> headers) {
         this.context = context.getApplicationContext();
         this.uri = uri;
         this.url = url;
+        this.headers = headers;
     }
 
     public static TrackDecoder forUri(Context context, Uri uri) {
-        return new TrackDecoder(context, uri, null);
+        return new TrackDecoder(context, uri, null, null);
     }
 
     public static TrackDecoder forUrl(Context context, String url) {
-        return new TrackDecoder(context, null, url);
+        return new TrackDecoder(context, null, url, null);
+    }
+
+    /** An http(s) file that needs request headers (YouTube wants the User-Agent of the app it was asked as). */
+    public static TrackDecoder forUrl(Context context, String url, String userAgent) {
+        Map<String, String> headers = new HashMap<>();
+        if (userAgent != null && !userAgent.isEmpty()) headers.put("User-Agent", userAgent);
+        return new TrackDecoder(context, null, url, headers);
     }
 
     @Override
@@ -39,6 +50,8 @@ public final class TrackDecoder implements PcmSource {
         try {
             if (uri != null) {
                 extractor.setDataSource(context, uri, null);
+            } else if (headers != null && !headers.isEmpty()) {
+                extractor.setDataSource(url, headers);
             } else {
                 extractor.setDataSource(url);
             }

@@ -14,7 +14,9 @@ same audio at the same moment. Everything runs on your own Wi-Fi or phone hotspo
 | **Same player everywhere** | Cover art, title, progress and controls are mirrored on every speaker; speakers can control playback too. |
 | **Volume for every device** | Tap the speaker button: each connected device gets its own slider, mute and an *All devices* fader. |
 | **Sync** | One-tap *Sync now* and a **Low-latency sync** switch (shorter buffer, tighter alignment). |
-| **Sources** | My Music · Online Radio · DLNA Renderer · Microphone / Aux · Speaker Mode |
+| **Sources** | My Music · Online Radio · YouTube · DLNA Renderer · Microphone / Aux · Speaker Mode |
+| **YouTube** | Paste a link: play the video's audio in sync, or save video with sound, audio only, thumbnail, lyrics and subtitles. Background download queue. |
+| **Lyrics** | Swipe the cover art for lyrics. Synced lyrics follow playback and can be tapped to jump. Speakers show them too. |
 | **Audio settings** | Connection state, sync offset with **+ / −** and **Reset**, channels **Mono / Stereo / Left / Right** (two phones = a stereo pair). |
 | **Speaker mode** | Shows the player and its status (*Waiting for connection*), nearby players, connect by IP, auto connect. |
 | **Settings** | Device name, IP address for connect, theme (Dark / AMOLED / Light / System) + accent, audio mode, animations, speaker options (auto connect, re-sync frequency). |
@@ -84,3 +86,5 @@ The key is public by design — fine for sideloading, never for a store. See `si
 - Sync is as good as the weakest link: expect roughly ±10–30 ms on a healthy network, then tune with the offset.
 - Streams use no transport encryption: use networks you trust. Anyone on the network who knows the room code can join.
 - Radio supports MP3 and AAC (ADTS) streams; HLS (`.m3u8`) and Ogg/FLAC stations are not supported yet.
+- YouTube reads public stream and caption addresses directly, without a decoding step for protected (ciphered) streams, which are skipped. Playback or downloads can stop working when YouTube changes its service. Save only content you have the right to keep, and respect YouTube's terms.
+- Lyrics come from LRCLIB and YouTube captions. Matches are by title and artist, so a song can get the wrong lyrics.

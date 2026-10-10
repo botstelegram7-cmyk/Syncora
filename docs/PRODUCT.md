@@ -18,6 +18,9 @@ music once, hear it everywhere in sync, and fix any device that is a little earl
 
 - As a player, I see **all the music on my phone** in the app, search it, shuffle it, loop the queue or repeat one song.
 - As a player, I can switch the **current source**: My Music, Online Radio, DLNA Renderer, Microphone / Aux, Speaker Mode.
+- As a player, I paste a **YouTube link** and play its audio in sync with my speakers, or save the video, its audio,
+  thumbnail, lyrics or subtitles to my phone in the background.
+- As a listener, I **swipe the cover art** to read the lyrics of the song that is playing; synced lyrics follow along.
 - As a speaker, I see the **same music player** (cover art, title, progress, controls) as the player does.
 - As anyone in the room, I open the **volume panel** and set the volume of every connected device with its own slider,
   and I can switch on **low-latency sync** or tap **Sync now**.
@@ -65,3 +68,6 @@ music once, hear it everywhere in sync, and fix any device that is a little earl
 Android 8.0+ (API 26). Sync quality depends on Wi-Fi quality and device audio paths; Bluetooth outputs add delay that the
 sync offset compensates. Router client isolation, broadcast filtering and battery management can block discovery or
 background playback. Streams are unencrypted — use trusted networks.
+
+YouTube support reads public stream addresses and may stop working when YouTube changes its service. Downloads are
+for content the user has the right to keep. Lyrics are looked up by title and artist and can be wrong.
