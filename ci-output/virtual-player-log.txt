@@ -1,0 +1,30 @@
+[   0.0s] virtual player listening on 8787 (time port 57848), running 95 s
+[   3.6s] speaker connected: Android SDK built for x86_64 (7ea50a7c-1ccf-44ec-954d-13619e6dc8ce)
+[   4.1s] hello: {'name': 'Android SDK built for x86_64', 'volume': 1, 'muted': False, 'channel': 'stereo', 'offsetMs': 0}
+[   4.6s] art requested: tvirtual0
+[  25.8s] sent SET volume 0.6 to the speaker
+[  27.2s] command from Android SDK built for x86_64: {'cmd': 'toggle'}
+[  27.8s] sent SET resync to the speaker
+[  31.0s] command from Android SDK built for x86_64: {'cmd': 'toggle'}
+[  35.1s] command from Android SDK built for x86_64: {'cmd': 'next'}
+[  35.5s] art requested: tvirtual1
+[  40.1s] command from Android SDK built for x86_64: {'cmd': 'seek', 'ms': 60000}
+[  95.0s] ---- verdict
+[  95.0s] PASS  the Android speaker connected to the virtual player
+[  95.0s] PASS  the speaker stayed connected until the end of the test (early disconnects at [])
+[  95.0s] PASS  the speaker measured the clock with UDP probes (52 probes)
+[  95.0s] PASS  HELLO announced the speaker's name ({'name': 'Android SDK built for x86_64', 'volume': 1, 'muted': False, 'channel': 'stereo', 'offsetMs': 0})
+[  95.0s] PASS  the speaker reports its state every second (89 reports)
+[  95.0s] reported statuses: ['buffering', 'resyncing', 'synced']
+[  95.0s] PASS  the speaker reported itself as synced
+[  95.0s] sync error after warm-up: median 8 ms, max 359 ms over 85 reports
+[  95.0s] PASS  median sync error is within 40 ms (8 ms)
+[  95.0s] PASS  the speaker applied the volume the player sent (reported volumes: [0.6, 1])
+[  95.0s] channels seen: ['left', 'stereo'], offsets seen: [0, 40]
+[  95.0s] PASS  the speaker reported the Left channel after it was selected
+[  95.0s] PASS  the speaker reported its +40 ms sync offset after it was set
+[  95.0s] PASS  the player received the speaker's 'toggle' command
+[  95.0s] PASS  the player received the speaker's 'next' command
+[  95.0s] PASS  the player received the speaker's 'seek' command
+[  95.0s] commands received: ['toggle', 'toggle', 'next', 'seek']
+FAILED CHECKS: 0
