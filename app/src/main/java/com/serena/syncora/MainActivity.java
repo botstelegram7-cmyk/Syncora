@@ -347,6 +347,16 @@ public final class MainActivity extends Activity {
         addFootnote("NO ACCOUNT     ·     NO INTERNET     ·     JUST YOUR LOCAL NETWORK");
     }
 
+    private void addSectionLabel(String titleText, String meta) {
+        LinearLayout row = new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(text(titleText, 9, MUTED, true), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        TextView detail = text(meta, 9, SUBTLE, true);
+        detail.setLetterSpacing(0.1f);
+        row.addView(detail);
+        page.addView(row, fullWidth());
+    }
+
     private View actionCard(String titleText, String subtitle, String flag, boolean primary, Runnable onClick) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.HORIZONTAL);
