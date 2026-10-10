@@ -57,7 +57,13 @@ note "launching"
 adb shell input keyevent KEYCODE_WAKEUP; adb shell wm dismiss-keyguard >/dev/null 2>&1
 launch --es tab player; sleep 4
 shot 01_player_empty
+# first run: the library asks for access to the music before it can list anything
+timeout 30 adb shell pm revoke $PKG android.permission.READ_MEDIA_AUDIO; sleep 2
 launch --es tab source --es source music; sleep 4
+shot 01b_library_permission_card
+timeout 30 adb shell pm grant $PKG android.permission.READ_MEDIA_AUDIO; sleep 1
+timeout 30 adb shell am force-stop $PKG; sleep 1
+launch --es tab source --es source music; sleep 5
 shot 02_library
 launch --es tab player --es play first; sleep 7
 shot 03_player_playing
@@ -72,6 +78,7 @@ launch --es sheet queue; sleep 2; shot 07_queue_sheet
 adb shell input keyevent KEYCODE_BACK; sleep 1
 launch --es tab devices; sleep 2; shot 08_devices
 launch --es tab settings; sleep 2; shot 09_settings
+timeout 20 adb shell input swipe 540 1900 540 600 400; sleep 1; shot 09b_settings_scrolled
 launch --es tab source --es source radio; sleep 5; shot 10_radio
 launch --es tab source --es source dlna; sleep 3; shot 11_dlna
 launch --es tab source --es source mic; sleep 3; shot 12_mic

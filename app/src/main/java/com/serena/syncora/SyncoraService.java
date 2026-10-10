@@ -1354,6 +1354,7 @@ public final class SyncoraService extends Service {
         // As the player, the timeline is this device's own clock: forget any offset left over from speaker mode.
         player.setClockOffsetNanos(0);
         player.setClockReady(true);
+        lastSyncErrorNanos = 0;
         if (flush) newEpoch();
         liveSource = live;
         anchorMediaMs = startMs;
@@ -2048,6 +2049,7 @@ public final class SyncoraService extends Service {
         setConnection(SessionState.Connection.CONNECTING, "Connecting to " + ip + "\u2026");
         ensurePlayer();
         player.setClockReady(false); // audio waits until this device knows the player's clock
+        lastSyncErrorNanos = 0;
         final GroupClient c = new GroupClient(clientListener(++connectGeneration));
         client = c;
         c.connect(ip, port, remoteCode, prefs.deviceId(), prefs.deviceName());

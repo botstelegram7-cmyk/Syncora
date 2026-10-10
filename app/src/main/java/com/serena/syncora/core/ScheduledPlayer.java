@@ -108,6 +108,7 @@ public final class ScheduledPlayer {
     private short[] scratch = new short[4096];
     private short[] silence = new short[0];
     private boolean lastTimestampValid;
+    private long lastErrorReportNanos;
     private Thread thread;
 
     public ScheduledPlayer(Sink sink, Clock clock, Listener listener) {
@@ -262,8 +263,13 @@ public final class ScheduledPlayer {
                 try {
                     handle(chunk);
                 } catch (IOException e) {
-                    if (listener != null) listener.onSinkError(String.valueOf(e.getMessage()));
+                    long failedAt = clock.nanoTime();
+                    if (listener != null && failedAt - lastErrorReportNanos > 5_000_000_000L) {
+                        lastErrorReportNanos = failedAt;
+                        listener.onSinkError(String.valueOf(e.getMessage()));
+                    }
                     releaseSink();
+                    clock.sleepNanos(250_000_000L); // do not hammer a broken output on every chunk
                 }
             }
         } catch (InterruptedException ignored) {
