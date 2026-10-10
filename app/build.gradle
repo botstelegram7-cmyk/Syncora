@@ -2,6 +2,10 @@ plugins {
     id 'com.android.application'
 }
 
+// Releases are signed with the key in signing/ so every new APK can be installed over the previous one.
+// CI (or you) can override it with SYNCORA_KEYSTORE_PATH / _PASSWORD / SYNCORA_KEY_ALIAS / SYNCORA_KEY_PASSWORD.
+def envKeystore = System.getenv('SYNCORA_KEYSTORE_PATH')
+
 android {
     namespace 'com.serena.syncora'
     compileSdk 35
@@ -10,8 +14,24 @@ android {
         applicationId 'com.serena.syncora'
         minSdk 26
         targetSdk 35
-        versionCode 1
-        versionName '0.1.0'
+        versionCode 2
+        versionName '0.2.0'
+    }
+
+    signingConfigs {
+        sideload {
+            if (envKeystore) {
+                storeFile file(envKeystore)
+                storePassword System.getenv('SYNCORA_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('SYNCORA_KEY_ALIAS') ?: 'syncora'
+                keyPassword System.getenv('SYNCORA_KEY_PASSWORD')
+            } else {
+                storeFile rootProject.file('signing/syncora-sideload.jks')
+                storePassword 'syncora-sideload'
+                keyAlias 'syncora'
+                keyPassword 'syncora-sideload'
+            }
+        }
     }
 
     compileOptions {
@@ -21,12 +41,26 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix ''
-            versionNameSuffix '-debug'
+            signingConfig signingConfigs.sideload
         }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.sideload
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
 }

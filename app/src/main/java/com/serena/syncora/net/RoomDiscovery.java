@@ -1,4 +1,4 @@
-package com.serena.syncora;
+package com.serena.syncora.net;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
@@ -20,30 +20,40 @@ import java.util.Locale;
 import java.util.Set;
 
 /** Broadcast-based room discovery. It works on a Wi-Fi router and on a phone hotspot without internet. */
-final class RoomDiscovery {
-    static final int DISCOVERY_PORT = 8788;
-    private static final String REQUEST = "SYNCORA_DISCOVER|1";
+public final class RoomDiscovery {
+    public static final int DISCOVERY_PORT = 8788;
+    private static final String REQUEST_PREFIX = "SYNCORA_DISCOVER|";
+    private static final String REQUEST = REQUEST_PREFIX + "2";
 
-    static final class RoomInfo {
-        final String code;
-        final String ip;
-        final int port;
-        final String name;
-        final String title;
-        final long seenAt;
+    public static final class RoomInfo {
+        public final String code;
+        public final String ip;
+        public final int port;
+        public final String name;
+        public final String title;
+        public final boolean playing;
+        public final int clients;
+        public final String source;
+        public final long seenAt;
 
-        RoomInfo(String code, String ip, int port, String name, String title) {
+        public RoomInfo(String code, String ip, int port, String name, String title, boolean playing, int clients,
+                        String source) {
             this.code = code;
             this.ip = ip;
             this.port = port;
             this.name = name;
             this.title = title;
+            this.playing = playing;
+            this.clients = clients;
+            this.source = source;
             this.seenAt = System.currentTimeMillis();
         }
     }
 
-    interface Listener {
+    public interface Listener {
+        /** The room this device is hosting right now, or null. */
         RoomInfo localRoom();
+
         void onRoomFound(RoomInfo room);
     }
 
@@ -56,12 +66,12 @@ final class RoomDiscovery {
     private Thread worker;
     private WifiManager.MulticastLock multicastLock;
 
-    RoomDiscovery(Context context, Listener listener) {
+    public RoomDiscovery(Context context, Listener listener) {
         this.context = context.getApplicationContext();
         this.listener = listener;
     }
 
-    synchronized void start(boolean shouldProbe) {
+    public synchronized void start(boolean shouldProbe) {
         probing = shouldProbe;
         if (running) return;
         running = true;
@@ -71,11 +81,11 @@ final class RoomDiscovery {
         worker.start();
     }
 
-    void setProbing(boolean shouldProbe) {
+    public void setProbing(boolean shouldProbe) {
         probing = shouldProbe;
     }
 
-    synchronized void stop() {
+    public synchronized void stop() {
         running = false;
         generation++;
         Thread thread = worker;
@@ -110,7 +120,7 @@ final class RoomDiscovery {
                 try {
                     socket.receive(packet);
                     String message = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
-                    if (REQUEST.equals(message)) {
+                    if (message.startsWith(REQUEST_PREFIX)) {
                         replyWithLocalRoom(socket, packet);
                     } else if (message.startsWith("SYNCORA_ROOM|")) {
                         parseRoom(message, packet.getAddress());
@@ -166,8 +176,9 @@ final class RoomDiscovery {
     private void replyWithLocalRoom(DatagramSocket socket, DatagramPacket request) {
         RoomInfo room = listener.localRoom();
         if (room == null) return;
-        String message = "SYNCORA_ROOM|1|" + room.code + "|" + room.port + "|"
-                + encode(room.name) + "|" + encode(room.title);
+        String message = "SYNCORA_ROOM|2|" + room.code + "|" + room.port + "|"
+                + encode(room.name) + "|" + encode(room.title) + "|" + (room.playing ? 1 : 0) + "|" + room.clients + "|"
+                + encode(room.source);
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
         try {
             socket.send(new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort()));
@@ -177,13 +188,14 @@ final class RoomDiscovery {
     }
 
     private void parseRoom(String message, InetAddress address) {
-        String[] parts = message.split("\\|", 6);
-        if (parts.length < 6 || !"1".equals(parts[1])) return;
+        String[] parts = message.split("\\|", 9);
+        if (parts.length < 9 || !"2".equals(parts[1])) return;
         try {
             int port = Integer.parseInt(parts[3]);
             String ip = address.getHostAddress();
             if (ip == null || ip.isEmpty() || ip.contains(":")) return;
-            RoomInfo room = new RoomInfo(parts[2].toUpperCase(Locale.US), ip, port, decode(parts[4]), decode(parts[5]));
+            RoomInfo room = new RoomInfo(parts[2].toUpperCase(Locale.US), ip, port, decode(parts[4]), decode(parts[5]),
+                    "1".equals(parts[6]), Integer.parseInt(parts[7].trim()), decode(parts[8]));
             RoomInfo local = listener.localRoom();
             if (local == null || !local.code.equalsIgnoreCase(room.code)) listener.onRoomFound(room);
         } catch (NumberFormatException ignored) { }
