@@ -162,11 +162,22 @@ for line in open(sys.argv[1], errors="replace"):
     m = re.search(r"src=(\w+) playing=(\w+) pos=(-?\d+).*?syncErrMs=(-?\d+) aligned=(\w+) queuedChunks=(-?\d+)", line)
     if m and m.group(2) == "true":
         rows[m.group(1)].append((int(m.group(4)), m.group(5) == "true", int(m.group(6))))
+bad = []
 for src, r in rows.items():
     errs = [abs(e) for e, a, q in r]
     aligned = sum(1 for e, a, q in r if a)
-    print("%-6s samples=%3d aligned=%3d%% maxErr=%4d ms medianErr=%3d ms maxQueued=%d" % (src, len(r), 100 * aligned // len(r), max(errs), sorted(errs)[len(errs) // 2], max(q for e, a, q in r)))
+    median = sorted(errs)[len(errs) // 2]
+    print("%-7s samples=%3d aligned=%3d%% maxErr=%5d ms medianErr=%3d ms maxQueued=%d" % (src, len(r), 100 * aligned // len(r), max(errs), median, max(q for e, a, q in r)))
+    if src != "MIC" and median > 100:
+        bad.append(src)
+for src in ("MUSIC", "DLNA", "RADIO", "SPEAKER"):
+    if src not in rows:
+        bad.append(src + " (no samples)")
+if bad:
+    print("SYNC DIAGNOSTICS OUT OF RANGE: %s" % bad)
+    sys.exit(1)
 PY
+[ $? -ne 0 ] && fail "sync diagnostics out of range (see diag-summary.txt)"
 cat "$OUT/diag-summary.txt"
 if grep -q "FATAL EXCEPTION" "$OUT/logcat.txt"; then
   fail "the app crashed"

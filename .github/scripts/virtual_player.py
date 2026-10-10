@@ -91,6 +91,7 @@ class Player:
         self.repeat = "off"
         self.clients = {}
         self.seen = []
+        self.early_disconnects = []
         self.state_dirty = True
         self.commands = []
         self.udp_probes = 0
@@ -332,6 +333,8 @@ class Handler(socketserver.BaseRequestHandler):
         finally:
             client.closed = True
             with lock:
+                if time.time() < END_WALL - 1.5:
+                    P.early_disconnects.append(time.time() - START_WALL)
                 if P.clients.get(cid) is client:
                     del P.clients[cid]
                     P.state_dirty = True
@@ -414,7 +417,7 @@ while time.time() < END_WALL:
 log("---- verdict")
 speakers = list(P.seen)
 check(connected_at is not None, "the Android speaker connected to the virtual player")
-check(len(P.clients) > 0, "the speaker stayed connected until the end of the test")
+check(not P.early_disconnects, "the speaker stayed connected until the end of the test (early disconnects at %s)" % P.early_disconnects)
 check(P.udp_probes >= 3, "the speaker measured the clock with UDP probes (%d probes)" % P.udp_probes)
 if speakers:
     c = speakers[0]

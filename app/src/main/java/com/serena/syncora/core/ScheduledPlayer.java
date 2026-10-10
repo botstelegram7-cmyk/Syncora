@@ -305,8 +305,10 @@ public final class ScheduledPlayer {
             long tolerance = lastTimestampValid ? toleranceNanos : toleranceNanos * 3;
             lastErrorNanos = error;
             boolean within = Math.abs(error) <= tolerance;
-            aligned = within && lastTimestampValid;
-            if (aligned) everAligned = true;
+            // "aligned" (shown in the UI) means inside the bound that is always enforced; the stricter tolerance only
+            // decides when a correction is allowed.
+            aligned = Math.abs(error) <= Math.max(MIN_IMMEDIATE_ERROR_NANOS, toleranceNanos * 2) && lastTimestampValid;
+            if (within && lastTimestampValid) everAligned = true;
             if (within) correcting = false;
             report(now, error);
 
