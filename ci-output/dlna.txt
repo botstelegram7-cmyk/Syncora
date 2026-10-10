@@ -1,0 +1,13 @@
+PASS  device description served
+PASS  AVTransport SCPD served
+PASS  RenderingControl SCPD served
+PASS  ConnectionManager SCPD served
+PASS  transport starts idle
+PASS  SetAVTransportURI accepted
+PASS  Play accepted
+PASS  transport is PLAYING
+position 0:00:03 -> 0:00:07
+PASS  position advances while casting
+PASS  metadata title reported
+PASS  Pause accepted
+PASS  transport is PAUSED_PLAYBACK

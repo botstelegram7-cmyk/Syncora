@@ -4,3 +4,5 @@
 [+13s] launching
 [+80s] virtual speaker (independent protocol client) against the player
 [+116s] virtual speaker OK
+[+118s] DLNA casting from a file served by the runner
+[+133s] DLNA OK
