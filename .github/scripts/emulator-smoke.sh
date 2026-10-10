@@ -7,15 +7,28 @@ APK=${1:-app/build/outputs/apk/debug/app-debug.apk}
 OUT=ci-output
 mkdir -p "$OUT" /tmp/shots
 FAILED=0
-note() { echo "[smoke] $*"; }
-fail() { echo "[smoke] FAIL: $*"; FAILED=1; }
+START=$(date +%s)
+note() { echo "[smoke +$(( $(date +%s) - START ))s] $*"; echo "[+$(( $(date +%s) - START ))s] $*" >> "$OUT/progress.txt"; }
+fail() { echo "[smoke] FAIL: $*"; echo "FAIL: $*" >> "$OUT/progress.txt"; FAILED=1; }
+
+# Push what we have so far, so a later hang cannot hide earlier results.
+publish_partial() {
+  [ -n "${GITHUB_REF_NAME:-}" ] && [ "${GITHUB_EVENT_NAME:-}" = "push" ] || return 0
+  (
+    git config user.name "syncora-ci" && git config user.email "ci@users.noreply.github.com" &&
+    git add -f ci-output >/dev/null 2>&1 &&
+    git commit -qm "CI: partial results after $1 [skip ci]" >/dev/null 2>&1 &&
+    timeout 60 git pull --rebase -q origin "$GITHUB_REF_NAME" >/dev/null 2>&1 &&
+    timeout 60 git push -q origin "HEAD:$GITHUB_REF_NAME" >/dev/null 2>&1
+  ) || true
+}
 
 shot() {
-  adb exec-out screencap -p > "/tmp/shots/$1.png" 2>/dev/null
+  timeout 30 adb exec-out screencap -p > "/tmp/shots/$1.png" 2>/dev/null
   python3 .github/scripts/to_jpeg.py "/tmp/shots/$1.png" "$OUT/$1.jpg" || fail "could not save screenshot $1"
 }
-launch() { adb shell am start -W -n "$PKG/.MainActivity" "$@" >/dev/null 2>&1; }
-logdiag() { adb logcat -d -s SyncoraDiag:I | tail -n "${1:-3}"; }
+launch() { timeout 40 adb shell am start -W -n "$PKG/.MainActivity" "$@" >/dev/null 2>&1; }
+logdiag() { timeout 30 adb logcat -d -s SyncoraDiag:I | tail -n "${1:-3}"; }
 
 note "installing $APK"
 adb install -r -g "$APK" || { fail "install failed"; exit 1; }
@@ -66,6 +79,7 @@ launch --es tab source --es source speaker; sleep 4; shot 13_speaker
 launch --es tab player --es source speaker; sleep 2; shot 14_player_speaker
 launch --es tab player --es source music --es theme light; sleep 3; shot 15_player_light
 launch --es tab source --es theme dark; sleep 3; shot 16_library_again
+publish_partial "UI tour"
 
 # ---------------------------------------------------------------- end-to-end checks against the real player
 roomport() {
@@ -77,17 +91,20 @@ roomport() {
 note "virtual speaker (independent protocol client) against the player"
 launch --es tab player --es source music --es play first; sleep 6
 PORT=$(roomport); adb forward tcp:18787 tcp:"$PORT" >/dev/null
-if python3 .github/scripts/virtual_speaker.py 18787 "$OUT/virtual-speaker.txt"; then note "virtual speaker OK"; else fail "virtual speaker checks failed"; fi
+if timeout 150 python3 .github/scripts/virtual_speaker.py 18787 "$OUT/virtual-speaker.txt"; then note "virtual speaker OK"; else fail "virtual speaker checks failed"; fi
 shot 17_after_virtual_speaker
+publish_partial "virtual speaker"
 
 note "DLNA casting from a file served by the runner"
-(cd /tmp/music && nohup python3 -m http.server 9000 --bind 0.0.0.0 >/tmp/http.log 2>&1 &)
+(cd /tmp/music && setsid nohup python3 -m http.server 9000 --bind 0.0.0.0 >/tmp/http.log 2>&1 < /dev/null &)
 sleep 1
 launch --es source dlna; sleep 4
 PORT=$(roomport); adb forward tcp:18787 tcp:"$PORT" >/dev/null
-if bash .github/scripts/dlna_check.sh 18787 "$OUT/dlna.txt"; then note "DLNA OK"; else fail "DLNA checks failed"; fi
+if timeout 120 bash .github/scripts/dlna_check.sh 18787 "$OUT/dlna.txt"; then note "DLNA OK"; else fail "DLNA checks failed"; fi
 launch --es tab player; sleep 2; shot 18_dlna_cast_player
 launch --es tab source; sleep 1; shot 19_dlna_page_casting
+pkill -f "http.server 9000" >/dev/null 2>&1
+publish_partial "DLNA"
 
 note "internet radio"
 launch --es source radio --es play radio --es tab player; sleep 18
@@ -97,18 +114,21 @@ note "radio diagnostics lines: $RADIO_LINES"
 echo "radio diag lines with playing=true: $RADIO_LINES" > "$OUT/radio.txt"
 adb logcat -d -s Syncora:I Syncora:W | grep -i "radio\|source error" | tail -n 5 >> "$OUT/radio.txt"
 if [ "$RADIO_LINES" -lt 5 ]; then fail "radio did not start playing (needs internet from the emulator)"; fi
+publish_partial "radio"
 
 note "microphone / aux capture"
+timeout 60 adb logcat -d -t 1 >/dev/null 2>&1
 launch --es source mic --es play mic --es tab source; sleep 7
 shot 21_mic_live
 MIC_LINES=$(adb logcat -d -s SyncoraDiag:I | grep -c 'src=MIC playing=true')
 echo "mic diag lines with playing=true: $MIC_LINES" > "$OUT/mic.txt"
 note "mic diagnostics lines: $MIC_LINES"
 if [ "$MIC_LINES" -lt 3 ]; then fail "microphone capture did not start"; fi
+publish_partial "microphone"
 
 # ---------------------------------------------------------------- logs
 note "collecting logs and checking for crashes"
-adb logcat -d -v time > /tmp/logcat-full.txt 2>&1
+timeout 90 adb logcat -d -v time > /tmp/logcat-full.txt 2>&1
 grep "SyncoraDiag" /tmp/logcat-full.txt > "$OUT/diag.txt"
 grep -E "AndroidRuntime|FATAL|I/Syncora |W/Syncora |E/Syncora |ANR" /tmp/logcat-full.txt | tail -n 300 > "$OUT/logcat.txt"
 python3 - "$OUT/diag.txt" > "$OUT/diag-summary.txt" <<'PY'
@@ -129,6 +149,6 @@ if grep -q "FATAL EXCEPTION" "$OUT/logcat.txt"; then
   grep -A 25 "FATAL EXCEPTION" "$OUT/logcat.txt" | head -n 60
 fi
 if grep -q "W/Syncora .*audio output error" "$OUT/logcat.txt"; then fail "the audio output reported errors"; grep "audio output error" "$OUT/logcat.txt" | head -n 5; fi
-if ! adb shell pidof $PKG >/dev/null; then fail "the app process is not running"; fi
+if ! timeout 20 adb shell pidof $PKG >/dev/null; then fail "the app process is not running"; fi
 echo "$FAILED" > "$OUT/smoke-result.txt"
 exit $FAILED

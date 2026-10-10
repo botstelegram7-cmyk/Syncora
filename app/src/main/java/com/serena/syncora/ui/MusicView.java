@@ -289,13 +289,16 @@ final class MusicView extends SourceView {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        if (!registered && MusicLibrary.hasPermission(getContext())) {
-            try {
-                getContext().getContentResolver().registerContentObserver(MusicLibrary.collection(), true, observer);
-                registered = true;
-            } catch (RuntimeException ignored) {
-                registered = false;
-            }
+        registerObserver();
+    }
+
+    private void registerObserver() {
+        if (registered || !MusicLibrary.hasPermission(getContext())) return;
+        try {
+            getContext().getContentResolver().registerContentObserver(MusicLibrary.collection(), true, observer);
+            registered = true;
+        } catch (RuntimeException ignored) {
+            registered = false;
         }
     }
 
@@ -329,7 +332,7 @@ final class MusicView extends SourceView {
                         all.clear();
                         all.addAll(tracks);
                         refilter();
-                        if (!registered && isAttachedToWindow() && MusicLibrary.hasPermission(context)) onAttachedToWindow();
+                        if (isAttachedToWindow()) registerObserver();
                     }
                 });
             }

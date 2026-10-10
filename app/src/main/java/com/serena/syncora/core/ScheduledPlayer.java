@@ -447,8 +447,10 @@ public final class ScheduledPlayer {
                     sink.start();
                     started = true;
                 }
-                if (++stalls > 1500) throw new IOException("audio output stalled");
-                clock.sleepNanos(4_000_000L);
+                if (++stalls > 800) throw new IOException("audio output stalled");
+                // The output buffer is full: wait for roughly a quarter of what is left to write (4-12 ms) instead of spinning.
+                long left = framesToNanos(length / Math.max(1, openChannels), openRate) / 4;
+                clock.sleepNanos(Math.max(4_000_000L, Math.min(12_000_000L, left)));
             }
         }
         return true;
