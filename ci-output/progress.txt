@@ -38,3 +38,5 @@ FAIL: speaker role checks failed
 [+213s] speaker role OK
 [+215s] DLNA casting from a file served by the runner
 [+230s] DLNA OK
+[+235s] internet radio
+[+254s] radio diagnostics lines: 18
