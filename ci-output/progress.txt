@@ -11,3 +11,5 @@
 [+244s] DLNA OK
 [+249s] internet radio
 [+268s] radio diagnostics lines: 19
+[+270s] microphone / aux capture
+[+277s] mic diagnostics lines: 8
