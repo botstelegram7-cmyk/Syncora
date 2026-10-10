@@ -2,3 +2,5 @@
 [+1s] seeding music
 [+11s] MediaStore audio rows: 4
 [+12s] launching
+[+94s] virtual speaker (independent protocol client) against the player
+[+130s] virtual speaker OK
