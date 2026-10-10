@@ -9,3 +9,5 @@
 [+228s] speaker role OK
 [+229s] DLNA casting from a file served by the runner
 [+244s] DLNA OK
+[+249s] internet radio
+[+268s] radio diagnostics lines: 19
