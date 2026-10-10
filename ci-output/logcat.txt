@@ -1,27 +1,27 @@
-10-10 07:31:03.789 I/Syncora ( 2462): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
-10-10 07:31:08.783 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:31:27.782 I/Syncora ( 2462): start TrackDecoder at 0 ms (live=false, flush=false, lookahead=450 ms)
-10-10 07:31:33.853 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:31:36.211 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:31:41.571 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:31:44.941 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:31:48.404 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:31:58.760 I/Syncora ( 2462): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
-10-10 07:32:03.753 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:32:17.112 I/Syncora ( 2462): start TrackDecoder at 14117 ms (live=false, flush=true, lookahead=450 ms)
-10-10 07:32:23.225 I/Syncora ( 2462): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
-10-10 07:32:30.243 I/Syncora ( 2462): start TrackDecoder at 6505 ms (live=false, flush=true, lookahead=260 ms)
-10-10 07:32:33.275 I/Syncora ( 2462): start TrackDecoder at 9211 ms (live=false, flush=true, lookahead=450 ms)
-10-10 07:32:44.458 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:32:59.258 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:33:11.341 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:33:15.386 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:33:20.236 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:34:11.468 I/Syncora ( 2462): speaker connection closed: The player closed the connection (refused=false)
-10-10 07:34:12.982 I/Syncora ( 2462): speaker connection closed: failed to connect to /10.0.2.2 (port 8787) from /10.0.2.16 (port 40854) after 5000ms: isConnected failed: ECONNREFUSED (Connection refused) (refused=false)
-10-10 07:34:19.628 I/Syncora ( 2462): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
-10-10 07:34:33.757 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:34:34.367 I/Syncora ( 2462): start RadioSource at 0 ms (live=true, flush=true, lookahead=300 ms)
-10-10 07:34:36.199 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:34:39.339 E/BLASTSyncEngine(  506): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
-10-10 07:34:54.412 I/Syncora ( 2462): start MicSource at 0 ms (live=true, flush=true, lookahead=300 ms)
+10-10 07:57:42.333 I/Syncora ( 2470): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
+10-10 07:57:47.330 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:06.340 I/Syncora ( 2470): start TrackDecoder at 0 ms (live=false, flush=false, lookahead=450 ms)
+10-10 07:58:13.567 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:15.981 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:21.431 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:24.848 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:28.555 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:39.252 I/Syncora ( 2470): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
+10-10 07:58:44.240 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:58:57.618 I/Syncora ( 2470): start TrackDecoder at 14174 ms (live=false, flush=true, lookahead=450 ms)
+10-10 07:59:03.754 I/Syncora ( 2470): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
+10-10 07:59:10.798 I/Syncora ( 2470): start TrackDecoder at 6486 ms (live=false, flush=true, lookahead=260 ms)
+10-10 07:59:13.870 I/Syncora ( 2470): start TrackDecoder at 9188 ms (live=false, flush=true, lookahead=450 ms)
+10-10 07:59:25.311 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:59:40.163 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:59:53.238 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 07:59:57.271 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 08:00:02.250 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 08:00:52.346 I/Syncora ( 2470): speaker connection closed: The player closed the connection (refused=false)
+10-10 08:00:54.029 I/Syncora ( 2470): speaker connection closed: failed to connect to /10.0.2.2 (port 8787) from /10.0.2.16 (port 55356) after 5000ms: isConnected failed: ECONNREFUSED (Connection refused) (refused=false)
+10-10 08:00:59.719 I/Syncora ( 2470): start TrackDecoder at 0 ms (live=false, flush=true, lookahead=450 ms)
+10-10 08:01:13.859 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 08:01:14.501 I/Syncora ( 2470): start RadioSource at 0 ms (live=true, flush=true, lookahead=300 ms)
+10-10 08:01:16.475 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 08:01:19.461 E/BLASTSyncEngine(  508): WM sent Transaction to organized, but never received commit callback. Application ANR likely to follow.
+10-10 08:01:34.609 I/Syncora ( 2470): start MicSource at 0 ms (live=true, flush=true, lookahead=300 ms)
