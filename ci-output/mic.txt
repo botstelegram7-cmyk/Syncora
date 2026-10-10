@@ -1,1 +1,1 @@
-mic diag lines with playing=true: 8
+mic diag lines with playing=true: 7
