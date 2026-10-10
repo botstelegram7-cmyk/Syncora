@@ -20,3 +20,5 @@
 [+116s] speaker role against an independent virtual player
 [+166s] waiting for the virtual player to finish
 FAIL: speaker role checks failed
+[+214s] DLNA casting from a file served by the runner
+[+228s] DLNA OK
