@@ -81,6 +81,9 @@ public final class SourcePage extends FrameLayout implements StateListener {
                 case MIC:
                     views[index] = new MicView(c, host);
                     break;
+                case YOUTUBE:
+                    views[index] = new YouTubeView(c, host);
+                    break;
                 case SPEAKER:
                     views[index] = new SpeakerView(c, host);
                     break;
@@ -133,6 +136,8 @@ public final class SourcePage extends FrameLayout implements StateListener {
                 return "DLNA Renderer";
             case MIC:
                 return "Microphone / Aux";
+            case YOUTUBE:
+                return "YouTube";
             case SPEAKER:
                 return "Speaker Mode";
             default:

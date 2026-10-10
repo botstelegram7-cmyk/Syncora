@@ -5,6 +5,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -15,6 +16,9 @@ import com.serena.syncora.SessionState;
 import com.serena.syncora.Source;
 import com.serena.syncora.SyncoraService;
 import com.serena.syncora.core.PlayQueue;
+
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 /**
  * The music player. The same screen is shown on the player and on every speaker, with the same cover art.
@@ -31,6 +35,9 @@ public final class PlayerPage extends FrameLayout implements StateListener {
     private final TextView devicesText;
     private final View devicesDot;
     private final ArtView art;
+    private final LyricsView lyricsView;
+    private final ViewPager pager;
+    private final View[] dots = new View[2];
     private final TextView titleView;
     private final TextView subtitleView;
     private final TextView statusView;
@@ -114,10 +121,59 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         });
         header.addView(devicesChip, Ui.lin(Ui.WRAP, Ui.WRAP));
 
-        // ---- artwork (takes whatever height is left)
+        // ---- artwork (takes whatever height is left). Swipe left on the art to read the lyrics.
         art = new ArtView(c);
         art.setMaxSize(Ui.dp(380));
-        column.addView(art, Ui.lin(Ui.MATCH, 0, 1f));
+        lyricsView = new LyricsView(c);
+        lyricsView.setSeekListener(new LyricsView.SeekListener() {
+            @Override
+            public void onSeek(long positionMs) {
+                SyncoraService s = host.service();
+                if (s != null && state.durationMs > 0 && !state.live) s.seekTo(positionMs);
+            }
+        });
+        final View[] pages = {art, lyricsView};
+        pager = new ViewPager(c);
+        pager.setAdapter(new PagerAdapter() {
+            @Override
+            public int getCount() {
+                return pages.length;
+            }
+
+            @Override
+            public boolean isViewFromObject(View view, Object object) {
+                return view == object;
+            }
+
+            @Override
+            public Object instantiateItem(ViewGroup container, int position) {
+                View page = pages[position];
+                container.addView(page);
+                return page;
+            }
+
+            @Override
+            public void destroyItem(ViewGroup container, int position, Object object) {
+                container.removeView((View) object);
+            }
+        });
+        pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                updateDots(position);
+            }
+        });
+        column.addView(pager, Ui.lin(Ui.MATCH, 0, 1f));
+
+        LinearLayout dotRow = new LinearLayout(c);
+        dotRow.setOrientation(LinearLayout.HORIZONTAL);
+        dotRow.setGravity(Gravity.CENTER);
+        for (int i = 0; i < dots.length; i++) {
+            dots[i] = new View(c);
+            dotRow.addView(dots[i], Ui.lin(Ui.dp(6), Ui.dp(6), 4, 0, 4, 0));
+        }
+        updateDots(0);
+        column.addView(dotRow, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(2)));
 
         // ---- title block
         LinearLayout info = new LinearLayout(c);
@@ -290,6 +346,12 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         return chip;
     }
 
+    private void updateDots(int selected) {
+        for (int i = 0; i < dots.length; i++) {
+            dots[i].setBackground(Ui.oval(i == selected ? Theme.accent : Theme.alpha(Theme.text, 70)));
+        }
+    }
+
     public void setTopInset(int px) {
         header.setPadding(Ui.dp(16), Ui.dp(10) + px, Ui.dp(16), Ui.dp(6));
     }
@@ -330,6 +392,7 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         if (dragging) return;
         long duration = state.durationMs;
         long position = state.positionNow();
+        lyricsView.setPosition(position);
         if (state.live || duration <= 0) {
             seek.setProgress(0f);
             timeLeft.setText(state.live ? "" : Ui.formatTime(position));
@@ -382,6 +445,10 @@ public final class PlayerPage extends FrameLayout implements StateListener {
                     title = "Microphone / Aux";
                     subtitle = "Start the input in the Mic tab";
                     break;
+                case YOUTUBE:
+                    title = "YouTube";
+                    subtitle = "Find a video on the YouTube page";
+                    break;
                 case SPEAKER:
                     title = speakerConnected ? (s.hostName.isEmpty() ? "Syncora Player" : s.hostName) : "Syncora Player";
                     subtitle = speakerConnected ? "Nothing is playing yet" : "Waiting for connection";
@@ -422,6 +489,9 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         String key = s.artKey.isEmpty() ? (s.hasMedia ? s.title : src.id) : s.artKey;
         art.setArt(s.art, key, fallbackIcon);
         backdrop.setArt(s.art, key);
+
+        // lyrics (swipe page)
+        lyricsView.show(s.lyricsKey, s.lyrics, s.hasMedia || s.isSpeaker() ? s.lyricsStatus : "");
 
         // controls
         playIcon.setImageResource(s.playing ? R.drawable.ic_pause : R.drawable.ic_play);

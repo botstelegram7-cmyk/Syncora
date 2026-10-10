@@ -157,19 +157,27 @@ final class RadioView extends SourceView {
         list.setOnItemClickListener(new android.widget.AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                SyncoraService service = host.service();
-                if (service == null || position >= stations.size()) return;
-                Station st = stations.get(position);
-                if (st.url.equals(playingUrl) && playing) {
-                    host.navigate(UiHost.TAB_PLAYER);
-                    return;
-                }
-                service.playStation(st);
-                host.navigate(UiHost.TAB_PLAYER);
+                if (position >= 0 && position < stations.size()) play(stations.get(position));
             }
         });
         column.addView(list, Ui.lin(Ui.MATCH, 0, 1f));
         updateChips();
+    }
+
+    /** Starts a station on the player and shows the player. Every tap gives feedback, even when it cannot start. */
+    private void play(Station st) {
+        SyncoraService service = host.service();
+        if (service == null) {
+            host.toast("Syncora is still starting. Tap the station again in a moment.");
+            return;
+        }
+        if (st.url.equals(playingUrl) && playing) {
+            host.navigate(UiHost.TAB_PLAYER);
+            return;
+        }
+        host.toast("Connecting to " + st.name + "\u2026");
+        service.playStation(st);
+        host.navigate(UiHost.TAB_PLAYER);
     }
 
     private void updateChips() {
@@ -264,11 +272,7 @@ final class RadioView extends SourceView {
                         }
                         Station st = new Station("custom-" + Integer.toHexString(url.hashCode()), uri.getHost(), url, "custom", "", "", 0);
                         if (!host.prefs().isFavorite(st)) host.prefs().toggleFavorite(st);
-                        SyncoraService service = host.service();
-                        if (service != null) {
-                            service.playStation(st);
-                            host.navigate(UiHost.TAB_PLAYER);
-                        }
+                        play(st);
                         if (CHIPS[mode][0].equals("favorites")) loadMode();
                     }
                 });
@@ -365,6 +369,13 @@ final class RadioView extends SourceView {
                 }
             });
             row.setBackground(Ui.ripple(current ? Ui.rect(Theme.accentSoft, 16) : null, 16));
+            // The whole row is the target: a tap anywhere on it starts the station (the star keeps its own tap).
+            row.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    play(st);
+                }
+            });
             return row;
         }
     }

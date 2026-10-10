@@ -6,6 +6,7 @@ public enum Source {
     RADIO("radio", "Online Radio", "Stream stations from the internet"),
     DLNA("dlna", "DLNA Renderer", "Let other apps cast to this device"),
     MIC("mic", "Microphone / Aux", "Share a live input with every speaker"),
+    YOUTUBE("youtube", "YouTube", "Play or download YouTube audio and video"),
     SPEAKER("speaker", "Speaker Mode", "Play what another device is playing");
 
     public final String id;

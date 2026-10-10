@@ -455,6 +455,9 @@ public final class MainActivity extends Activity implements UiHost {
                 case MIC:
                     label = "Mic";
                     break;
+                case YOUTUBE:
+                    label = "YouTube";
+                    break;
                 case SPEAKER:
                     label = "Speaker";
                     break;

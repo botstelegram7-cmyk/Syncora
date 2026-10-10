@@ -44,9 +44,15 @@ import com.serena.syncora.net.NetUtil;
 import com.serena.syncora.net.RoomDiscovery;
 import com.serena.syncora.net.TimeClient;
 import com.serena.syncora.net.TimeServer;
+import com.serena.syncora.lyrics.Lyrics;
+import com.serena.syncora.lyrics.LyricsClient;
 import com.serena.syncora.radio.Station;
+import com.serena.syncora.youtube.YouTubeFormat;
+import com.serena.syncora.youtube.YouTubeLyrics;
+import com.serena.syncora.youtube.YouTubeVideo;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -203,6 +209,26 @@ public final class SyncoraService extends Service {
     private Bitmap remoteArt;
     private String remoteArtLoadedKey = "";
     private String remoteArtRequestedKey = "";
+    private Lyrics remoteLyrics;
+    private String remoteLyricsKey = "";
+    private String remoteLyricsRequestedKey = "";
+
+    // ---- lyrics of the song that is playing on the player (speakers fetch them over /lyrics)
+    private Lyrics lyrics;
+    private String lyricsKey = "";
+    private String lyricsStatus = "";
+    private String lastIcyTitle = "";
+    /** Lyrics already found, as JSON, keyed by song (most recent last). Read by the HTTP thread too. */
+    private final LinkedHashMap<String, String> lyricsStore = new LinkedHashMap<String, String>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > 24;
+        }
+    };
+
+    // ---- YouTube (audio of the loaded video is what plays)
+    private YouTubeVideo youtube;
+    private YouTubeFormat youtubeAudio;
     private int reconnectAttempts;
     private int connectGeneration;
 
@@ -234,6 +260,9 @@ public final class SyncoraService extends Service {
         String hostName = "";
         String station = "";
         String stationStatus = "";
+        String lyricsKey = "";
+        boolean lyricsReady;
+        String lyricsStatus = "";
 
         void reset() {
             Remote fresh = new Remote();
@@ -253,6 +282,8 @@ public final class SyncoraService extends Service {
             audioMode = AudioProfile.BALANCED;
             lookaheadMs = 0;
             station = stationStatus = "";
+            lyricsKey = lyricsStatus = "";
+            lyricsReady = false;
         }
     }
 
@@ -451,6 +482,7 @@ public final class SyncoraService extends Service {
             if (target == Source.MUSIC && queue.current() != null) nowPlayingFromTrack(queue.current());
             if (target == Source.RADIO && station == null) station = Prefs.stationFromJson(prefs.lastStationJson());
             if (target == Source.RADIO && station != null) nowPlayingFromStation(station);
+            if (target == Source.YOUTUBE && youtube != null) nowPlayingFromYouTube(youtube);
             if (uiCount > 0 && prefs.shareRoom()) ensureRoom();
         }
         updateForeground();
@@ -469,6 +501,9 @@ public final class SyncoraService extends Service {
         anchorMediaMs = 0;
         stationStatus = "";
         stationNowPlaying = "";
+        lyrics = null;
+        lyricsKey = "";
+        lyricsStatus = "";
     }
 
     // ================================================================= public API: transport
@@ -593,7 +628,10 @@ public final class SyncoraService extends Service {
     // ================================================================= public API: radio
 
     public void playStation(Station st) {
-        if (source == Source.SPEAKER) return;
+        if (source == Source.SPEAKER) {
+            message("Leave Speaker Mode first to play a station.");
+            return;
+        }
         if (source != Source.RADIO) selectSource(Source.RADIO);
         station = st;
         prefs.setLastStation(st);
@@ -602,6 +640,25 @@ public final class SyncoraService extends Service {
 
     public Station currentStation() {
         return station;
+    }
+
+    // ================================================================= public API: YouTube
+
+    /** Plays the audio of a YouTube video on the player (so on every speaker too), from the beginning. */
+    public void playYouTube(YouTubeVideo video, YouTubeFormat audio) {
+        if (source == Source.SPEAKER) {
+            message("Leave Speaker Mode first to play YouTube audio.");
+            return;
+        }
+        if (source != Source.YOUTUBE) selectSource(Source.YOUTUBE);
+        youtube = video;
+        youtubeAudio = audio;
+        startYouTube(0);
+    }
+
+    /** The video loaded in the YouTube page, or null. */
+    public YouTubeVideo currentYouTube() {
+        return youtube;
     }
 
     // ================================================================= public API: microphone / aux
@@ -1154,6 +1211,19 @@ public final class SyncoraService extends Service {
                             return false;
                         }
                     });
+                    server.route("/lyrics", new MiniHttpServer.Handler() {
+                        @Override
+                        public boolean handle(MiniHttpServer.Request r, Socket s, InputStream in, OutputStream out) throws IOException {
+                            String key = r.query.get("k") == null ? "" : r.query.get("k");
+                            String json;
+                            synchronized (lyricsStore) {
+                                json = lyricsStore.get(key);
+                            }
+                            if (json == null) MiniHttpServer.respondText(out, 404, "Not Found", "No lyrics");
+                            else MiniHttpServer.respondJson(out, json);
+                            return false;
+                        }
+                    });
                     server.route("/dlna/", new MiniHttpServer.Handler() {
                         @Override
                         public boolean handle(MiniHttpServer.Request r, Socket s, InputStream in, OutputStream out) throws IOException {
@@ -1436,6 +1506,10 @@ public final class SyncoraService extends Service {
                 pausedPositionMs = 0;
                 break;
             }
+            case YOUTUBE:
+                playing = false;
+                pausedPositionMs = 0;
+                break;
             case DLNA:
                 playing = false;
                 pausedPositionMs = 0;
@@ -1477,6 +1551,11 @@ public final class SyncoraService extends Service {
                 stopMicInternal();
                 playing = false;
                 hasMedia = false;
+                break;
+            case YOUTUBE:
+                playing = false;
+                stationStatus = "";
+                message("Can't play this YouTube audio: " + problem);
                 break;
             case DLNA:
                 playing = false;
@@ -1532,6 +1611,7 @@ public final class SyncoraService extends Service {
     private void startStation(Station st) {
         stopPump();
         nowPlayingFromStation(st);
+        lastIcyTitle = "";
         stationStatus = "Connecting\u2026";
         playing = true;
         buffering = true;
@@ -1549,6 +1629,16 @@ public final class SyncoraService extends Service {
                         if (source != Source.RADIO || station == null) return;
                         stationNowPlaying = streamTitle;
                         subtitle = streamTitle.isEmpty() ? station.subtitle() : streamTitle;
+                        if (!streamTitle.isEmpty() && !streamTitle.equals(lastIcyTitle)) {
+                            lastIcyTitle = streamTitle;
+                            requestLyrics("s" + Integer.toHexString(streamTitle.hashCode()), new LyricsWork() {
+                                @Override
+                                public Lyrics load() {
+                                    String[] parts = YouTubeLyrics.splitTitle(streamTitle, "");
+                                    return LyricsClient.find(parts[1], parts[0], "", 0);
+                                }
+                            });
+                        }
                         publish();
                     }
                 });
@@ -1567,6 +1657,23 @@ public final class SyncoraService extends Service {
             }
         });
         startPump(radio, 0, true, 0, true);
+        requestFocus();
+        registerNoisy();
+        if (host == null && uiCount > 0 && prefs.shareRoom()) ensureRoom();
+        updateForeground();
+        publish();
+    }
+
+    private void startYouTube(long startMs) {
+        YouTubeVideo v = youtube;
+        YouTubeFormat a = youtubeAudio;
+        if (v == null || a == null) return;
+        stopPump();
+        nowPlayingFromYouTube(v);
+        playing = true;
+        buffering = true;
+        pausedPositionMs = startMs;
+        startPump(TrackDecoder.forUrl(this, a.url, v.userAgent), startMs, false, 0, true);
         requestFocus();
         registerNoisy();
         if (host == null && uiCount > 0 && prefs.shareRoom()) ensureRoom();
@@ -1609,6 +1716,13 @@ public final class SyncoraService extends Service {
                 }
                 startStation(station);
                 break;
+            case YOUTUBE:
+                if (youtube == null || youtubeAudio == null) {
+                    message("Pick a YouTube video first.");
+                    return;
+                }
+                startYouTube(pausedPositionMs);
+                break;
             case DLNA:
                 if (!dlnaUri.isEmpty()) startDlnaPlayback(pausedPositionMs);
                 break;
@@ -1624,7 +1738,7 @@ public final class SyncoraService extends Service {
         long target = Math.max(0, positionMs);
         long d = durationMs;
         if (d > 0 && target > d) target = d;
-        if (source != Source.MUSIC && source != Source.DLNA) return;
+        if (source != Source.MUSIC && source != Source.DLNA && source != Source.YOUTUBE) return;
         if (playing && pump != null) {
             int e = newEpoch();
             anchorMediaMs = target;
@@ -1639,6 +1753,7 @@ public final class SyncoraService extends Service {
     private void restartCurrent() {
         long position = hostPositionMs();
         if (source == Source.MUSIC && queue.current() != null) playCurrentFrom(position);
+        else if (source == Source.YOUTUBE && youtube != null) startYouTube(position);
         else if (source == Source.DLNA && !dlnaUri.isEmpty()) startDlnaPlayback(position);
     }
 
@@ -1652,6 +1767,13 @@ public final class SyncoraService extends Service {
         art = null;
         durationMs = t.durationMs;
         hasMedia = true;
+        requestLyrics("m" + t.id, new LyricsWork() {
+            @Override
+            public Lyrics load() {
+                String artist = "<unknown>".equals(t.artist) ? "" : t.artist;
+                return LyricsClient.find(t.title, artist, t.album, t.durationMs);
+            }
+        });
         loadArtAsync(t.artKey(), new ArtSource() {
             @Override
             public Bitmap load() {
@@ -1660,7 +1782,33 @@ public final class SyncoraService extends Service {
         });
     }
 
+    private void nowPlayingFromYouTube(final YouTubeVideo v) {
+        title = v.title;
+        subtitle = v.author;
+        album = "YouTube";
+        artKey = v.artKey();
+        art = null;
+        durationMs = v.durationMs;
+        hasMedia = true;
+        stationNowPlaying = "";
+        loadArtAsync(v.artKey(), new ArtSource() {
+            @Override
+            public Bitmap load() {
+                return ArtLoader.loadFromUrl(v.thumbnailUrl, ART_PX);
+            }
+        });
+        requestLyrics("y" + v.id, new LyricsWork() {
+            @Override
+            public Lyrics load() {
+                return YouTubeLyrics.find(v);
+            }
+        });
+    }
+
     private void nowPlayingFromStation(Station st) {
+        lyrics = null;
+        lyricsKey = "";
+        lyricsStatus = "";
         title = st.name;
         subtitle = st.subtitle();
         album = "";
@@ -1686,6 +1834,116 @@ public final class SyncoraService extends Service {
                     public void run() {
                         if (destroyed || !key.equals(artKey)) return;
                         art = bitmap;
+                        publish();
+                    }
+                });
+            }
+        });
+    }
+
+    // ================================================================= lyrics
+
+    private interface LyricsWork {
+        Lyrics load();
+    }
+
+    /**
+     * Finds the lyrics of one song on a worker thread. Results are kept for the next time the song plays, and only
+     * count while the same song is still the one playing.
+     */
+    private void requestLyrics(final String key, final LyricsWork work) {
+        lyrics = null;
+        lyricsKey = key;
+        String cached;
+        synchronized (lyricsStore) {
+            cached = lyricsStore.get(key);
+        }
+        if (cached != null) {
+            try {
+                lyrics = Lyrics.fromJson(new JSONObject(cached));
+            } catch (JSONException ignored) {
+                lyrics = null;
+            }
+            lyricsStatus = lyrics == null ? "No lyrics found for this song" : "";
+            if (lyrics != null) return;
+        }
+        lyricsStatus = "Looking for lyrics\u2026";
+        worker.execute(new Runnable() {
+            @Override
+            public void run() {
+                Lyrics found = null;
+                try {
+                    found = work.load();
+                } catch (RuntimeException ignored) {
+                    found = null;
+                }
+                final Lyrics result = found == null || found.isEmpty() ? null : found;
+                main.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (destroyed || !key.equals(lyricsKey)) return;
+                        lyrics = result;
+                        lyricsStatus = result == null ? "No lyrics found for this song" : "";
+                        if (result != null) {
+                            synchronized (lyricsStore) {
+                                lyricsStore.put(key, result.toJson().toString());
+                            }
+                        }
+                        publish();
+                    }
+                });
+            }
+        });
+    }
+
+    /** Speakers ask the player for the lyrics of the song it is playing. */
+    private void fetchRemoteLyricsIfNeeded() {
+        final Remote r = remote;
+        if (r.lyricsKey.isEmpty()) {
+            remoteLyrics = null;
+            remoteLyricsKey = "";
+            return;
+        }
+        if (!r.lyricsKey.equals(remoteLyricsKey)) remoteLyrics = null;
+        if (!r.lyricsReady || r.lyricsKey.equals(remoteLyricsKey) || r.lyricsKey.equals(remoteLyricsRequestedKey)) return;
+        remoteLyricsRequestedKey = r.lyricsKey;
+        final String key = r.lyricsKey;
+        final String ip = remoteIp;
+        final int port = remotePort;
+        worker.execute(new Runnable() {
+            @Override
+            public void run() {
+                Lyrics result = null;
+                HttpURLConnection c = null;
+                try {
+                    c = (HttpURLConnection) new URL("http://" + ip + ":" + port + "/lyrics?k=" + NetUtil.urlEncode(key)).openConnection();
+                    c.setConnectTimeout(2500);
+                    c.setReadTimeout(5000);
+                    if (c.getResponseCode() == 200) {
+                        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                        try (InputStream in = c.getInputStream()) {
+                            byte[] buf = new byte[8192];
+                            int n;
+                            while ((n = in.read(buf)) > 0 && bytes.size() < 2 * 1024 * 1024) bytes.write(buf, 0, n);
+                        }
+                        result = Lyrics.fromJson(new JSONObject(bytes.toString("UTF-8")));
+                    }
+                } catch (Exception ignored) {
+                    result = null;
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                final Lyrics found = result;
+                main.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (destroyed) return;
+                        if (found != null && key.equals(remote.lyricsKey)) {
+                            remoteLyrics = found;
+                            remoteLyricsKey = key;
+                        } else if (key.equals(remoteLyricsRequestedKey)) {
+                            remoteLyricsRequestedKey = ""; // try again on the next state update
+                        }
                         publish();
                     }
                 });
@@ -2256,6 +2514,9 @@ public final class SyncoraService extends Service {
         r.album = o.optString("album", "");
         r.artKey = o.optString("artKey", "");
         r.artReady = o.optBoolean("artReady", false);
+        r.lyricsKey = o.optString("lyricsKey", "");
+        r.lyricsReady = o.optBoolean("lyricsReady", false);
+        r.lyricsStatus = o.optString("lyricsStatus", "");
         r.shuffle = o.optBoolean("shuffle", false);
         r.repeat = PlayQueue.Repeat.fromId(o.optString("repeat", "off"));
         r.canSeek = o.optBoolean("canSeek", false);
@@ -2311,6 +2572,7 @@ public final class SyncoraService extends Service {
         r.devices = devices;
 
         fetchRemoteArtIfNeeded();
+        fetchRemoteLyricsIfNeeded();
         publish();
     }
 
@@ -2495,7 +2757,10 @@ public final class SyncoraService extends Service {
         s.durationMs = durationMs;
         s.live = liveSource;
         s.positionMs = hostPositionMs();
-        s.canSeek = (source == Source.MUSIC || source == Source.DLNA) && hasMedia && durationMs > 0;
+        s.canSeek = (source == Source.MUSIC || source == Source.DLNA || source == Source.YOUTUBE) && hasMedia && durationMs > 0;
+        s.lyrics = lyrics;
+        s.lyricsKey = lyricsKey;
+        s.lyricsStatus = lyricsStatus;
         s.canSkip = source == Source.MUSIC && !queue.isEmpty();
         s.shuffle = queue.isShuffle();
         s.repeat = queue.getRepeat();
@@ -2576,6 +2841,9 @@ public final class SyncoraService extends Service {
         s.album = r.album;
         s.artKey = r.artKey;
         s.art = remoteArtLoadedKey.equals(r.artKey) ? remoteArt : null;
+        s.lyrics = connected && r.lyricsKey.equals(remoteLyricsKey) ? remoteLyrics : null;
+        s.lyricsKey = r.lyricsKey;
+        s.lyricsStatus = connected ? r.lyricsStatus : "";
         s.durationMs = r.durationMs;
         s.live = r.live;
         s.positionMs = connected ? remotePositionMs() : 0;
@@ -2658,6 +2926,9 @@ public final class SyncoraService extends Service {
         Json.put(o, "album", album);
         Json.put(o, "artKey", artKey);
         Json.put(o, "artReady", !artKey.isEmpty() && artStore.get(artKey) != null);
+        Json.put(o, "lyricsKey", lyricsKey);
+        Json.put(o, "lyricsReady", lyrics != null);
+        Json.put(o, "lyricsStatus", lyricsStatus);
         Json.put(o, "shuffle", s.shuffle);
         Json.put(o, "repeat", s.repeat.id);
         Json.put(o, "canSeek", s.canSeek);
@@ -2753,9 +3024,11 @@ public final class SyncoraService extends Service {
 
     private void updateNotification(SessionState s) {
         if (!foreground) return;
+        // The system media controls draw the seekbar from the media session: keep its position current.
+        notifier.refreshSession(s);
         String signature = s.title + '|' + s.subtitle + '|' + s.playing + '|' + s.artKey + '|' + (s.art != null) + '|'
                 + s.connection + '|' + s.canSkip + '|' + s.source + '|' + s.connectedSpeakers() + '|' + s.hasMedia + '|'
-                + s.connectionText;
+                + s.connectionText + '|' + s.durationMs + '|' + s.canSeek + '|' + s.buffering;
         if (signature.equals(lastNotificationSignature)) return;
         lastNotificationSignature = signature;
         notifier.update(s);
