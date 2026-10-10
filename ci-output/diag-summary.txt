@@ -1,5 +1,0 @@
-MUSIC   samples= 66 aligned= 98% maxErr=  386 ms medianErr=  0 ms maxQueued=7
-SPEAKER samples= 86 aligned= 96% maxErr= 3774 ms medianErr=  8 ms maxQueued=8
-DLNA    samples=  8 aligned= 87% maxErr=  412 ms medianErr=  0 ms maxQueued=7
-RADIO   samples= 20 aligned= 95% maxErr=  274 ms medianErr= 11 ms maxQueued=5
-MIC     samples= 10 aligned=  0% maxErr=    0 ms medianErr=  0 ms maxQueued=0
