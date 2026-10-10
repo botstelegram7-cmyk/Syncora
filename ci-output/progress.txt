@@ -1,0 +1,4 @@
+[+0s] installing apk/app-debug.apk
+[+1s] seeding music
+[+11s] MediaStore audio rows: 4
+[+12s] launching
