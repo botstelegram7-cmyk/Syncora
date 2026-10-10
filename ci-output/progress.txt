@@ -10,3 +10,4 @@
 [+156s] radio diagnostics lines: 18
 [+158s] microphone / aux capture
 [+165s] mic diagnostics lines: 8
+[+166s] collecting logs and checking for crashes
