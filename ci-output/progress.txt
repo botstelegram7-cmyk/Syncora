@@ -11,3 +11,7 @@
 [+158s] microphone / aux capture
 [+165s] mic diagnostics lines: 8
 [+166s] collecting logs and checking for crashes
+[+0s] installing apk/app-debug.apk
+[+3s] seeding music
+[+12s] MediaStore audio rows: 4
+[+13s] launching
