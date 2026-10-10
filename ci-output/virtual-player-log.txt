@@ -1,0 +1,30 @@
+[   0.0s] virtual player listening on 8787 (time port 51642), running 95 s
+[   3.6s] speaker connected: Android SDK built for x86_64 (5cdde9f8-4487-4cfc-a719-e16afe8eedc6)
+[   4.1s] hello: {'name': 'Android SDK built for x86_64', 'volume': 1, 'muted': False, 'channel': 'stereo', 'offsetMs': 0}
+[   4.5s] art requested: tvirtual0
+[  25.7s] sent SET volume 0.6 to the speaker
+[  26.3s] command from Android SDK built for x86_64: {'cmd': 'toggle'}
+[  27.7s] sent SET resync to the speaker
+[  29.9s] command from Android SDK built for x86_64: {'cmd': 'toggle'}
+[  33.9s] command from Android SDK built for x86_64: {'cmd': 'next'}
+[  34.2s] art requested: tvirtual1
+[  38.8s] command from Android SDK built for x86_64: {'cmd': 'seek', 'ms': 60000}
+[  95.0s] ---- verdict
+[  95.0s] PASS  the Android speaker connected to the virtual player
+[  95.0s] FAIL  the speaker stayed connected until the end of the test
+[  95.0s] PASS  the speaker measured the clock with UDP probes (52 probes)
+[  95.0s] PASS  HELLO announced the speaker's name ({'name': 'Android SDK built for x86_64', 'volume': 1, 'muted': False, 'channel': 'stereo', 'offsetMs': 0})
+[  95.0s] PASS  the speaker reports its state every second (90 reports)
+[  95.0s] reported statuses: ['buffering', 'resyncing', 'synced']
+[  95.0s] PASS  the speaker reported itself as synced
+[  95.0s] sync error after warm-up: median 7 ms, max 365 ms over 86 reports
+[  95.0s] PASS  median sync error is within 40 ms (7 ms)
+[  95.0s] PASS  the speaker applied the volume the player sent (reported volumes: [0.6, 1])
+[  95.0s] channels seen: ['left', 'stereo'], offsets seen: [0, 40]
+[  95.0s] PASS  the speaker reported the Left channel after it was selected
+[  95.0s] PASS  the speaker reported its +40 ms sync offset after it was set
+[  95.0s] PASS  the player received the speaker's 'toggle' command
+[  95.0s] PASS  the player received the speaker's 'next' command
+[  95.0s] PASS  the player received the speaker's 'seek' command
+[  95.0s] commands received: ['toggle', 'toggle', 'next', 'seek']
+FAILED CHECKS: 1
