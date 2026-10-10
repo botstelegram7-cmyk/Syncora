@@ -44,6 +44,7 @@ public final class SourcePage extends FrameLayout implements StateListener {
         titles.addView(titleView, Ui.lin(Ui.MATCH, Ui.WRAP));
         subtitleView = Ui.text(c, "", 13, Theme.muted, Ui.REGULAR);
         subtitleView.setSingleLine(true);
+        subtitleView.setEllipsize(android.text.TextUtils.TruncateAt.END);
         titles.addView(subtitleView, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 4, 0, 0));
         header.addView(titles, Ui.lin(0, Ui.WRAP, 1f));
         chip = Ui.pill(c, 0, "Source", Theme.surface2, Theme.text);

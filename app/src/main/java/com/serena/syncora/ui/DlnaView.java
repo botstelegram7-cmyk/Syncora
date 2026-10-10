@@ -38,7 +38,7 @@ final class DlnaView extends SourceView {
         column.addView(headline, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 6, 0, 0));
         detail = Ui.text(c, "", 14, Theme.muted, Ui.REGULAR);
         detail.setGravity(Gravity.CENTER);
-        detail.setLineSpacing(0, 1.15f);
+        detail.setLineSpacing(Ui.dpf(3), 1f);
         column.addView(detail, Ui.lin(Ui.MATCH, Ui.WRAP, 24, 8, 24, 0));
 
         castCard = new LinearLayout(c);
@@ -83,7 +83,7 @@ final class DlnaView extends SourceView {
             n.setBackground(Ui.oval(Theme.accent));
             line.addView(n, Ui.lin(Ui.dp(22), Ui.dp(22), 0, 1, 12, 0));
             TextView t = Ui.text(c, lines[i], 13, Theme.muted, Ui.REGULAR);
-            t.setLineSpacing(0, 1.15f);
+            t.setLineSpacing(Ui.dpf(3), 1f);
             line.addView(t, Ui.lin(0, Ui.WRAP, 1f));
             steps.addView(line, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, i == lines.length - 1 ? 0 : 10));
         }

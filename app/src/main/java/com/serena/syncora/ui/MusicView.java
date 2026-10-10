@@ -246,7 +246,7 @@ final class MusicView extends SourceView {
         TextView body = Ui.text(c, "Syncora lists the songs stored on this device so you can play them for every speaker in the room. "
                 + "Nothing is uploaded.", 13, Theme.muted, Ui.REGULAR);
         body.setGravity(Gravity.CENTER);
-        body.setLineSpacing(0, 1.15f);
+        body.setLineSpacing(Ui.dpf(3), 1f);
         card.addView(body, Ui.lin(Ui.WRAP, Ui.WRAP, 0, 8, 0, 18));
         TextView allow = Ui.primaryButton(c, "Allow access");
         allow.setOnClickListener(new OnClickListener() {

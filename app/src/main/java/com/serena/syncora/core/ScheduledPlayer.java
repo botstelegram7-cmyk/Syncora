@@ -65,7 +65,8 @@ public final class ScheduledPlayer {
     };
 
     private static final int MAX_QUEUE = 400;
-    private static final long BIG_ERROR_NANOS = 150_000_000L;
+    /** Misalignment that is always corrected at once, whatever the re-sync interval says. */
+    private static final long MIN_IMMEDIATE_ERROR_NANOS = 50_000_000L;
     private static final long IDLE_RELEASE_NANOS = 3_000_000_000L;
     private static final long REPORT_INTERVAL_NANOS = 500_000_000L;
     private static final int MAX_SILENCE_SECONDS = 3;
@@ -99,6 +100,8 @@ public final class ScheduledPlayer {
     private int openChannels = 2;
     private long shortsWritten;
     private boolean everAligned;
+    /** A correction is under way: keep going (across chunks) until the output is back within tolerance. */
+    private boolean correcting;
     private long lastCorrectionNanos;
     private long lastReportNanos;
     private final long[] ts = new long[2];
@@ -304,9 +307,11 @@ public final class ScheduledPlayer {
             boolean within = Math.abs(error) <= tolerance;
             aligned = within && lastTimestampValid;
             if (aligned) everAligned = true;
+            if (within) correcting = false;
             report(now, error);
 
             if (!within && mayCorrect(now, error)) {
+                correcting = true;
                 lastCorrectionNanos = now;
                 forceResync = false;
                 if (error > 0) {
@@ -329,9 +334,10 @@ public final class ScheduledPlayer {
     }
 
     private boolean mayCorrect(long now, long error) {
+        if (correcting) return true;
         if (!everAligned) return true;
         if (forceResync) return true;
-        if (Math.abs(error) > BIG_ERROR_NANOS) return true;
+        if (Math.abs(error) > Math.max(MIN_IMMEDIATE_ERROR_NANOS, toleranceNanos * 3)) return true;
         long interval = resyncIntervalNanos;
         return interval > 0 && now - lastCorrectionNanos >= interval;
     }
@@ -364,6 +370,7 @@ public final class ScheduledPlayer {
         openChannels = channels;
         shortsWritten = 0;
         everAligned = false;
+        correcting = false;
         lastTimestampValid = false;
         fadeIn = true;
         applyGain();
@@ -375,6 +382,7 @@ public final class ScheduledPlayer {
         started = false;
         shortsWritten = 0;
         everAligned = false;
+        correcting = false;
         aligned = false;
         lastTimestampValid = false;
         try {

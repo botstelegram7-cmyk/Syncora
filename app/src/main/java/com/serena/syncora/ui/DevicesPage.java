@@ -77,7 +77,7 @@ public final class DevicesPage extends FrameLayout implements StateListener {
         roomCard.addView(roomAddress, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 8, 0, 0));
         roomHint = Ui.text(c, "On another device open Syncora \u2192 Source \u2192 Speaker Mode. It finds this room automatically, "
                 + "or type the IP address above.", 12, Theme.muted, Ui.REGULAR);
-        roomHint.setLineSpacing(0, 1.15f);
+        roomHint.setLineSpacing(Ui.dpf(3), 1f);
         roomCard.addView(roomHint, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 10, 0, 0));
         LinearLayout actions = new LinearLayout(c);
         TextView copy = Ui.secondaryButton(c, "Copy IP");
@@ -144,7 +144,7 @@ public final class DevicesPage extends FrameLayout implements StateListener {
         connectionTitle = Ui.text(c, "", 22, Theme.text, Ui.BOLD);
         connectionCard.addView(connectionTitle, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 8, 0, 0));
         connectionDetail = Ui.text(c, "", 13, Theme.muted, Ui.REGULAR);
-        connectionDetail.setLineSpacing(0, 1.15f);
+        connectionDetail.setLineSpacing(Ui.dpf(3), 1f);
         connectionCard.addView(connectionDetail, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 6, 0, 0));
         connectionButton = Ui.secondaryButton(c, "Find players");
         connectionButton.setOnClickListener(new OnClickListener() {
@@ -239,7 +239,7 @@ public final class DevicesPage extends FrameLayout implements StateListener {
         if (lowLatency.isChecked() != s.lowLatency()) lowLatency.setChecked(s.lowLatency(), false);
         syncInfo.setText(s.lowLatency() ? "On \u2014 about " + s.lookaheadMs + " ms delay" : "Off \u2014 steady, buffered playback");
 
-        listLabel.setText(speaker ? "Devices in this room" : "Connected devices");
+        listLabel.setText((speaker ? "Devices in this room" : "Connected devices").toUpperCase(java.util.Locale.getDefault()));
         StringBuilder sig = new StringBuilder();
         for (SessionState.Device d : s.devices) {
             sig.append(d.id).append(d.name).append(d.status).append(d.channel).append(d.offsetMs).append(d.syncErrMs)
@@ -279,7 +279,7 @@ public final class DevicesPage extends FrameLayout implements StateListener {
 
             LinearLayout texts = new LinearLayout(c);
             texts.setOrientation(LinearLayout.VERTICAL);
-            TextView name = Ui.text(c, Sheets.deviceTitle(d) + (d.host ? " \u00B7 player" : ""), 15, Theme.text, Ui.BOLD);
+            TextView name = Ui.text(c, Sheets.deviceName(d), 15, Theme.text, Ui.BOLD);
             name.setSingleLine(true);
             name.setEllipsize(android.text.TextUtils.TruncateAt.END);
             texts.addView(name, Ui.lin(Ui.MATCH, Ui.WRAP));
@@ -288,7 +288,8 @@ public final class DevicesPage extends FrameLayout implements StateListener {
             View dot = new View(c);
             dot.setBackground(Ui.oval(Sheets.statusColor(d)));
             statusLine.addView(dot, Ui.lin(Ui.dp(7), Ui.dp(7), 0, 0, 7, 0));
-            TextView status = Ui.text(c, Sheets.statusText(d), 12, Theme.muted, Ui.REGULAR);
+            TextView status = Ui.text(c, Sheets.roleLabel(d) + " \u00B7 " + Sheets.statusText(d), 12, Theme.muted, Ui.REGULAR);
+            status.setSingleLine(true);
             statusLine.addView(status, Ui.lin(Ui.WRAP, Ui.WRAP));
             texts.addView(statusLine, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 4, 0, 0));
             String detail = (d.address.isEmpty() ? "" : d.address + " \u00B7 ") + ChannelMode.fromId(d.channel).label
