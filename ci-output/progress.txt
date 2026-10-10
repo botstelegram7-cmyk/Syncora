@@ -24,3 +24,5 @@ FAIL: speaker role checks failed
 [+228s] DLNA OK
 [+234s] internet radio
 [+252s] radio diagnostics lines: 19
+[+254s] microphone / aux capture
+[+262s] mic diagnostics lines: 8
