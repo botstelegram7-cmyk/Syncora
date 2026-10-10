@@ -13,7 +13,7 @@ fail() { echo "[smoke] FAIL: $*"; echo "FAIL: $*" >> "$OUT/progress.txt"; FAILED
 
 # Push what we have so far, so a later hang cannot hide earlier results.
 publish_partial() {
-  [ -n "${GITHUB_REF_NAME:-}" ] && [ "${GITHUB_EVENT_NAME:-}" = "push" ] || return 0
+  [ -n "${CI_SHOTS:-}" ] && [ -n "${GITHUB_REF_NAME:-}" ] && [ "${GITHUB_EVENT_NAME:-}" = "push" ] || return 0
   (
     git config user.name "syncora-ci" && git config user.email "ci@users.noreply.github.com" &&
     git add -f ci-output >/dev/null 2>&1 &&

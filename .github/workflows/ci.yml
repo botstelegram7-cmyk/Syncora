@@ -78,8 +78,10 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
+  # The emulator tour takes ~8 minutes: run it on demand ("[emulator]" in the commit message, or run the workflow by hand).
   emulator:
     needs: build
+    if: contains(github.event.head_commit.message, '[emulator]') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -100,6 +102,9 @@ jobs:
         run: python3 -c "import PIL" 2>/dev/null || pip install --quiet --break-system-packages pillow || pip install --quiet pillow
 
       - name: Run the app on an emulator
+        env:
+          # screenshots and logs are only committed back to the branch when the commit message contains "[ci-shots]"
+          CI_SHOTS: ${{ contains(github.event.head_commit.message, '[ci-shots]') && '1' || '' }}
         uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
           api-level: 34
@@ -111,7 +116,7 @@ jobs:
           script: timeout 1080 bash .github/scripts/emulator-smoke.sh apk/app-debug.apk
 
       - name: Publish screenshots and logs to the branch
-        if: always() && github.event_name == 'push'
+        if: always() && github.event_name == 'push' && contains(github.event.head_commit.message, '[ci-shots]')
         run: |
           if [ -d ci-output ]; then
             git config user.name "syncora-ci"
