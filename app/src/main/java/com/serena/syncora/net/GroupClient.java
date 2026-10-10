@@ -13,6 +13,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** A speaker's connection to a room's host. All callbacks run on the connection thread. */
 public final class GroupClient {
@@ -33,6 +35,8 @@ public final class GroupClient {
 
     private final Listener listener;
     private final Object writeLock = new Object();
+    /** Socket writes must never happen on the caller's (possibly main) thread. */
+    private final ExecutorService sender = Executors.newSingleThreadExecutor();
     private volatile boolean closedByUs;
     private volatile Socket socket;
     private volatile OutputStream out;
@@ -59,42 +63,58 @@ public final class GroupClient {
         return s != null && s.isConnected() && !s.isClosed() && !closedByUs;
     }
 
-    public boolean sendHello(String json) {
-        return send(FrameCodec.T_HELLO, json);
+    public void sendHello(String json) {
+        send(FrameCodec.T_HELLO, json);
     }
 
-    public boolean sendState(String json) {
-        return send(FrameCodec.T_CLIENT_STATE, json);
+    public void sendState(String json) {
+        send(FrameCodec.T_CLIENT_STATE, json);
     }
 
-    public boolean sendCommand(JSONObject command) {
-        return send(FrameCodec.T_COMMAND, command.toString());
+    public void sendCommand(JSONObject command) {
+        send(FrameCodec.T_COMMAND, command.toString());
     }
 
-    private boolean send(int type, String json) {
-        OutputStream o = out;
-        if (o == null || closedByUs) return false;
-        byte[] frame = FrameCodec.encodeText(type, json);
-        synchronized (writeLock) {
-            try {
-                o.write(frame);
-                o.flush();
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
+    private void send(int type, final String json) {
+        final int frameType = type;
+        try {
+            sender.execute(new Runnable() {
+                @Override
+                public void run() {
+                    OutputStream o = out;
+                    if (o == null || closedByUs) return;
+                    byte[] frame = FrameCodec.encodeText(frameType, json);
+                    synchronized (writeLock) {
+                        try {
+                            o.write(frame);
+                            o.flush();
+                        } catch (IOException ignored) {
+                            // the read side notices the broken connection
+                        }
+                    }
+                }
+            });
+        } catch (RuntimeException ignored) {
+            // already shut down
         }
     }
 
     public void close() {
         closedByUs = true;
-        Socket s = socket;
+        sender.shutdown();
+        final Socket s = socket;
         if (s != null) {
-            try {
-                s.close();
-            } catch (IOException ignored) {
-                // nothing to do
-            }
+            // closing from a helper thread keeps this safe to call from the UI thread
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        s.close();
+                    } catch (IOException ignored) {
+                        // nothing to do
+                    }
+                }
+            }, "syncora-client-close").start();
         }
     }
 
@@ -171,6 +191,7 @@ public final class GroupClient {
                 // nothing to do
             }
             out = null;
+            sender.shutdown();
             if (!closedByUs) listener.onClosed(reason, refused);
         }
     }
