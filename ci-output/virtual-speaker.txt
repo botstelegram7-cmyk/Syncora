@@ -1,7 +1,7 @@
-hello: {'app': 'Syncora', 'v': 2, 'code': 'SYNC-F7H8SS', 'name': 'Android SDK built for x86_64', 'title': 'Golden Hour', 'clients': 0}
+hello: {'app': 'Syncora', 'v': 2, 'code': 'SYNC-6HWLKR', 'name': 'Android SDK built for x86_64', 'title': 'Golden Hour', 'clients': 0}
 PASS  stream handshake answered 200
 PASS  WELCOME received
-welcome: {'v': 2, 'hostNanos': 107726501887, 'timePort': 54425, 'epoch': 1, 'audioMode': 'balanced', 'hostName': 'Android SDK built for x86_64', 'roomCode': 'SYNC-F7H8SS'}
+welcome: {'v': 2, 'hostNanos': 116724104729, 'timePort': 40357, 'epoch': 1, 'audioMode': 'balanced', 'hostName': 'Android SDK built for x86_64', 'roomCode': 'SYNC-6HWLKR'}
 PASS  WELCOME announces a UDP time port
 PASS  audio chunks are streaming (189 chunks in 7 s)
 PASS  stereo at a normal sample rate (44100 Hz)
@@ -21,7 +21,7 @@ PASS  the player is listed as the host device
 PASS  pause flushes the speakers
 PASS  state says paused
 PASS  no audio while paused
-PASS  audio resumes after play (80 chunks)
+PASS  audio resumes after play (79 chunks)
 PASS  resume starts a new timeline (flush)
 PASS  seek flushes the speakers
 after seek: anchorMs=8000

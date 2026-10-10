@@ -31,3 +31,5 @@ FAIL: speaker role checks failed
 [+1s] seeding music
 [+11s] MediaStore audio rows: 4
 [+12s] launching
+[+80s] virtual speaker (independent protocol client) against the player
+[+116s] virtual speaker OK
