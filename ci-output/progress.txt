@@ -26,3 +26,4 @@ FAIL: speaker role checks failed
 [+252s] radio diagnostics lines: 19
 [+254s] microphone / aux capture
 [+262s] mic diagnostics lines: 8
+[+263s] collecting logs and checking for crashes
