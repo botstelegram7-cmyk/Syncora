@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Syncora</string>
+    <string name="app_tagline">One Beat. Every Device.</string>
+    <string name="notification_channel">Syncora playback</string>
+    <string name="notification_playing">Syncora is keeping your room in sync</string>
+</resources>
