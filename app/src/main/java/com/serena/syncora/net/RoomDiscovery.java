@@ -176,10 +176,7 @@ public final class RoomDiscovery {
     private void replyWithLocalRoom(DatagramSocket socket, DatagramPacket request) {
         RoomInfo room = listener.localRoom();
         if (room == null) return;
-        String message = "SYNCORA_ROOM|2|" + room.code + "|" + room.port + "|"
-                + encode(room.name) + "|" + encode(room.title) + "|" + (room.playing ? 1 : 0) + "|" + room.clients + "|"
-                + encode(room.source);
-        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = buildRoomMessage(room).getBytes(StandardCharsets.UTF_8);
         try {
             socket.send(new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort()));
         } catch (IOException error) {
@@ -188,17 +185,33 @@ public final class RoomDiscovery {
     }
 
     private void parseRoom(String message, InetAddress address) {
+        String ip = address.getHostAddress();
+        if (ip == null || ip.isEmpty() || ip.contains(":")) return;
+        RoomInfo room = parseRoomMessage(message, ip);
+        if (room == null) return;
+        RoomInfo local = listener.localRoom();
+        if (local == null || !local.code.equalsIgnoreCase(room.code)) listener.onRoomFound(room);
+    }
+
+    /** {@code SYNCORA_ROOM|2|code|port|name|title|playing|clients|source} (free text is URL-encoded). */
+    static String buildRoomMessage(RoomInfo room) {
+        return "SYNCORA_ROOM|2|" + room.code + "|" + room.port + "|" + encode(room.name) + "|" + encode(room.title) + "|"
+                + (room.playing ? 1 : 0) + "|" + room.clients + "|" + encode(room.source);
+    }
+
+    /** Returns null when the message is not a valid version 2 room announcement. */
+    static RoomInfo parseRoomMessage(String message, String ip) {
+        if (message == null) return null;
         String[] parts = message.split("\\|", 9);
-        if (parts.length < 9 || !"2".equals(parts[1])) return;
+        if (parts.length < 9 || !"SYNCORA_ROOM".equals(parts[0]) || !"2".equals(parts[1])) return null;
         try {
-            int port = Integer.parseInt(parts[3]);
-            String ip = address.getHostAddress();
-            if (ip == null || ip.isEmpty() || ip.contains(":")) return;
-            RoomInfo room = new RoomInfo(parts[2].toUpperCase(Locale.US), ip, port, decode(parts[4]), decode(parts[5]),
+            int port = Integer.parseInt(parts[3].trim());
+            if (port < 1 || port > 65535) return null;
+            return new RoomInfo(parts[2].toUpperCase(Locale.US), ip, port, decode(parts[4]), decode(parts[5]),
                     "1".equals(parts[6]), Integer.parseInt(parts[7].trim()), decode(parts[8]));
-            RoomInfo local = listener.localRoom();
-            if (local == null || !local.code.equalsIgnoreCase(room.code)) listener.onRoomFound(room);
-        } catch (NumberFormatException ignored) { }
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private void acquireMulticastLock() {

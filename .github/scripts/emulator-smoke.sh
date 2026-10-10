@@ -95,6 +95,30 @@ if timeout 150 python3 .github/scripts/virtual_speaker.py 18787 "$OUT/virtual-sp
 shot 17_after_virtual_speaker
 publish_partial "virtual speaker"
 
+note "speaker role against an independent virtual player"
+(setsid nohup python3 .github/scripts/virtual_player.py 8787 "$OUT/virtual-player.txt" 95 toggle,next,seek > /tmp/virtual-player.log 2>&1 < /dev/null &)
+sleep 3
+launch --es source speaker --es connect 10.0.2.2:8787 --es tab player; sleep 14
+shot 22_speaker_connected_player
+launch --es tab source; sleep 2; shot 23_speaker_connected_page
+launch --es tab devices; sleep 2; shot 24_speaker_devices
+launch --es tab player --es sheet volume; sleep 2; shot 25_speaker_volume_sheet
+timeout 20 adb shell input keyevent KEYCODE_BACK; sleep 1
+launch --es cmd toggle; sleep 3; shot 26_speaker_paused_by_command
+launch --es cmd toggle; sleep 4
+launch --es cmd next; sleep 4; shot 27_speaker_next_song
+launch --es cmd seek; sleep 3
+launch --es cmd offset; sleep 2
+launch --es cmd left; sleep 2
+launch --es sheet audio; sleep 2; shot 28_speaker_audio_sheet
+timeout 20 adb shell input keyevent KEYCODE_BACK; sleep 1
+note "waiting for the virtual player to finish"
+for i in $(seq 1 45); do pgrep -f virtual_player.py >/dev/null || break; sleep 2; done
+if [ -f "$OUT/virtual-player.txt" ] && ! grep -q "^FAILED CHECKS: [1-9]" /tmp/virtual-player.log; then note "speaker role OK"; else fail "speaker role checks failed"; fi
+tail -n 40 /tmp/virtual-player.log | cut -c1-240
+cp /tmp/virtual-player.log "$OUT/virtual-player-log.txt" 2>/dev/null
+publish_partial "speaker role"
+
 note "DLNA casting from a file served by the runner"
 (cd /tmp/music && setsid nohup python3 -m http.server 9000 --bind 0.0.0.0 >/tmp/http.log 2>&1 < /dev/null &)
 sleep 1

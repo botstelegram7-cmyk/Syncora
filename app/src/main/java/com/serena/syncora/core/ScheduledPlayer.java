@@ -65,8 +65,8 @@ public final class ScheduledPlayer {
     };
 
     private static final int MAX_QUEUE = 400;
-    /** Misalignment that is always corrected at once, whatever the re-sync interval says. */
-    private static final long MIN_IMMEDIATE_ERROR_NANOS = 50_000_000L;
+    /** Misalignment that is always corrected at once, whatever the re-sync interval says (at least this, or 2x tolerance). */
+    private static final long MIN_IMMEDIATE_ERROR_NANOS = 30_000_000L;
     private static final long IDLE_RELEASE_NANOS = 3_000_000_000L;
     private static final long REPORT_INTERVAL_NANOS = 500_000_000L;
     private static final int MAX_SILENCE_SECONDS = 3;
@@ -337,7 +337,7 @@ public final class ScheduledPlayer {
         if (correcting) return true;
         if (!everAligned) return true;
         if (forceResync) return true;
-        if (Math.abs(error) > Math.max(MIN_IMMEDIATE_ERROR_NANOS, toleranceNanos * 3)) return true;
+        if (Math.abs(error) > Math.max(MIN_IMMEDIATE_ERROR_NANOS, toleranceNanos * 2)) return true;
         long interval = resyncIntervalNanos;
         return interval > 0 && now - lastCorrectionNanos >= interval;
     }

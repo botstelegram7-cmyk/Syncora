@@ -321,13 +321,13 @@ public class ScheduledPlayerTest {
 
     @Test
     public void smallErrorsAreLeftAloneUntilTheResyncInterval() throws Exception {
-        // A 30 ms slip is below the immediate threshold (max(50 ms, 3 x tolerance)), so it waits for the interval.
+        // A 25 ms slip is below the immediate threshold (max(30 ms, 2 x tolerance)), so it waits for the interval.
         Scenario s = new Scenario(0, 0, 450, 35, 35, 1.0, true, 10, 15);
         s.sink.stallAt = s.clock.now + 2_000 * MS;
-        s.sink.stallLen = 30 * MS;
+        s.sink.stallLen = 25 * MS;
         s.run(100, 0); // 4 s
         Result last = s.results.get(s.results.size() - 1);
-        assertTrue("error remains for now: " + last.error / MS + " ms", Math.abs(last.error) >= 20 * MS);
+        assertTrue("error remains for now: " + last.error / MS + " ms", Math.abs(last.error) >= 15 * MS);
     }
 
     @Test

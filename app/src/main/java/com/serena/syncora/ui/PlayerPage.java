@@ -408,7 +408,7 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         } else if (s.hasMedia && others > 0) {
             status = (others + 1) + " DEVICES" + syncSuffix(s) + (s.lowLatency() ? " \u00B7 LOW LATENCY" : "");
         } else if (s.hasMedia) {
-            status = "PLAYING ON THIS DEVICE";
+            status = s.playing ? "PLAYING ON THIS DEVICE" : "PAUSED";
         } else {
             status = "";
         }
