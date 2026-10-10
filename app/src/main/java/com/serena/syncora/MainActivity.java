@@ -667,6 +667,33 @@ public final class MainActivity extends Activity implements UiHost {
         }
     }
 
+    private void debugCommand(String command) {
+        SyncoraService s = service;
+        if (s == null) return;
+        switch (command) {
+            case "toggle":
+                s.togglePlay();
+                break;
+            case "next":
+                s.next();
+                break;
+            case "seek":
+                s.seekTo(60_000);
+                break;
+            case "volume":
+                s.setDeviceVolume(prefs.deviceId(), 0.35f);
+                break;
+            case "offset":
+                s.setDeviceOffset(prefs.deviceId(), 40);
+                break;
+            case "left":
+                s.setDeviceChannel(prefs.deviceId(), com.serena.syncora.core.ChannelMode.LEFT);
+                break;
+            default:
+                break;
+        }
+    }
+
     private boolean isDebuggable() {
         return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
@@ -682,12 +709,17 @@ public final class MainActivity extends Activity implements UiHost {
         final String sheet = intent.getStringExtra("sheet");
         final String theme = intent.getStringExtra("theme");
         final String play = intent.getStringExtra("play");
+        final String connect = intent.getStringExtra("connect");
+        final String cmd = intent.getStringExtra("cmd");
         if (theme != null && !theme.equals(prefs.theme())) {
             prefs.setTheme(theme);
             themeChanged();
         }
         if (sourceId != null && service != null) service.selectSource(Source.fromId(sourceId));
         if (play != null && service != null) debugPlay(play);
+        if (connect != null && service != null) service.connectByAddress(connect);
+        if (cmd != null && service != null) debugCommand(cmd);
+        if (intent.getBooleanExtra("monitor", false) && service != null) service.setMicMonitor(true);
         main.postDelayed(new Runnable() {
             @Override
             public void run() {

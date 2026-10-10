@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      # Arena session branch: pushing it publishes the release too (merging to main publishes the same version again)
+      - arena/13504b10-syncora
   workflow_dispatch:
 
 permissions:

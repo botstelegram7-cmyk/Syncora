@@ -50,7 +50,7 @@ final class SpeakerView extends SourceView {
         player.setGravity(Gravity.CENTER_HORIZONTAL);
         player.setPadding(Ui.dp(20), Ui.dp(18), Ui.dp(20), Ui.dp(18));
         player.setBackground(Ui.card(22));
-        player.addView(Ui.label(c, "Connected to player"), Ui.lin(Ui.WRAP, Ui.WRAP));
+        player.addView(Ui.label(c, "Player"), Ui.lin(Ui.WRAP, Ui.WRAP));
         appName = Ui.text(c, "Syncora Player", 24, Theme.text, Ui.BOLD);
         appName.setGravity(Gravity.CENTER);
         player.addView(appName, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 8, 0, 0));
@@ -60,7 +60,7 @@ final class SpeakerView extends SourceView {
         player.addView(statusPill, Ui.lin(Ui.WRAP, Ui.WRAP, 0, 12, 0, 0));
         detail = Ui.text(c, "", 13, Theme.muted, Ui.REGULAR);
         detail.setGravity(Gravity.CENTER);
-        detail.setLineSpacing(0, 1.15f);
+        detail.setLineSpacing(Ui.dpf(3), 1f);
         player.addView(detail, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 12, 0, 0));
         disconnect = Ui.secondaryButton(c, "Disconnect");
         disconnect.setOnClickListener(new OnClickListener() {
@@ -222,7 +222,7 @@ final class SpeakerView extends SourceView {
                 color = Theme.warn;
                 break;
             case SCANNING:
-                text = "Looking for players\u2026";
+                text = "Waiting for connection";
                 color = Theme.warn;
                 break;
             default:
@@ -235,7 +235,9 @@ final class SpeakerView extends SourceView {
         statusPill.setBackground(Ui.rect(Theme.alpha(color, 36), 16));
         detail.setText(connected
                 ? (s.hasMedia ? "Now playing: " + s.title : "Nothing is playing yet \u2014 start a song on the player.")
-                : (s.connectionText.isEmpty() ? "Open Syncora on the other device, pick a song and this speaker will join." : s.connectionText));
+                : (s.connection == SessionState.Connection.SCANNING || s.connectionText.isEmpty() || s.connectionText.startsWith("Waiting")
+                ? "Open Syncora on the other device and start a song \u2014 this speaker joins automatically."
+                : s.connectionText));
         disconnect.setVisibility(connected ? VISIBLE : GONE);
         ipValue.setText(host.prefs().connectIp().isEmpty() ? "Not set" : host.prefs().connectIp());
         if (autoConnect.isChecked() != s.autoConnect) autoConnect.setChecked(s.autoConnect, false);

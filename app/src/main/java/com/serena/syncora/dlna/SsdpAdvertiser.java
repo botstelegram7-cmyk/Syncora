@@ -122,19 +122,30 @@ public final class SsdpAdvertiser {
         try {
             InetAddress group = InetAddress.getByName(GROUP);
             for (String[] t : targets()) {
-                StringBuilder m = new StringBuilder();
-                m.append("NOTIFY * HTTP/1.1\r\nHOST: ").append(GROUP).append(':').append(PORT).append("\r\n");
-                if ("ssdp:alive".equals(nts)) {
-                    m.append("CACHE-CONTROL: max-age=1800\r\nLOCATION: ").append(location).append("\r\n");
-                }
-                m.append("NT: ").append(t[0]).append("\r\nNTS: ").append(nts).append("\r\nSERVER: ").append(SERVER)
-                        .append("\r\nUSN: ").append(t[1]).append("\r\n\r\n");
-                byte[] bytes = m.toString().getBytes(UTF8);
+                byte[] bytes = notifyMessage(nts, location, t[0], t[1]).getBytes(UTF8);
                 s.send(new DatagramPacket(bytes, bytes.length, group, PORT));
             }
         } catch (IOException ignored) {
             // network may be changing
         }
+    }
+
+    /** One NOTIFY advertisement ({@code ssdp:alive} or {@code ssdp:byebye}). */
+    static String notifyMessage(String nts, String location, String nt, String usn) {
+        StringBuilder m = new StringBuilder();
+        m.append("NOTIFY * HTTP/1.1\r\nHOST: ").append(GROUP).append(':').append(PORT).append("\r\n");
+        if ("ssdp:alive".equals(nts)) {
+            m.append("CACHE-CONTROL: max-age=1800\r\nLOCATION: ").append(location).append("\r\n");
+        }
+        m.append("NT: ").append(nt).append("\r\nNTS: ").append(nts).append("\r\nSERVER: ").append(SERVER)
+                .append("\r\nUSN: ").append(usn).append("\r\n\r\n");
+        return m.toString();
+    }
+
+    /** The unicast answer to an M-SEARCH. */
+    static String searchResponse(String location, String st, String usn, String httpDate) {
+        return "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nDATE: " + httpDate + "\r\nEXT:\r\nLOCATION: " + location
+                + "\r\nSERVER: " + SERVER + "\r\nST: " + st + "\r\nUSN: " + usn + "\r\n\r\n";
     }
 
     private void listen(MulticastSocket s) {
@@ -178,10 +189,7 @@ public final class SsdpAdvertiser {
                         if (s == null) return;
                         SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
                         format.setTimeZone(TimeZone.getTimeZone("GMT"));
-                        String m = "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nDATE: " + format.format(new Date())
-                                + "\r\nEXT:\r\nLOCATION: " + location + "\r\nSERVER: " + SERVER + "\r\nST: " + target[0]
-                                + "\r\nUSN: " + target[1] + "\r\n\r\n";
-                        byte[] bytes = m.getBytes(UTF8);
+                        byte[] bytes = searchResponse(location, target[0], target[1], format.format(new Date())).getBytes(UTF8);
                         try {
                             s.send(new DatagramPacket(bytes, bytes.length, address, port));
                         } catch (IOException ignored) {

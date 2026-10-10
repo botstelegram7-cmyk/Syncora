@@ -80,7 +80,7 @@ final class MicView extends SourceView {
         column.addView(bigLabel, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 16, 0, 0));
         hint = Ui.text(c, "", 13, Theme.muted, Ui.REGULAR);
         hint.setGravity(Gravity.CENTER);
-        hint.setLineSpacing(0, 1.15f);
+        hint.setLineSpacing(Ui.dpf(3), 1f);
         column.addView(hint, Ui.lin(Ui.MATCH, Ui.WRAP, 20, 6, 20, 0));
 
         level = new LevelView(c);

@@ -54,6 +54,16 @@ public final class Prefs {
         return id;
     }
 
+    /** The room ID this device uses whenever it is the player; stable so speakers can reconnect after a restart. */
+    public synchronized String roomCode() {
+        String code = sp.getString("roomCode", null);
+        if (code == null || !code.matches("SYNC-[A-Z2-9]{6}")) {
+            code = com.serena.syncora.net.NetUtil.createRoomCode();
+            sp.edit().putString("roomCode", code).apply();
+        }
+        return code;
+    }
+
     public String deviceName() {
         String saved = sp.getString("deviceName", "");
         if (saved != null && !saved.trim().isEmpty()) return saved.trim();

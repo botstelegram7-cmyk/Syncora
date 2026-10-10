@@ -69,8 +69,11 @@ gradle testDebugUnitTest      # sync engine, wire format, network, DLNA and radi
 ```
 
 The app has no third-party runtime dependencies. Releases are built by `.github/workflows/android-release.yml`
-(on every push to `main`, or manually) and published to GitHub Releases. `.github/workflows/ci.yml` builds, runs the
-tests and drives the app on an emulator for UI smoke checks.
+(on every push to `main`, or manually) and published to GitHub Releases. `.github/workflows/ci.yml` builds and runs the
+unit tests on every push to an `arena/**` branch; put `[emulator]` in a commit message (or run the workflow by hand) to
+also drive the app on an Android emulator: UI tour with screenshots, an independent protocol client talking to the
+player, an independent player talking to the speaker role, DLNA casting, radio and microphone checks
+(`.github/scripts/`). Add `[ci-shots]` as well to have the screenshots and logs committed back to the branch.
 
 APKs are signed with the repository's **sideload key** (`signing/`), so each release updates the previous one in place.
 The key is public by design — fine for sideloading, never for a store. See `signing/README.md` to use your own key.

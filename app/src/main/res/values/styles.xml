@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:windowBackground">@color/window_background</item>
@@ -9,7 +9,7 @@
         <item name="android:colorAccent">@color/accent_default</item>
         <item name="android:colorControlActivated">@color/accent_default</item>
         <item name="android:textColorHighlight">#55C9F66B</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="27">shortEdges</item>
     </style>
 
     <style name="SheetAnimation">

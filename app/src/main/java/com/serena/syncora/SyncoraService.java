@@ -1110,7 +1110,7 @@ public final class SyncoraService extends Service {
     private void ensureRoom() {
         if (roomOpen || source == Source.SPEAKER || destroyed) return;
         roomOpen = true;
-        if (roomCode.isEmpty()) roomCode = NetUtil.createRoomCode();
+        if (roomCode.isEmpty()) roomCode = prefs.roomCode();
         String ip = NetUtil.findLocalIp();
         roomIp = ip == null ? "" : ip;
         host = new GroupHost(hostListener);
@@ -1351,6 +1351,10 @@ public final class SyncoraService extends Service {
                 + ", flush=" + flush + ", lookahead=" + lookaheadMs(live) + " ms)");
         stopPump();
         ensurePlayer();
+        // As the player, the timeline is this device's own clock: forget any offset left over from speaker mode.
+        player.setClockOffsetNanos(0);
+        player.setClockReady(true);
+        lastSyncErrorNanos = 0;
         if (flush) newEpoch();
         liveSource = live;
         anchorMediaMs = startMs;
@@ -1978,7 +1982,11 @@ public final class SyncoraService extends Service {
         connectionText = "";
         applyLocalOutput();
         epoch = 0;
-        if (player != null) player.flush(0);
+        if (player != null) {
+            player.flush(0);
+            player.setClockOffsetNanos(0);
+            player.setClockReady(true);
+        }
     }
 
     private void setConnection(SessionState.Connection c, String text) {
@@ -2040,6 +2048,8 @@ public final class SyncoraService extends Service {
         remoteArtRequestedKey = "";
         setConnection(SessionState.Connection.CONNECTING, "Connecting to " + ip + "\u2026");
         ensurePlayer();
+        player.setClockReady(false); // audio waits until this device knows the player's clock
+        lastSyncErrorNanos = 0;
         final GroupClient c = new GroupClient(clientListener(++connectGeneration));
         client = c;
         c.connect(ip, port, remoteCode, prefs.deviceId(), prefs.deviceName());
@@ -2400,7 +2410,8 @@ public final class SyncoraService extends Service {
     /** One line per second in debuggable builds; the emulator checks read these. */
     private void logDiagnostics() {
         GroupHost h = host;
-        android.util.Log.i("SyncoraDiag", "src=" + source + " playing=" + playing + " pos=" + (source == Source.SPEAKER ? remotePositionMs() : hostPositionMs())
+        boolean isPlaying = source == Source.SPEAKER ? remote.playing : playing;
+        android.util.Log.i("SyncoraDiag", "src=" + source + " playing=" + isPlaying + " pos=" + (source == Source.SPEAKER ? remotePositionMs() : hostPositionMs())
                 + " epoch=" + epoch + " clients=" + (h == null ? 0 : h.clientCount()) + " syncErrMs=" + (lastSyncErrorNanos / 1_000_000L)
                 + " aligned=" + (player != null && player.isAligned()) + " queuedChunks=" + (player == null ? -1 : player.queuedChunks())
                 + " conn=" + connection + " room=" + roomPort);

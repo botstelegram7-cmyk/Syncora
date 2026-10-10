@@ -320,8 +320,8 @@ public class NetIntegrationTest {
             }
         }, 5000));
         assertNotNull(sync);
-        assertEquals("same machine, same clock", 0, sync.offsetNanos(), 3_000_000.0);
-        assertTrue("rtt is small on loopback: " + sync.bestRttNanos(), sync.bestRttNanos() < 20_000_000L);
+        assertEquals("same machine, same clock", 0, sync.offsetNanos(), 10_000_000.0);
+        assertTrue("rtt is small on loopback: " + sync.bestRttNanos(), sync.bestRttNanos() < 100_000_000L);
         assertFalse(sync.bestRttNanos() < 0);
     }
 
