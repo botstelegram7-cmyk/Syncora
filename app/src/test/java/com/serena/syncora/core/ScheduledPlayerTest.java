@@ -58,6 +58,9 @@ public class ScheduledPlayerTest {
         final List<Write> writes = new ArrayList<>();
         final List<short[]> audioBlocks = new ArrayList<>();
         float gain = 1f;
+        /** From this virtual time on the hardware stops consuming for stallLen (e.g. a starved audio thread). */
+        long stallAt = Long.MAX_VALUE;
+        long stallLen;
 
         SimSink(SimClock clock, int capacityFrames, long hwLatencyNanos, long fallbackLatencyNanos, double rateScale,
                 boolean timestamps) {
@@ -69,9 +72,13 @@ public class ScheduledPlayerTest {
             this.timestamps = timestamps;
         }
 
+        private long effective(long now) {
+            return now - Math.min(Math.max(0, now - stallAt), stallLen);
+        }
+
         private long consumed() {
             if (!started) return 0;
-            long c = (long) ((clock.now - startNanos) * (double) rate * rateScale / 1e9);
+            long c = (long) ((effective(clock.now) - startNanos) * (double) rate * rateScale / 1e9);
             return Math.min(c, writtenShorts / channels);
         }
 
@@ -117,12 +124,12 @@ public class ScheduledPlayerTest {
         @Override
         public boolean timestamp(long[] out) {
             if (!timestamps || !started) return false;
-            long quantized = (clock.now / (20 * MS)) * (20 * MS);
+            long quantized = (effective(clock.now) / (20 * MS)) * (20 * MS);
             long since = quantized - startNanos - hwLatencyNanos;
             if (since < 0) return false;
             long frames = Math.min((long) (since * (double) rate * rateScale / 1e9), writtenShorts / channels);
             out[0] = frames;
-            out[1] = quantized;
+            out[1] = quantized + (effective(clock.now) == clock.now ? 0 : clock.now - effective(clock.now));
             return true;
         }
 
@@ -154,7 +161,8 @@ public class ScheduledPlayerTest {
 
         /** Local time at which sink frame {@code frame} comes out of the speaker. */
         long renderTime(long frame) {
-            return startNanos + hwLatencyNanos + (long) (frame * 1e9 / (rate * rateScale));
+            long nominal = startNanos + hwLatencyNanos + (long) (frame * 1e9 / (rate * rateScale));
+            return nominal >= stallAt ? nominal + stallLen : nominal;
         }
     }
 
@@ -284,6 +292,42 @@ public class ScheduledPlayerTest {
             if (r.played) worst = Math.max(worst, Math.abs(r.error));
         }
         assertTrue("drift stays bounded, worst was " + worst / MS + " ms", worst <= 30 * MS);
+    }
+
+
+    @Test
+    public void aStalledOutputIsCorrectedAtOnceAcrossSeveralChunks() throws Exception {
+        // 15 s re-sync interval, yet a 140 ms hiccup must not be left to ring for the next 15 seconds.
+        Scenario s = new Scenario(0, 0, 450, 35, 35, 1.0, true, 20, 15);
+        s.sink.stallAt = s.clock.now + 2_000 * MS;
+        s.sink.stallLen = 140 * MS;
+        s.run(120, 0); // 4.8 s of audio, the stall hits after 2 s
+        // find the chunks that were written late and make sure the error is gone again a few chunks later
+        long worst = 0;
+        int worstIndex = -1;
+        for (int i = 20; i < s.results.size(); i++) {
+            Result r = s.results.get(i);
+            if (r.played && Math.abs(r.error) > worst) {
+                worst = Math.abs(r.error);
+                worstIndex = i;
+            }
+        }
+        assertTrue("the stall was noticed (worst error " + worst / MS + " ms)", worst > 60 * MS);
+        for (int i = worstIndex + 12; i < s.results.size(); i++) {
+            Result r = s.results.get(i);
+            assertTrue("chunk " + i + " is back in sync, error " + r.error / MS + " ms", r.played && Math.abs(r.error) <= 25 * MS);
+        }
+    }
+
+    @Test
+    public void smallErrorsAreLeftAloneUntilTheResyncInterval() throws Exception {
+        // A 25 ms slip is below the immediate threshold (max(30 ms, 2 x tolerance)), so it waits for the interval.
+        Scenario s = new Scenario(0, 0, 450, 35, 35, 1.0, true, 10, 15);
+        s.sink.stallAt = s.clock.now + 2_000 * MS;
+        s.sink.stallLen = 25 * MS;
+        s.run(100, 0); // 4 s
+        Result last = s.results.get(s.results.size() - 1);
+        assertTrue("error remains for now: " + last.error / MS + " ms", Math.abs(last.error) >= 15 * MS);
     }
 
     @Test

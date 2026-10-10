@@ -65,7 +65,8 @@ public final class ScheduledPlayer {
     };
 
     private static final int MAX_QUEUE = 400;
-    private static final long BIG_ERROR_NANOS = 150_000_000L;
+    /** Misalignment that is always corrected at once, whatever the re-sync interval says (at least this, or 2x tolerance). */
+    private static final long MIN_IMMEDIATE_ERROR_NANOS = 30_000_000L;
     private static final long IDLE_RELEASE_NANOS = 3_000_000_000L;
     private static final long REPORT_INTERVAL_NANOS = 500_000_000L;
     private static final int MAX_SILENCE_SECONDS = 3;
@@ -99,12 +100,15 @@ public final class ScheduledPlayer {
     private int openChannels = 2;
     private long shortsWritten;
     private boolean everAligned;
+    /** A correction is under way: keep going (across chunks) until the output is back within tolerance. */
+    private boolean correcting;
     private long lastCorrectionNanos;
     private long lastReportNanos;
     private final long[] ts = new long[2];
     private short[] scratch = new short[4096];
     private short[] silence = new short[0];
     private boolean lastTimestampValid;
+    private long lastErrorReportNanos;
     private Thread thread;
 
     public ScheduledPlayer(Sink sink, Clock clock, Listener listener) {
@@ -259,8 +263,13 @@ public final class ScheduledPlayer {
                 try {
                     handle(chunk);
                 } catch (IOException e) {
-                    if (listener != null) listener.onSinkError(String.valueOf(e.getMessage()));
+                    long failedAt = clock.nanoTime();
+                    if (listener != null && failedAt - lastErrorReportNanos > 5_000_000_000L) {
+                        lastErrorReportNanos = failedAt;
+                        listener.onSinkError(String.valueOf(e.getMessage()));
+                    }
                     releaseSink();
+                    clock.sleepNanos(250_000_000L); // do not hammer a broken output on every chunk
                 }
             }
         } catch (InterruptedException ignored) {
@@ -302,11 +311,15 @@ public final class ScheduledPlayer {
             long tolerance = lastTimestampValid ? toleranceNanos : toleranceNanos * 3;
             lastErrorNanos = error;
             boolean within = Math.abs(error) <= tolerance;
-            aligned = within && lastTimestampValid;
-            if (aligned) everAligned = true;
+            // "aligned" (shown in the UI) means inside the bound that is always enforced; the stricter tolerance only
+            // decides when a correction is allowed.
+            aligned = Math.abs(error) <= Math.max(MIN_IMMEDIATE_ERROR_NANOS, toleranceNanos * 2) && lastTimestampValid;
+            if (within && lastTimestampValid) everAligned = true;
+            if (within) correcting = false;
             report(now, error);
 
             if (!within && mayCorrect(now, error)) {
+                correcting = true;
                 lastCorrectionNanos = now;
                 forceResync = false;
                 if (error > 0) {
@@ -329,9 +342,10 @@ public final class ScheduledPlayer {
     }
 
     private boolean mayCorrect(long now, long error) {
+        if (correcting) return true;
         if (!everAligned) return true;
         if (forceResync) return true;
-        if (Math.abs(error) > BIG_ERROR_NANOS) return true;
+        if (Math.abs(error) > Math.max(MIN_IMMEDIATE_ERROR_NANOS, toleranceNanos * 2)) return true;
         long interval = resyncIntervalNanos;
         return interval > 0 && now - lastCorrectionNanos >= interval;
     }
@@ -364,6 +378,7 @@ public final class ScheduledPlayer {
         openChannels = channels;
         shortsWritten = 0;
         everAligned = false;
+        correcting = false;
         lastTimestampValid = false;
         fadeIn = true;
         applyGain();
@@ -375,6 +390,7 @@ public final class ScheduledPlayer {
         started = false;
         shortsWritten = 0;
         everAligned = false;
+        correcting = false;
         aligned = false;
         lastTimestampValid = false;
         try {
@@ -439,8 +455,10 @@ public final class ScheduledPlayer {
                     sink.start();
                     started = true;
                 }
-                if (++stalls > 1500) throw new IOException("audio output stalled");
-                clock.sleepNanos(4_000_000L);
+                if (++stalls > 800) throw new IOException("audio output stalled");
+                // The output buffer is full: wait for roughly a quarter of what is left to write (4-12 ms) instead of spinning.
+                long left = framesToNanos(length / Math.max(1, openChannels), openRate) / 4;
+                clock.sleepNanos(Math.max(4_000_000L, Math.min(12_000_000L, left)));
             }
         }
         return true;

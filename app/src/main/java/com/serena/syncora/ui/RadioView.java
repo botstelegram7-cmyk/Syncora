@@ -277,7 +277,7 @@ final class RadioView extends SourceView {
     @Override
     String subtitle(SessionState s) {
         if (s.hasMedia && s.source == Source.RADIO) return "Now playing: " + s.stationName;
-        return "Stations stream through this device to every speaker";
+        return "Streamed once, heard on every speaker";
     }
 
     @Override

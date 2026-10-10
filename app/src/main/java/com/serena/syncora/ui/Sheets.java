@@ -84,6 +84,16 @@ public final class Sheets {
         return d.self ? name + " (this device)" : name;
     }
 
+    static String deviceName(SessionState.Device d) {
+        return d.name.isEmpty() ? "Device" : d.name;
+    }
+
+    /** "This device", "Player" or "Speaker". */
+    static String roleLabel(SessionState.Device d) {
+        if (d.self) return "This device";
+        return d.host ? "Player" : "Speaker";
+    }
+
     // ---------------------------------------------------------------- generic rows
 
     private static LinearLayout optionRow(Context c, int iconRes, String title, String subtitle, boolean selected) {
@@ -198,6 +208,7 @@ public final class Sheets {
         ImageView mute;
         boolean dragging;
         String id;
+        String role = "";
     }
 
     public static void volume(final UiHost host) {
@@ -277,10 +288,13 @@ public final class Sheets {
                             Ui.lin(Ui.dp(40), Ui.dp(40), 0, 0, 12, 0));
                     LinearLayout names = new LinearLayout(c);
                     names.setOrientation(LinearLayout.VERTICAL);
-                    TextView name = Ui.text(c, deviceTitle(d), 15, Theme.text, Ui.BOLD);
+                    TextView name = Ui.text(c, deviceName(d), 15, Theme.text, Ui.BOLD);
                     name.setSingleLine(true);
+                    name.setEllipsize(android.text.TextUtils.TruncateAt.END);
                     names.addView(name, Ui.lin(Ui.MATCH, Ui.WRAP));
                     row.status = Ui.text(c, "", 12, Theme.good, Ui.REGULAR);
+                    row.status.setSingleLine(true);
+                    row.role = roleLabel(d);
                     names.addView(row.status, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 3, 0, 0));
                     head.addView(names, Ui.lin(0, Ui.WRAP, 1f));
                     row.mute = Ui.iconButton(c, R.drawable.ic_volume, 44, 22, Theme.text, "Mute " + d.name);
@@ -382,7 +396,7 @@ public final class Sheets {
                     row.bar.setEnabled(!d.muted);
                     row.mute.setImageResource(d.muted ? R.drawable.ic_volume_off : R.drawable.ic_volume);
                     row.mute.setColorFilter(d.muted ? Theme.danger : Theme.text);
-                    row.status.setText(statusText(d));
+                    row.status.setText(row.role + " \u00B7 " + statusText(d));
                     row.status.setTextColor(statusColor(d));
                 }
                 if (master != null && !masterDragging && count > 0) master.setProgress(sum / count);
@@ -557,7 +571,7 @@ public final class Sheets {
                 body.addView(channels, Ui.lin(Ui.MATCH, Ui.WRAP));
                 TextView tip = Ui.text(c, "Use Left on one phone and Right on another to make a stereo pair. Mono mixes both channels together.",
                         12, Theme.muted, Ui.REGULAR);
-                tip.setLineSpacing(0, 1.15f);
+                tip.setLineSpacing(Ui.dpf(3), 1f);
                 body.addView(tip, Ui.lin(Ui.MATCH, Ui.WRAP, 2, 10, 2, 0));
             }
 

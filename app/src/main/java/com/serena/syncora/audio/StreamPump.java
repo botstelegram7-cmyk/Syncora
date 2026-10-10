@@ -71,7 +71,7 @@ public final class StreamPump {
             @Override
             public void run() {
                 try {
-                    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+                    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO);
                 } catch (Throwable ignored) {
                     // not on Android (unit tests)
                 }

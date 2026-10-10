@@ -383,12 +383,12 @@ public final class PlayerPage extends FrameLayout implements StateListener {
                     subtitle = "Start the input in the Mic tab";
                     break;
                 case SPEAKER:
-                    title = speakerConnected ? "Waiting for the player" : "Syncora Player";
-                    subtitle = speakerConnected ? "Nothing is playing yet" : (s.connectionText.isEmpty() ? "Waiting for connection" : s.connectionText);
+                    title = speakerConnected ? (s.hostName.isEmpty() ? "Syncora Player" : s.hostName) : "Syncora Player";
+                    subtitle = speakerConnected ? "Nothing is playing yet" : "Waiting for connection";
                     break;
                 default:
                     title = "Your music";
-                    subtitle = "Open My Music and pick a song";
+                    subtitle = "Open Library and pick a song";
                     break;
             }
         }
@@ -401,14 +401,14 @@ public final class PlayerPage extends FrameLayout implements StateListener {
             if (speakerConnected) {
                 status = "SPEAKER \u00B7 " + (s.hostName.isEmpty() ? "PLAYER" : s.hostName.toUpperCase()) + (s.playing ? syncSuffix(s) : "");
             } else {
-                status = s.connectionText.toUpperCase();
+                status = s.connection == SessionState.Connection.CONNECTING ? s.connectionText.toUpperCase() : "LOOKING FOR PLAYERS ON THIS WI-FI";
             }
         } else if (src == Source.RADIO && !s.stationStatus.isEmpty() && s.hasMedia) {
             status = s.stationStatus.toUpperCase();
         } else if (s.hasMedia && others > 0) {
             status = (others + 1) + " DEVICES" + syncSuffix(s) + (s.lowLatency() ? " \u00B7 LOW LATENCY" : "");
         } else if (s.hasMedia) {
-            status = "PLAYING ON THIS DEVICE";
+            status = s.playing ? "PLAYING ON THIS DEVICE" : "PAUSED";
         } else {
             status = "";
         }

@@ -46,24 +46,28 @@ public final class AudioTrackSink implements ScheduledPlayer.Sink {
                 .setSampleRate(sampleRate)
                 .setChannelMask(mask)
                 .build();
-        AudioTrack created;
+        AudioTrack created = build(attributes, format, size, lowLatency);
+        if (created == null && lowLatency) created = build(attributes, format, size, false); // not every device offers the fast path
+        if (created == null) throw new IOException("Could not open the audio output");
+        created.setVolume(gain);
+        track = created;
+    }
+
+    private static AudioTrack build(AudioAttributes attributes, AudioFormat format, int size, boolean fast) {
         try {
-            created = new AudioTrack.Builder()
+            AudioTrack t = new AudioTrack.Builder()
                     .setAudioAttributes(attributes)
                     .setAudioFormat(format)
                     .setBufferSizeInBytes(size)
                     .setTransferMode(AudioTrack.MODE_STREAM)
-                    .setPerformanceMode(lowLatency ? AudioTrack.PERFORMANCE_MODE_LOW_LATENCY : AudioTrack.PERFORMANCE_MODE_NONE)
+                    .setPerformanceMode(fast ? AudioTrack.PERFORMANCE_MODE_LOW_LATENCY : AudioTrack.PERFORMANCE_MODE_NONE)
                     .build();
-        } catch (RuntimeException e) {
-            throw new IOException("Could not open the audio output: " + e.getMessage(), e);
+            if (t.getState() == AudioTrack.STATE_INITIALIZED) return t;
+            t.release();
+        } catch (RuntimeException ignored) {
+            // fall through: the caller tries the next option
         }
-        if (created.getState() != AudioTrack.STATE_INITIALIZED) {
-            created.release();
-            throw new IOException("Audio output failed to initialise");
-        }
-        created.setVolume(gain);
-        track = created;
+        return null;
     }
 
     @Override
