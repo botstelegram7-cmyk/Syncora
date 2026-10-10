@@ -117,6 +117,7 @@ public final class SyncoraService extends Service {
     private WifiManager.WifiLock wifiLock;
     private boolean noisyRegistered;
     private boolean destroyed;
+    private boolean debuggable;
     private boolean restored;
     private boolean foreground;
     private int uiCount;
@@ -260,6 +261,7 @@ public final class SyncoraService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        debuggable = (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         prefs = new Prefs(this);
         queue.setShuffle(prefs.shuffle());
         queue.setRepeat(prefs.repeat());
@@ -904,6 +906,7 @@ public final class SyncoraService extends Service {
 
             @Override
             public void onSinkError(final String message) {
+                android.util.Log.w("Syncora", "audio output error: " + message);
                 main.post(new Runnable() {
                     @Override
                     public void run() {
@@ -1344,6 +1347,8 @@ public final class SyncoraService extends Service {
     }
 
     private void startPump(PcmSource src, long startMs, boolean live, long chainedAnchor, boolean flush) {
+        android.util.Log.i("Syncora", "start " + src.getClass().getSimpleName() + " at " + startMs + " ms (live=" + live
+                + ", flush=" + flush + ", lookahead=" + lookaheadMs(live) + " ms)");
         stopPump();
         ensurePlayer();
         if (flush) newEpoch();
@@ -1443,6 +1448,7 @@ public final class SyncoraService extends Service {
     }
 
     private void onPumpError(String problem) {
+        android.util.Log.w("Syncora", "source error (" + source + "): " + problem);
         stopPump();
         switch (source) {
             case MUSIC: {
@@ -2205,6 +2211,7 @@ public final class SyncoraService extends Service {
     }
 
     private void onSpeakerClosed(String reason, boolean refused) {
+        android.util.Log.i("Syncora", "speaker connection closed: " + reason + " (refused=" + refused + ")");
         disconnectClient();
         remote.playing = false;
         if (refused) {
@@ -2385,9 +2392,19 @@ public final class SyncoraService extends Service {
                 roomIp = ip == null ? "" : ip;
             }
             if (uiCount > 0 || foreground) publish();
+            if (debuggable && (playing || micOn || connection == SessionState.Connection.CONNECTED)) logDiagnostics();
             main.postDelayed(this, TICK_MS);
         }
     };
+
+    /** One line per second in debuggable builds; the emulator checks read these. */
+    private void logDiagnostics() {
+        GroupHost h = host;
+        android.util.Log.i("SyncoraDiag", "src=" + source + " playing=" + playing + " pos=" + (source == Source.SPEAKER ? remotePositionMs() : hostPositionMs())
+                + " epoch=" + epoch + " clients=" + (h == null ? 0 : h.clientCount()) + " syncErrMs=" + (lastSyncErrorNanos / 1_000_000L)
+                + " aligned=" + (player != null && player.isAligned()) + " queuedChunks=" + (player == null ? -1 : player.queuedChunks())
+                + " conn=" + connection + " room=" + roomPort);
+    }
 
     private void pruneRooms() {
         long now = System.currentTimeMillis();

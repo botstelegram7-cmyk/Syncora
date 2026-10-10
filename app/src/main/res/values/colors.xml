@@ -1,3 +1,5 @@
 <resources>
     <color name="icon_background">#101715</color>
+    <color name="window_background">#0A0F0E</color>
+    <color name="accent_default">#C9F66B</color>
 </resources>

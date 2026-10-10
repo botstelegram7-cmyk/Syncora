@@ -3,15 +3,20 @@ name: Android build and release
 on:
   push:
     branches:
-      - arena/29675cba-syncora
+      - main
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out source
         uses: actions/checkout@v6.0.1
@@ -35,29 +40,79 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build installable debug APK
-        run: gradle --no-daemon assembleDebug
+      - name: Read the app version
+        id: version
+        run: |
+          VERSION=$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n 1)
+          if [ -z "$VERSION" ]; then echo "versionName not found in app/build.gradle"; exit 1; fi
+          echo "name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building Syncora v$VERSION"
 
-      - name: Stage APK with a friendly name
-        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Syncora-v0.1.0-debug.apk
+      - name: Use a private signing key (only when the repository provides one)
+        env:
+          KEYSTORE_B64: ${{ secrets.SYNCORA_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.SYNCORA_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SYNCORA_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SYNCORA_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/syncora-private.jks"
+            {
+              echo "SYNCORA_KEYSTORE_PATH=$RUNNER_TEMP/syncora-private.jks"
+              echo "SYNCORA_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "SYNCORA_KEY_ALIAS=$KEY_ALIAS"
+              echo "SYNCORA_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+            echo "Using the private signing key from repository secrets."
+          else
+            echo "No signing secrets: using the sideload key in signing/."
+          fi
 
-      - name: Keep APK as a workflow artifact
+      - name: Unit tests
+        run: |
+          set -o pipefail
+          gradle --no-daemon testDebugUnitTest 2>&1 | tee tests.log
+
+      - name: Explain test failures
+        if: failure()
+        run: python3 .github/scripts/annotate_log.py tests.log "Unit tests failed"
+
+      - name: Build the release APK
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleRelease 2>&1 | tee build.log
+
+      - name: Explain build failures
+        if: failure()
+        run: python3 .github/scripts/annotate_log.py build.log "Release build failed"
+
+      - name: Stage and verify the APK
+        id: apk
+        run: |
+          mkdir -p dist
+          APK="dist/Syncora-v${{ steps.version.outputs.name }}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK"
+          ls -l "$APK"
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the APK as a workflow artifact
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: Syncora-v0.1.0-debug
-          path: app/build/outputs/apk/debug/Syncora-v0.1.0-debug.apk
+          name: Syncora-v${{ steps.version.outputs.name }}
+          path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish APK to GitHub Release
-        uses: softprops/action-gh-release@v3.0.3
-        with:
-          tag_name: v0.1.0
-          name: Syncora v0.1.0
-          target_commitish: ${{ github.sha }}
-          body_path: .github/RELEASE_NOTES.md
-          files: app/build/outputs/apk/debug/Syncora-v0.1.0-debug.apk
-          fail_on_unmatched_files: true
-          make_latest: true
+      - name: Publish the APK to GitHub Releases
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.version.outputs.name }}"
+          # Re-publishing the same version replaces the previous release and its tag.
+          gh release delete "$TAG" --yes --cleanup-tag || true
+          gh release create "$TAG" "${{ steps.apk.outputs.path }}" \
+            --target "$GITHUB_SHA" \
+            --title "Syncora $TAG" \
+            --notes-file .github/RELEASE_NOTES.md \
+            --latest
