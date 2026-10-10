@@ -1,14 +1,14 @@
-hello: {'app': 'Syncora', 'v': 2, 'code': 'SYNC-DSNXUV', 'name': 'Android SDK built for x86_64', 'title': 'Golden Hour', 'clients': 0}
+hello: {'app': 'Syncora', 'v': 2, 'code': 'SYNC-F7H8SS', 'name': 'Android SDK built for x86_64', 'title': 'Golden Hour', 'clients': 0}
 PASS  stream handshake answered 200
 PASS  WELCOME received
-welcome: {'v': 2, 'hostNanos': 118163196966, 'timePort': 59801, 'epoch': 1, 'audioMode': 'balanced', 'hostName': 'Android SDK built for x86_64', 'roomCode': 'SYNC-DSNXUV'}
+welcome: {'v': 2, 'hostNanos': 107726501887, 'timePort': 54425, 'epoch': 1, 'audioMode': 'balanced', 'hostName': 'Android SDK built for x86_64', 'roomCode': 'SYNC-F7H8SS'}
 PASS  WELCOME announces a UDP time port
 PASS  audio chunks are streaming (189 chunks in 7 s)
 PASS  stereo at a normal sample rate (44100 Hz)
 PASS  decoded audio is not silence (peak 8999)
 PASS  sequence numbers are contiguous
 PASS  play times are gapless (max gap 0.000 ms)
-media time 6.99 s over wall time 6.99 s
+media time 6.98 s over wall time 6.97 s
 PASS  chunks are paced in real time (ratio 1.00)
 last chunk due 9.0 s after the welcome timestamp
 state: playing=True title=Golden Hour queue=0/4 devices=[('Android SDK built for x86_64', 1), ('CI speaker', 0.5)]
