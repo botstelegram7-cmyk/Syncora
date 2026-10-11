@@ -74,6 +74,9 @@ public final class DownloadQueue {
         return instance;
     }
 
+    /** Bound queued plus running work so fast taps cannot create an unbounded pile of network downloads. */
+    private static final int MAX_ACTIVE_JOBS = 8;
+
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final Handler main = new Handler(Looper.getMainLooper());
     private final List<Job> jobs = new CopyOnWriteArrayList<>();
@@ -85,7 +88,17 @@ public final class DownloadQueue {
 
     public synchronized Job submit(final String kind, String title, final Work work) {
         final Job job = new Job(nextId++, kind, title == null ? "" : title, this);
+        int active = 0;
+        for (Job existing : jobs) {
+            if (existing.state == State.QUEUED || existing.state == State.RUNNING) active++;
+        }
         jobs.add(0, job);
+        if (active >= MAX_ACTIVE_JOBS) {
+            job.state = State.FAILED;
+            job.message = "The download queue is full. Wait for a download to finish before adding another.";
+            changed();
+            return job;
+        }
         changed();
         executor.execute(new Runnable() {
             @Override

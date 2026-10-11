@@ -174,6 +174,24 @@ public class LyricsTest {
     }
 
     @Test
+    public void captionsParseFromTtmlAndSrv3Xml() {
+        String ttml = "<tt><body><div><p begin=\"00:00:01.250\" end=\"00:00:03.500\">"
+                + "<span>Hello</span> &amp; <span>world</span></p></div></body></tt>";
+        List<SubtitleParser.Cue> ttmlCues = SubtitleParser.parseTtml(ttml);
+        assertEquals(1, ttmlCues.size());
+        assertEquals(1250, ttmlCues.get(0).startMs);
+        assertEquals(3500, ttmlCues.get(0).endMs);
+        assertEquals("Hello & world", ttmlCues.get(0).text);
+
+        String srv3 = "<transcript><text start=\"4.25\" dur=\"1.5\">It&#39;s fine</text></transcript>";
+        List<SubtitleParser.Cue> srv3Cues = SubtitleParser.parseTtml(srv3);
+        assertEquals(1, srv3Cues.size());
+        assertEquals(4250, srv3Cues.get(0).startMs);
+        assertEquals(5750, srv3Cues.get(0).endMs);
+        assertEquals("It's fine", srv3Cues.get(0).text);
+    }
+
+    @Test
     public void rollingDuplicateCaptionsMerge() {
         String vtt = "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nSame\n\n00:00:02.000 --> 00:00:03.000\nSame\n";
         List<SubtitleParser.Cue> cues = SubtitleParser.parseVtt(vtt);

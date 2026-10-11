@@ -18,8 +18,10 @@ music once, hear it everywhere in sync, and fix any device that is a little earl
 
 - As a player, I see **all the music on my phone** in the app, search it, shuffle it, loop the queue or repeat one song.
 - As a player, I can switch the **current source**: My Music, Online Radio, DLNA Renderer, Microphone / Aux, Speaker Mode.
-- As a player, I paste a **YouTube link** and play its audio in sync with my speakers, or save the video, its audio,
-  thumbnail, lyrics or subtitles to my phone in the background.
+- As a player, I paste a **YouTube video or public playlist link**; playlist songs appear in a tappable list, and a tap
+  resolves and plays that song in sync with my speakers. I can also tap a video thumbnail to play its audio, or save
+  the video, audio, thumbnail, lyrics or subtitles to my phone in the background. Lookups are rate-limited and the
+  download queue is bounded to keep repeated taps from flooding requests.
 - As a listener, I **swipe the cover art** to read the lyrics of the song that is playing; synced lyrics follow along.
 - As a speaker, I see the **same music player** (cover art, title, progress) as the player does; the player owns shared track/queue controls, while speaker pause/mute is local to that device.
 - As anyone in the room, I open the **volume panel** and set the volume of every connected device with its own slider,

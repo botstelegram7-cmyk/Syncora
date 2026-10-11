@@ -86,6 +86,24 @@ public class YouTubeParseTest {
     }
 
     @Test
+    public void parsesYouTubeMusicPlaylistRows() throws IOException {
+        String json = "{\"contents\":{\"musicPlaylistShelfRenderer\":{\"contents\":["
+                + "{\"musicResponsiveListItemRenderer\":{\"playlistItemData\":{\"videoId\":\"dQw4w9WgXcQ\"},"
+                + "\"flexColumns\":["
+                + "{\"musicResponsiveListItemFlexColumnRenderer\":{\"text\":{\"runs\":[{\"text\":\"Song\"}]}}},"
+                + "{\"musicResponsiveListItemFlexColumnRenderer\":{\"text\":{\"runs\":[{\"text\":\"Artist\"}]}}}],"
+                + "\"fixedColumns\":[{\"musicResponsiveListItemFixedColumnRenderer\":{\"text\":{\"simpleText\":\"4:20\"}}}],"
+                + "\"thumbnail\":{\"musicThumbnailRenderer\":{\"thumbnail\":{\"thumbnails\":["
+                + "{\"url\":\"https://img.example/music.jpg\"}]}}}}}]}}}";
+        YouTubePlaylist playlist = YouTubeClient.parsePlaylistResponse(json, "OLAK5uyExample");
+        assertEquals(1, playlist.entries.size());
+        assertEquals("Song", playlist.entries.get(0).title);
+        assertEquals("Artist", playlist.entries.get(0).author);
+        assertEquals(260000, playlist.entries.get(0).durationMs);
+        assertEquals("https://img.example/music.jpg", playlist.entries.get(0).thumbnailUrl);
+    }
+
+    @Test
     public void idsAreReadFromCommonLinks() {
         assertEquals("dQw4w9WgXcQ", YouTubeIds.parse("dQw4w9WgXcQ"));
         assertEquals("dQw4w9WgXcQ", YouTubeIds.parse("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10s"));
@@ -95,5 +113,36 @@ public class YouTubeParseTest {
         assertNull(YouTubeIds.parse(""));
         assertNull(YouTubeIds.parse(null));
         assertNull(YouTubeIds.parse("https://example.com/watch?v=dQw4w9WgXcQ"));
+        assertNull(YouTubeIds.parse("https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ"));
+    }
+
+    @Test
+    public void playlistIdsAreReadFromPlaylistAndWatchLinks() {
+        assertEquals("PL1234567890", YouTubeIds.playlistId("https://www.youtube.com/playlist?list=PL1234567890"));
+        assertEquals("RDCLAK5uy", YouTubeIds.playlistId("youtube.com/watch?v=dQw4w9WgXcQ&list=RDCLAK5uy"));
+        assertEquals("OLAK5uyExample", YouTubeIds.playlistId("https://music.youtube.com/playlist?list=OLAK5uyExample"));
+        assertNull(YouTubeIds.playlistId("https://example.com/playlist?list=PL1234567890"));
+    }
+
+    @Test
+    public void parsesPlaylistRowsAndContinuationFromBrowseResponse() throws IOException {
+        String json = "{\"header\":{\"playlistHeaderRenderer\":{\"title\":{\"runs\":[{\"text\":\"Foreign Hits\"}]}}},"
+                + "\"contents\":{\"playlistVideoListRenderer\":{\"contents\":["
+                + "{\"playlistVideoRenderer\":{\"videoId\":\"dQw4w9WgXcQ\","
+                + "\"title\":{\"runs\":[{\"text\":\"Song One\"}]},"
+                + "\"shortBylineText\":{\"runs\":[{\"text\":\"Artist One\"}]},"
+                + "\"lengthText\":{\"simpleText\":\"3:14\"},"
+                + "\"thumbnail\":{\"thumbnails\":[{\"url\":\"https://img.example/song.jpg\"}]}}},"
+                + "{\"continuationItemRenderer\":{\"continuationEndpoint\":{\"continuationCommand\":{\"token\":\"NEXT\"}}}}"
+                + "]}}}";
+        YouTubePlaylist playlist = YouTubeClient.parsePlaylistResponse(json, "PL1234567890");
+        assertEquals("Foreign Hits", playlist.title);
+        assertEquals(1, playlist.entries.size());
+        assertEquals("dQw4w9WgXcQ", playlist.entries.get(0).videoId);
+        assertEquals("Song One", playlist.entries.get(0).title);
+        assertEquals("Artist One", playlist.entries.get(0).author);
+        assertEquals(194000L, playlist.entries.get(0).durationMs);
+        assertEquals("https://img.example/song.jpg", playlist.entries.get(0).thumbnailUrl);
+        assertTrue(playlist.hasMore);
     }
 }

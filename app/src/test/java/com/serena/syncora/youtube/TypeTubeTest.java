@@ -54,8 +54,11 @@ public class TypeTubeTest {
 
         List<YouTubeFormat> audio = v.audioFormats();
         assertEquals(2, audio.size());
-        // sorted by bitrate: opus (160000) first
+        // The list is still quality-ranked; playback separately prioritizes AAC for broad Android support.
         assertEquals(251, audio.get(0).itag);
+        List<YouTubeFormat> playback = v.playbackAudioFormats();
+        assertEquals(140, playback.get(0).itag);
+        assertEquals(251, playback.get(1).itag);
     }
 
     @Test
