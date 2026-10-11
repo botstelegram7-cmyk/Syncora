@@ -29,6 +29,12 @@ public final class SubtitleParser {
     private static final Pattern TIMING = Pattern.compile(
             "((?:\\d{1,2}:)?\\d{1,2}:\\d{2}[.,]\\d{1,3})\\s*-->\\s*((?:\\d{1,2}:)?\\d{1,2}:\\d{2}[.,]\\d{1,3})");
     private static final Pattern TAG = Pattern.compile("<[^>]+>");
+    private static final Pattern XML_CUE = Pattern.compile("<(?:p|text)\\b([^>]*)>(.*?)</(?:p|text)\\s*>",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern ATTRIBUTE = Pattern.compile("(?:^|\\s)%s\\s*=\\s*([\\\"'])(.*?)\\1",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern ENTITY = Pattern.compile("&(#x[0-9a-fA-F]+|#\\d+|amp|lt|gt|quot|apos|nbsp);",
+            Pattern.CASE_INSENSITIVE);
 
     private SubtitleParser() {
     }
@@ -58,6 +64,53 @@ public final class SubtitleParser {
             if (!clean.isEmpty()) addCue(cues, new Cue(start, Math.max(end, start), clean));
         }
         return cues;
+    }
+
+    /**
+     * Parses YouTube's XML caption formats (TTML and the older srv3 transcript). This is a fallback for videos whose
+     * captions are not returned as json3 or WebVTT.
+     */
+    public static List<Cue> parseTtml(String xml) {
+        List<Cue> cues = new ArrayList<>();
+        if (xml == null || xml.isEmpty()) return cues;
+        Matcher matcher = XML_CUE.matcher(xml);
+        while (matcher.find()) {
+            String attributes = matcher.group(1);
+            String raw = matcher.group(2);
+            String begin = attribute(attributes, "begin");
+            if (begin.isEmpty()) begin = attribute(attributes, "start");
+            String end = attribute(attributes, "end");
+            String duration = attribute(attributes, "dur");
+            if (begin.isEmpty()) continue;
+            long start = parseXmlTime(begin);
+            long finish = end.isEmpty()
+                    ? start + (duration.isEmpty() ? 2000 : parseXmlTime(duration))
+                    : parseXmlTime(end);
+            String text = clean(raw);
+            if (!text.isEmpty() && start >= 0) addCue(cues, new Cue(start, Math.max(start, finish), text));
+        }
+        return cues;
+    }
+
+    private static String attribute(String attributes, String name) {
+        Matcher matcher = Pattern.compile(String.format(Locale.US, ATTRIBUTE.pattern(), Pattern.quote(name)))
+                .matcher(attributes == null ? "" : attributes);
+        return matcher.find() ? matcher.group(2) : "";
+    }
+
+    private static long parseXmlTime(String value) {
+        if (value == null || value.trim().isEmpty()) return 0;
+        String text = value.trim();
+        try {
+            String lower = text.toLowerCase(Locale.US);
+            if (lower.endsWith("ms")) return Math.round(Double.parseDouble(lower.substring(0, lower.length() - 2)));
+            if (lower.endsWith("s")) return Math.round(Double.parseDouble(lower.substring(0, lower.length() - 1)) * 1000.0);
+            if (text.indexOf(':') >= 0) return parseTime(text);
+            // YouTube's srv3 format uses plain decimal seconds for start/dur.
+            return Math.round(Double.parseDouble(text) * 1000.0);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     /** Parses YouTube json3 timed text ({@code fmt=json3}). */
@@ -138,10 +191,32 @@ public final class SubtitleParser {
     }
 
     static String clean(String raw) {
-        String s = TAG.matcher(raw).replaceAll("");
-        s = s.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", " ")
-                .replace("&#39;", "'").replace("&quot;", "\"");
-        return s.replaceAll("\\s+", " ").trim();
+        String s = TAG.matcher(raw == null ? "" : raw).replaceAll("");
+        Matcher entities = ENTITY.matcher(s);
+        StringBuffer decoded = new StringBuffer();
+        while (entities.find()) {
+            String entity = entities.group(1);
+            String replacement;
+            if (entity.startsWith("#")) {
+                try {
+                    int codePoint = entity.regionMatches(true, 0, "#x", 0, 2)
+                            ? Integer.parseInt(entity.substring(2), 16)
+                            : Integer.parseInt(entity.substring(1));
+                    replacement = Character.isValidCodePoint(codePoint)
+                            ? new String(Character.toChars(codePoint)) : entities.group();
+                } catch (RuntimeException ignored) {
+                    replacement = entities.group();
+                }
+            } else if ("amp".equalsIgnoreCase(entity)) replacement = "&";
+            else if ("lt".equalsIgnoreCase(entity)) replacement = "<";
+            else if ("gt".equalsIgnoreCase(entity)) replacement = ">";
+            else if ("quot".equalsIgnoreCase(entity)) replacement = "\"";
+            else if ("apos".equalsIgnoreCase(entity)) replacement = "'";
+            else replacement = " ";
+            entities.appendReplacement(decoded, Matcher.quoteReplacement(replacement));
+        }
+        entities.appendTail(decoded);
+        return decoded.toString().replace('\u200b', ' ').replaceAll("\\s+", " ").trim();
     }
 
     /** Adds a cue, merging it into the previous one when the text repeats (rolling auto-captions). */

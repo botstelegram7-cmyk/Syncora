@@ -32,6 +32,8 @@ import com.serena.syncora.youtube.YouTubeClient;
 import com.serena.syncora.youtube.YouTubeDownloader;
 import com.serena.syncora.youtube.YouTubeFormat;
 import com.serena.syncora.youtube.YouTubeIds;
+import com.serena.syncora.youtube.YouTubeLookupLimiter;
+import com.serena.syncora.youtube.YouTubePlaylist;
 import com.serena.syncora.youtube.YouTubeVideo;
 
 import java.util.ArrayList;
@@ -46,18 +48,28 @@ import java.util.concurrent.Executors;
  * save through their download link.
  */
 final class YouTubeView extends SourceView {
-    private static final ExecutorService IO = Executors.newCachedThreadPool();
+    private static final ExecutorService IO = Executors.newFixedThreadPool(3);
+    private static final YouTubeLookupLimiter LOOKUP_LIMITER = new YouTubeLookupLimiter(2000);
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private final DownloadQueue queue;
     private final EditText input;
+    private final TextView findButton;
     private final TextView status;
     private final LinearLayout details;
+    private boolean lookupBusy;
+    private YouTubePlaylist playlist;
     private final LinearLayout jobsColumn;
     private final DownloadQueue.Listener queueListener = new DownloadQueue.Listener() {
         @Override
         public void onQueueChanged() {
             renderJobs();
+        }
+    };
+    private final Runnable findCooldownTick = new Runnable() {
+        @Override
+        public void run() {
+            updateFindButton();
         }
     };
     private YouTubeVideo video;
@@ -101,15 +113,15 @@ final class YouTubeView extends SourceView {
             }
         });
         row.addView(input, Ui.linW(1f, Ui.WRAP, 0, 0, Ui.dp(10), 0));
-        TextView find = Ui.primaryButton(context, "Find");
-        find.setOnClickListener(new View.OnClickListener() {
+        findButton = Ui.primaryButton(context, "Find");
+        findButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 fetch();
             }
         });
-        Ui.pressable(find);
-        row.addView(find, Ui.lin(Ui.WRAP, Ui.WRAP));
+        Ui.pressable(findButton);
+        row.addView(findButton, Ui.lin(Ui.WRAP, Ui.WRAP));
         column.addView(row, Ui.lin(Ui.MATCH, Ui.WRAP, 0, Ui.dp(6), 0, Ui.dp(10)));
 
         status = Ui.text(context, "", 13, Theme.muted, Ui.REGULAR);
@@ -156,15 +168,21 @@ final class YouTubeView extends SourceView {
     @Override
     void onRelease() {
         queue.removeListener(queueListener);
+        main.removeCallbacks(findCooldownTick);
     }
 
     // ================================================================= fetching
 
     private void fetch() {
         String text = DirectLink.normalize(input.getText().toString());
-        final String id = YouTubeIds.parse(text);
+        String playlistId = YouTubeIds.playlistId(text);
+        if (playlistId != null) {
+            fetchPlaylist(playlistId);
+            return;
+        }
+        String id = YouTubeIds.parse(text);
         if (id != null) {
-            fetchYouTube(id);
+            fetchYouTube(id, false, "");
             return;
         }
         DirectLink link = DirectLink.parse(text);
@@ -172,39 +190,169 @@ final class YouTubeView extends SourceView {
             fetchDirect(link);
             return;
         }
-        status.setText("That doesn't look like a YouTube link, video ID or media link.");
+        status.setText("Paste a YouTube video or playlist link, video ID, or direct media link.");
     }
 
-    /** Resolves a YouTube video: the TypeTube cluster first, then YouTube's own player API. */
-    private void fetchYouTube(final String id) {
+    private boolean beginLookup() {
+        long wait = LOOKUP_LIMITER.tryAcquire();
+        if (wait < 0) {
+            status.setText("A YouTube request is already running. Please wait for it to finish.");
+            return false;
+        }
+        if (wait > 0) {
+            status.setText("Please wait " + Math.max(1, (wait + 999) / 1000) + " seconds before another lookup.");
+            updateFindButton();
+            return false;
+        }
+        lookupBusy = true;
+        updateFindButton();
+        return true;
+    }
+
+    private void finishLookup() {
+        lookupBusy = false;
+        updateFindButton();
+    }
+
+    private void updateFindButton() {
+        if (lookupBusy) {
+            findButton.setText("Loading…");
+            findButton.setEnabled(false);
+            findButton.setAlpha(0.65f);
+            main.removeCallbacks(findCooldownTick);
+            return;
+        }
+        long wait = LOOKUP_LIMITER.remainingMillis();
+        if (wait > 0) {
+            long seconds = Math.max(1, (wait + 999) / 1000);
+            findButton.setText("Wait " + seconds + "s");
+            findButton.setEnabled(false);
+            findButton.setAlpha(0.65f);
+            main.removeCallbacks(findCooldownTick);
+            main.postDelayed(findCooldownTick, Math.min(wait, 1000));
+            return;
+        }
+        main.removeCallbacks(findCooldownTick);
+        findButton.setText("Find");
+        findButton.setEnabled(true);
+        findButton.setAlpha(1f);
+    }
+
+    private void fetchPlaylist(final String id) {
+        if (!beginLookup()) return;
         final int request = ++fetchId;
-        status.setText("Reading the video\u2026");
+        playlist = null;
+        video = null;
+        direct = null;
+        renderDetails();
+        status.setText("Loading playlist…");
+        IO.execute(new Runnable() {
+            @Override
+            public void run() {
+                YouTubePlaylist result = null;
+                String reason = "";
+                try {
+                    result = YouTubeClient.fetchPlaylist(id);
+                } catch (Exception e) {
+                    reason = e.getMessage() == null ? "network error" : e.getMessage();
+                } finally {
+                    LOOKUP_LIMITER.release();
+                }
+                final YouTubePlaylist loaded = result;
+                final String error = reason;
+                main.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        finishLookup();
+                        if (request != fetchId) return;
+                        if (loaded != null) {
+                            playlist = loaded;
+                            status.setText("Loaded " + loaded.entries.size() + " videos. Tap a song to play it.");
+                            renderDetails();
+                        } else {
+                            status.setText("Couldn't read this playlist: " + error);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    /** Resolves a video through TypeTube first, then YouTube's own player API. */
+    private void fetchYouTube(final String id, final boolean playWhenReady, final String selectedTitle) {
+        if (!beginLookup()) return;
+        final int request = ++fetchId;
+        if (!playWhenReady) {
+            playlist = null;
+            video = null;
+            direct = null;
+            renderDetails();
+        }
+        status.setText(playWhenReady && !selectedTitle.isEmpty()
+                ? "Preparing \"" + selectedTitle + "\"…" : "Reading the video…");
         IO.execute(new Runnable() {
             @Override
             public void run() {
                 YouTubeVideo found = null;
                 String why = "";
+                boolean resolvedByTypeTube = false;
                 try {
-                    found = TypeTube.fetch(id);
-                } catch (Exception e) {
-                    why = e.getMessage() == null ? "network error" : e.getMessage();
-                }
-                if (found == null) {
                     try {
-                        found = YouTubeClient.fetch(id);
+                        found = TypeTube.fetch(id);
+                        if (found != null && found.bestAudioForPlayback() == null) {
+                            why = "TypeTube returned no audio stream";
+                            found = null;
+                        }
+                        resolvedByTypeTube = found != null;
                     } catch (Exception e) {
-                        String also = e.getMessage() == null ? "network error" : e.getMessage();
-                        why = why.isEmpty() ? also : why + " / YouTube: " + also;
+                        why = e.getMessage() == null ? "network error" : e.getMessage();
                     }
+                    if (found == null) {
+                        try {
+                            found = YouTubeClient.fetch(id);
+                        } catch (Exception e) {
+                            String also = e.getMessage() == null ? "network error" : e.getMessage();
+                            why = why.isEmpty() ? also : why + " / YouTube: " + also;
+                        }
+                    } else {
+                        final YouTubeVideo immediate = found;
+                        main.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (request != fetchId) return;
+                                show(immediate);
+                                status.setText("Checking for subtitles…");
+                                if (playWhenReady) playAudio();
+                            }
+                        });
+                        if (found.captions.isEmpty()) {
+                            // TypeTube supplies media URLs but not captions. Fill that gap without delaying playback.
+                            try {
+                                List<YouTubeVideo.Caption> captions = YouTubeClient.fetchCaptions(id);
+                                if (!captions.isEmpty()) found = found.withCaptions(captions);
+                            } catch (Exception ignored) {
+                                // Playback should still work when caption metadata is unavailable.
+                            }
+                        }
+                    }
+                } finally {
+                    LOOKUP_LIMITER.release();
                 }
                 final YouTubeVideo result = found;
                 final String reason = why;
+                final boolean typeTubeResolved = resolvedByTypeTube;
                 main.post(new Runnable() {
                     @Override
                     public void run() {
+                        finishLookup();
                         if (request != fetchId) return;
-                        if (result != null) show(result);
-                        else status.setText("Couldn't read this video: " + reason);
+                        if (result != null) {
+                            if (!typeTubeResolved || video != result) show(result);
+                            else status.setText("");
+                            if (!typeTubeResolved && playWhenReady) playAudio();
+                        } else {
+                            status.setText("Couldn't read this video: " + reason);
+                        }
                     }
                 });
             }
@@ -217,6 +365,7 @@ final class YouTubeView extends SourceView {
         List<YouTubeFormat> formats = new ArrayList<>();
         formats.add(new YouTubeFormat(0, YouTubeFormat.Kind.AUDIO_ONLY, "", "", link.streamUrl,
                 0, 0, 0, "", 0, 2, 0));
+        playlist = null;
         direct = link;
         video = new YouTubeVideo("d" + Integer.toHexString(link.streamUrl.hashCode()), link.title,
                 link.host, 0, "", YouTubeDownloader.USER_AGENT, formats, new ArrayList<YouTubeVideo.Caption>());
@@ -235,9 +384,10 @@ final class YouTubeView extends SourceView {
 
     private void renderDetails() {
         details.removeAllViews();
+        Context c = getContext();
+        if (playlist != null) renderPlaylist(c, playlist);
         final YouTubeVideo v = video;
         if (v == null) return;
-        Context c = getContext();
 
         if (direct != null) {
             renderDirect(v, direct);
@@ -263,6 +413,15 @@ final class YouTubeView extends SourceView {
         info.addView(Ui.text(c, v.author + " \u00B7 " + Ui.formatTime(v.durationMs), 12, Theme.muted, Ui.REGULAR),
                 Ui.lin(Ui.MATCH, Ui.WRAP, 0, Ui.dp(4), 0, 0));
         card.addView(info, Ui.linW(1f, Ui.WRAP, 0, 0, 0, 0));
+        card.setClickable(true);
+        card.setFocusable(true);
+        card.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playAudio();
+            }
+        });
+        Ui.pressable(card);
         details.addView(card, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(14)));
 
         IO.execute(new Runnable() {
@@ -288,7 +447,7 @@ final class YouTubeView extends SourceView {
         });
         Ui.pressable(play);
         details.addView(play, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(6)));
-        details.addView(Ui.text(c, "Plays the audio only, through this phone and any speakers in the room.",
+        details.addView(Ui.text(c, "Tap the thumbnail or button to play audio through this phone and the room speakers.",
                 12, Theme.subtle, Ui.REGULAR), Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(4)));
 
         // video with sound
@@ -356,6 +515,39 @@ final class YouTubeView extends SourceView {
         if (v.captions.isEmpty()) {
             details.addView(Ui.text(c, "This video has no subtitle or caption tracks.", 13, Theme.muted, Ui.REGULAR),
                     Ui.lin(Ui.MATCH, Ui.WRAP));
+        }
+    }
+
+    /** Public playlist rows stay visible while a selected song is being resolved or played. */
+    private void renderPlaylist(Context c, final YouTubePlaylist loaded) {
+        details.addView(sectionLabel(c, loaded.title), Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(6)));
+        String count = loaded.entries.size() + (loaded.entries.size() == 1 ? " video" : " videos");
+        details.addView(Ui.text(c, count + " · tap any song to play it", 12, Theme.subtle, Ui.REGULAR),
+                Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(10)));
+        for (int i = 0; i < loaded.entries.size(); i++) {
+            final YouTubePlaylist.Entry entry = loaded.entries.get(i);
+            String label = entry.title;
+            if (!entry.author.isEmpty()) label += " · " + entry.author;
+            if (entry.durationMs > 0) label += " · " + Ui.formatTime(entry.durationMs);
+            View.OnClickListener play = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    fetchYouTube(entry.videoId, true, entry.title);
+                }
+            };
+            View row = itemRow(c, label, "Play", play);
+            row.setClickable(true);
+            row.setFocusable(true);
+            row.setOnClickListener(play);
+            Ui.pressable(row);
+            details.addView(row, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(6)));
+        }
+        if (loaded.hasMore) {
+            details.addView(Ui.text(c, "Showing the first 200 videos to keep the list responsive.",
+                    12, Theme.subtle, Ui.REGULAR), Ui.lin(Ui.MATCH, Ui.WRAP, 0, Ui.dp(4), 0, Ui.dp(8)));
+        }
+        if (video != null) {
+            details.addView(sectionLabel(c, "Selected video"), Ui.lin(Ui.MATCH, Ui.WRAP, 0, Ui.dp(18), 0, Ui.dp(8)));
         }
     }
 
@@ -495,8 +687,9 @@ final class YouTubeView extends SourceView {
     }
 
     private void start(String kind, YouTubeVideo v, DownloadQueue.Work work) {
-        queue.submit(kind, v.title, work);
-        host.toast(kind + " added to downloads");
+        DownloadQueue.Job job = queue.submit(kind, v.title, work);
+        if (job.state == DownloadQueue.State.FAILED) host.toast(job.message);
+        else host.toast(kind + " added to downloads");
     }
 
     // ================================================================= small views

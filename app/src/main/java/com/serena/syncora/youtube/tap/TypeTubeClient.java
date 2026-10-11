@@ -225,8 +225,18 @@ public final class TypeTubeClient {
                     break;
             }
         }
-        // bestAudio is a copy of one entry; make sure the list has at least the best stream
-        if (audioStreams.isEmpty() && bestAudio != null) audioStreams.add(bestAudio);
+        // Keep the server's preferred stream even if it omitted it from the full adaptive-format list.
+        if (bestAudio != null) {
+            boolean present = false;
+            for (AudioStream stream : audioStreams) {
+                if ((bestAudio.itag != 0 && stream.itag == bestAudio.itag)
+                        || (!bestAudio.url.isEmpty() && bestAudio.url.equals(stream.url))) {
+                    present = true;
+                    break;
+                }
+            }
+            if (!present) audioStreams.add(0, bestAudio);
+        }
         return new Track(id, title, author, uploader, durationSeconds, thumbnail, audioStreams, videoStreams);
     }
 

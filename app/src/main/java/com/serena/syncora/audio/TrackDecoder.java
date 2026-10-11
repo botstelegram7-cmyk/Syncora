@@ -37,10 +37,19 @@ public final class TrackDecoder implements PcmSource {
         return new TrackDecoder(context, null, url, null);
     }
 
-    /** An http(s) file that needs request headers (YouTube wants the User-Agent of the app it was asked as). */
+    /** An http(s) file that needs the User-Agent of the client that resolved its YouTube stream. */
     public static TrackDecoder forUrl(Context context, String url, String userAgent) {
+        return forUrl(context, url, userAgent, "");
+    }
+
+    /** A YouTube media URL may also need its originating watch page when fetched from another region/client. */
+    public static TrackDecoder forUrl(Context context, String url, String userAgent, String referer) {
         Map<String, String> headers = new HashMap<>();
         if (userAgent != null && !userAgent.isEmpty()) headers.put("User-Agent", userAgent);
+        if (referer != null && !referer.isEmpty()) {
+            headers.put("Referer", referer);
+            headers.put("Origin", "https://www.youtube.com");
+        }
         return new TrackDecoder(context, null, url, headers);
     }
 

@@ -51,6 +51,7 @@ import com.serena.syncora.lyrics.Lyrics;
 import com.serena.syncora.lyrics.LyricsClient;
 import com.serena.syncora.radio.Station;
 import com.serena.syncora.youtube.YouTubeFormat;
+import com.serena.syncora.youtube.YouTubeIds;
 import com.serena.syncora.youtube.YouTubeLyrics;
 import com.serena.syncora.youtube.YouTubeVideo;
 
@@ -246,6 +247,8 @@ public final class SyncoraService extends Service {
     // ---- YouTube (audio of the loaded video is what plays)
     private YouTubeVideo youtube;
     private YouTubeFormat youtubeAudio;
+    private List<YouTubeFormat> youtubeAudioCandidates = Collections.emptyList();
+    private int youtubeAudioCandidate;
     private int reconnectAttempts;
     private int connectGeneration;
 
@@ -796,8 +799,29 @@ public final class SyncoraService extends Service {
         }
         if (source != Source.YOUTUBE) selectSource(Source.YOUTUBE);
         youtube = video;
-        youtubeAudio = audio;
+        youtubeAudioCandidates = new ArrayList<>();
+        List<YouTubeFormat> ordered = video.playbackAudioFormats();
+        if (audio != null) youtubeAudioCandidates.add(audio);
+        for (YouTubeFormat candidate : ordered) {
+            boolean duplicate = false;
+            for (YouTubeFormat existing : youtubeAudioCandidates) {
+                if (sameYouTubeAudio(existing, candidate)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) youtubeAudioCandidates.add(candidate);
+        }
+        youtubeAudioCandidate = 0;
+        youtubeAudio = youtubeAudioCandidates.isEmpty() ? audio : youtubeAudioCandidates.get(0);
         startYouTube(0);
+    }
+
+    private static boolean sameYouTubeAudio(YouTubeFormat first, YouTubeFormat second) {
+        if (first == second) return true;
+        if (first == null || second == null) return false;
+        if (!first.url.isEmpty() && first.url.equals(second.url)) return true;
+        return first.url.isEmpty() && second.url.isEmpty() && first.itag == second.itag;
     }
 
     /** The video loaded in the YouTube page, or null. */
@@ -1703,6 +1727,7 @@ public final class SyncoraService extends Service {
     private void onPumpError(String problem) {
         android.util.Log.w("Syncora", "source error (" + source + "): " + problem);
         stopPump();
+        if (source == Source.YOUTUBE && tryNextYouTubeAudio()) return;
         switch (source) {
             case MUSIC: {
                 consecutiveErrors++;
@@ -1744,6 +1769,22 @@ public final class SyncoraService extends Service {
         buffering = false;
         updateForeground();
         publish();
+    }
+
+    /** If one adaptive stream is blocked, expired or unsupported, retry the next advertised audio codec. */
+    private boolean tryNextYouTubeAudio() {
+        if (youtube == null || youtubeAudioCandidates == null) return false;
+        for (int i = youtubeAudioCandidate + 1; i < youtubeAudioCandidates.size(); i++) {
+            YouTubeFormat candidate = youtubeAudioCandidates.get(i);
+            if (sameYouTubeAudio(candidate, youtubeAudio)) continue;
+            long position = playing ? hostPositionMs() : pausedPositionMs;
+            youtubeAudioCandidate = i;
+            youtubeAudio = candidate;
+            message("This YouTube audio stream did not work. Trying " + candidate.label() + " instead.");
+            startYouTube(position);
+            return true;
+        }
+        return false;
     }
 
     private void stopPlaybackInternal() {
@@ -1848,7 +1889,8 @@ public final class SyncoraService extends Service {
         playing = true;
         buffering = true;
         pausedPositionMs = startMs;
-        startPump(TrackDecoder.forUrl(this, a.url, v.userAgent), startMs, false, 0, true);
+        String referer = YouTubeIds.parse(v.id) == null ? "" : YouTubeIds.watchUrl(v.id);
+        startPump(TrackDecoder.forUrl(this, a.url, v.userAgent, referer), startMs, false, 0, true);
         requestFocus();
         registerNoisy();
         if (host == null && uiCount > 0 && prefs.shareRoom()) ensureRoom();

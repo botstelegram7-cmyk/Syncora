@@ -17,7 +17,7 @@ public final class YouTubeVideo {
         public Caption(String languageCode, String name, String baseUrl, boolean auto) {
             this.languageCode = languageCode == null ? "" : languageCode;
             this.name = name == null || name.isEmpty() ? this.languageCode : name;
-            this.baseUrl = baseUrl;
+            this.baseUrl = baseUrl == null ? "" : baseUrl;
             this.auto = auto;
         }
     }
@@ -62,15 +62,48 @@ public final class YouTubeVideo {
     }
 
     /**
-     * The best audio stream to play in sync. AAC is preferred because every Android decoder handles it; the
-     * highest bitrate wins within that choice.
+     * Audio streams in decoder-friendly order. AAC is first because it is supported by every Android decoder; Opus
+     * is the next choice, followed by any other advertised codec. Higher bitrates win within each codec group.
+     * Remaining entries are useful as fallbacks if a particular CDN URL cannot be opened on this device.
      */
-    public YouTubeFormat bestAudioForPlayback() {
-        YouTubeFormat best = null;
-        for (YouTubeFormat f : audioFormats()) {
-            if (best == null || (f.isAac() && !best.isAac())) best = f;
+    public List<YouTubeFormat> playbackAudioFormats() {
+        List<YouTubeFormat> out = audioFormats();
+        Collections.sort(out, new java.util.Comparator<YouTubeFormat>() {
+            @Override
+            public int compare(YouTubeFormat a, YouTubeFormat b) {
+                int preference = Integer.compare(audioPreference(a), audioPreference(b));
+                return preference != 0 ? preference : Long.compare(b.bitrate, a.bitrate);
+            }
+        });
+        List<YouTubeFormat> unique = new ArrayList<>();
+        for (YouTubeFormat f : out) {
+            boolean seen = false;
+            for (YouTubeFormat existing : unique) {
+                if ((!f.url.isEmpty() && f.url.equals(existing.url)) || (f.url.isEmpty() && f.itag == existing.itag)) {
+                    seen = true;
+                    break;
+                }
+            }
+            if (!seen) unique.add(f);
         }
-        return best;
+        return unique;
+    }
+
+    private static int audioPreference(YouTubeFormat format) {
+        if (format.isAac()) return 0;
+        if (format.isOpus()) return 1;
+        return 2;
+    }
+
+    /** The first decoder-friendly audio stream, or null if the video has no audio-only streams. */
+    public YouTubeFormat bestAudioForPlayback() {
+        List<YouTubeFormat> ordered = playbackAudioFormats();
+        return ordered.isEmpty() ? null : ordered.get(0);
+    }
+
+    /** Copies this metadata and streams with a caption list fetched from YouTube's player API. */
+    public YouTubeVideo withCaptions(List<Caption> newCaptions) {
+        return new YouTubeVideo(id, title, author, durationMs, thumbnailUrl, userAgent, formats, newCaptions);
     }
 
     /**

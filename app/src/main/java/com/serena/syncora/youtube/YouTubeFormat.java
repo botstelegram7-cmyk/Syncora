@@ -35,7 +35,7 @@ public final class YouTubeFormat {
         this.kind = kind;
         this.mime = mime == null ? "" : mime;
         this.codecs = codecs == null ? "" : codecs;
-        this.url = url;
+        this.url = url == null ? "" : url;
         this.bitrate = bitrate;
         this.width = width;
         this.height = height;
