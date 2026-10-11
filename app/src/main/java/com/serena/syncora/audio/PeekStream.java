@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /** Buffered stream that lets the frame readers look ahead before they commit to a frame. */
-final class PeekStream {
+final class PeekStream extends InputStream {
     private final InputStream in;
     private byte[] buffer = new byte[16 * 1024];
     private int start;
@@ -12,6 +12,25 @@ final class PeekStream {
 
     PeekStream(InputStream in) {
         this.in = in;
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (start < end) return buffer[start++] & 0xFF;
+        return in.read();
+    }
+
+    @Override
+    public int read(byte[] out, int offset, int length) throws IOException {
+        if (out == null) throw new NullPointerException("out");
+        if (offset < 0 || length < 0 || length > out.length - offset) throw new IndexOutOfBoundsException();
+        if (length == 0) return 0;
+        int buffered = end - start;
+        if (buffered == 0) return in.read(out, offset, length);
+        int count = Math.min(length, buffered);
+        System.arraycopy(buffer, start, out, offset, count);
+        start += count;
+        return count;
     }
 
     /** Makes sure at least {@code n} bytes are buffered; false when the stream ends first. */
@@ -35,7 +54,8 @@ final class PeekStream {
         return true;
     }
 
-    int available() {
+    @Override
+    public int available() {
         return end - start;
     }
 
@@ -83,5 +103,10 @@ final class PeekStream {
                 return true;
             }
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        in.close();
     }
 }
