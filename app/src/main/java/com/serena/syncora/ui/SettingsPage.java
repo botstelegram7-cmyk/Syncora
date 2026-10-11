@@ -16,6 +16,7 @@ import com.serena.syncora.R;
 import com.serena.syncora.SessionState;
 import com.serena.syncora.SyncoraService;
 import com.serena.syncora.core.AudioProfile;
+import com.serena.syncora.lyrics.LyricsAppearance;
 
 /** Fourth tab: all settings. */
 public final class SettingsPage extends FrameLayout implements StateListener {
@@ -26,6 +27,10 @@ public final class SettingsPage extends FrameLayout implements StateListener {
     private TextView themeValue;
     private TextView audioValue;
     private TextView resyncValue;
+    private TextView lyricsModeValue;
+    private TextView lyricsThemeValue;
+    private TextView sleepTimerValue;
+    private SessionState latestState = new SessionState();
     private ToggleView animations;
     private ToggleView autoConnect;
     private LinearLayout accentRow;
@@ -33,6 +38,7 @@ public final class SettingsPage extends FrameLayout implements StateListener {
     public SettingsPage(final UiHost host) {
         super(host.activity());
         this.host = host;
+        latestState = host.state();
         Context c = host.activity();
         setBackgroundColor(Theme.bg);
         ScrollView scroll = new ScrollView(c);
@@ -200,6 +206,72 @@ public final class SettingsPage extends FrameLayout implements StateListener {
                     }
                 });
 
+        // ---- lyrics appearance
+        LinearLayout lyricLook = group(c, "Lyrics & Appearance");
+        lyricsModeValue = valueRow(c, lyricLook, R.drawable.ic_note, "Display mode", "Karaoke, Classic, Cinematic, Minimal, Dual or Compact", false,
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        final String[] modes = {LyricsAppearance.KARAOKE, LyricsAppearance.CLASSIC, LyricsAppearance.CINEMATIC,
+                                LyricsAppearance.MINIMAL, LyricsAppearance.DUAL, LyricsAppearance.COMPACT};
+                        final String[] labels = {"Karaoke", "Classic", "Cinematic", "Minimal", "Dual lyrics", "Compact"};
+                        LyricsAppearance current = prefs.lyricsAppearance();
+                        int selected = 0;
+                        for (int i = 0; i < modes.length; i++) if (modes[i].equals(current.mode)) selected = i;
+                        Sheets.choice(host, "Lyrics display mode", "Switching modes never interrupts playback", labels, null, selected,
+                                new Sheets.ChoiceListener() {
+                                    @Override
+                                    public void onChoice(int index) {
+                                        LyricsAppearance next = prefs.lyricsAppearance();
+                                        next.mode = modes[index];
+                                        saveLyricsAppearance(next);
+                                    }
+                                });
+                    }
+                });
+        lyricsThemeValue = valueRow(c, lyricLook, R.drawable.ic_palette, "Built-in theme", "12 native lyric palettes", true,
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        final int customOffset = 1;
+                        final int count = LyricsAppearance.PRESETS.size();
+                        String[] labels = new String[count + 1];
+                        String[] ids = new String[count + 1];
+                        labels[0] = "Custom";
+                        ids[0] = "custom";
+                        int selected = 0;
+                        LyricsAppearance current = prefs.lyricsAppearance();
+                        for (int i = 0; i < count; i++) {
+                            LyricsAppearance.Preset preset = LyricsAppearance.PRESETS.get(i);
+                            labels[i + customOffset] = preset.name;
+                            ids[i + customOffset] = preset.id;
+                            if (preset.id.equals(current.themeId)) selected = i + customOffset;
+                        }
+                        if ("custom".equals(current.themeId)) selected = 0;
+                        Sheets.choice(host, "Lyrics theme", "Presets are readable on light and dark artwork", labels, null, selected,
+                                new Sheets.ChoiceListener() {
+                                    @Override
+                                    public void onChoice(int index) {
+                                        LyricsAppearance next = prefs.lyricsAppearance();
+                                        next.themeId = ids[index];
+                                        next.themeName = "custom".equals(ids[index]) ? next.themeName : "";
+                                        next.activeColor = 0;
+                                        next.inactiveColor = 0;
+                                        next.backgroundColor = 0;
+                                        next.background = "";
+                                        saveLyricsAppearance(next);
+                                    }
+                                });
+                    }
+                });
+        row(c, lyricLook, R.drawable.ic_tune, "Open live style editor", "Typography, line spacing, animation, colours and live preview", true)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        LyricsEditorSheet.show(host);
+                    }
+                });
+
         // ---- audio
         LinearLayout audio = group(c, "Audio");
         audioValue = valueRow(c, audio, R.drawable.ic_tune, "Audio mode", "Trade a little delay for steadier sound", false,
@@ -222,6 +294,57 @@ public final class SettingsPage extends FrameLayout implements StateListener {
                                         SyncoraService s = host.service();
                                         if (s != null) s.setAudioMode(profiles[index].id);
                                         else prefs.setAudioMode(profiles[index].id);
+                                        refresh();
+                                    }
+                                });
+                    }
+                });
+
+        // ---- playback timer
+        LinearLayout playback = group(c, "Playback");
+        sleepTimerValue = valueRow(c, playback, R.drawable.ic_stop, "Sleep timer", "Player pauses the room; a speaker stops only itself", false,
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        final String[] labels = {"Off", "15 minutes", "30 minutes", "45 minutes", "60 minutes",
+                                "90 minutes", "At end of current track…", "Custom duration…"};
+                        Sheets.choice(host, "Sleep timer", host.state().isSpeaker()
+                                        ? "Expiry mutes only this speaker; the player and other speakers keep playing."
+                                        : "Expiry pauses the synchronized room.", labels, null, 0,
+                                new Sheets.ChoiceListener() {
+                                    @Override
+                                    public void onChoice(int index) {
+                                        SyncoraService service = host.service();
+                                        if (service == null) {
+                                            host.toast("Playback service is not ready yet.");
+                                            return;
+                                        }
+                                        if (index == 0) {
+                                            service.cancelSleepTimer();
+                                        } else if (index >= 1 && index <= 5) {
+                                            int[] minutes = {15, 30, 45, 60, 90};
+                                            service.startSleepTimerMinutes(minutes[index - 1]);
+                                        } else if (index == 6) {
+                                            service.startSleepTimerAtTrackEnd();
+                                        } else {
+                                            Sheets.input(host, "Custom sleep timer", "Choose 1 to 1,440 minutes", "Minutes", "30",
+                                                    InputType.TYPE_CLASS_NUMBER, "Start", new Sheets.TextListener() {
+                                                        @Override
+                                                        public void onText(String text) {
+                                                            try {
+                                                                int value = Integer.parseInt(text);
+                                                                if (value < 1 || value > 1440) {
+                                                                    host.toast("Enter a duration from 1 to 1,440 minutes.");
+                                                                    return;
+                                                                }
+                                                                SyncoraService s = host.service();
+                                                                if (s != null) s.startSleepTimerMinutes(value);
+                                                            } catch (NumberFormatException e) {
+                                                                host.toast("Enter the timer in minutes.");
+                                                            }
+                                                        }
+                                                    });
+                                        }
                                         refresh();
                                     }
                                 });
@@ -271,7 +394,28 @@ public final class SettingsPage extends FrameLayout implements StateListener {
         }
         row(c, about, R.drawable.ic_info, "Syncora " + version, "One Beat. Every Device.", false);
         row(c, about, R.drawable.ic_wifi, "Works offline", "Rooms run over your own Wi-Fi or hotspot. Radio needs internet on the player only.", true);
+        row(c, about, R.drawable.ic_note, "Created by Technical Serena & XioquiXin",
+                "Telegram: @TechnicalSerena · @XioquiXin\nInstagram: @Prnce572002", true);
         refresh();
+    }
+
+    private void saveLyricsAppearance(LyricsAppearance appearance) {
+        host.prefs().setLyricsAppearance(appearance);
+        SyncoraService service = host.service();
+        if (service != null) service.lyricsAppearanceChanged();
+        refresh();
+    }
+
+    private static String timerText(SessionState state) {
+        if (state.sleepTimerAtTrackEnd) return "End of track";
+        long millis = state.sleepTimerRemainingMs;
+        if (millis <= 0) return state.sleepTimerMuted ? "Finished · this speaker muted" : "Off";
+        long totalSeconds = (millis + 999) / 1000;
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds / 60) % 60;
+        long seconds = totalSeconds % 60;
+        if (hours > 0) return hours + ":" + (minutes < 10 ? "0" : "") + minutes + " left";
+        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds + " left";
     }
 
     private void refresh() {
@@ -293,12 +437,17 @@ public final class SettingsPage extends FrameLayout implements StateListener {
                 break;
         }
         audioValue.setText(AudioProfile.of(prefs.audioMode()).label);
+        LyricsAppearance lyrics = prefs.lyricsAppearance();
+        lyricsModeValue.setText(LyricsAppearance.modeLabel(lyrics.mode));
+        lyricsThemeValue.setText(lyrics.themeLabel());
+        sleepTimerValue.setText(timerText(latestState));
         int resync = prefs.resyncSeconds();
         resyncValue.setText(resync == 0 ? "Off" : resync + " s");
     }
 
     @Override
     public void onState(SessionState s) {
+        latestState = s;
         refresh();
         if (autoConnect.isChecked() != s.autoConnect) autoConnect.setChecked(s.autoConnect, false);
     }

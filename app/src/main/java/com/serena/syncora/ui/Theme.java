@@ -29,6 +29,9 @@ public final class Theme {
     public static int good = 0xFF5AD58C;
     public static int warn = 0xFFFFB454;
 
+    private static volatile String artworkKey = "";
+    private static volatile int[] artworkPalette;
+
     private Theme() {
     }
 
@@ -94,8 +97,17 @@ public final class Theme {
             {0xFF2CB67D, 0xFF0F3D3E}, {0xFFF9A826, 0xFFB5179E}, {0xFF00B4D8, 0xFF7209B7}, {0xFFFF5D8F, 0xFFFFA62B}
     };
 
+    /** Updates the player/backdrop palette after decoding a small sample of the current cover. */
+    public static void setArtworkPalette(String key, int[] colors) {
+        artworkKey = key == null ? "" : key;
+        artworkPalette = colors == null || colors.length < 2 ? null : new int[]{colors[0], colors[1]};
+    }
+
     public static int[] artColors(String key) {
-        int h = key == null ? 0 : Math.abs(key.hashCode());
+        String safe = key == null ? "" : key;
+        int[] current = artworkPalette;
+        if (current != null && safe.equals(artworkKey)) return new int[]{current[0], current[1]};
+        int h = safe.hashCode() & 0x7fffffff;
         return ART[h % ART.length];
     }
 

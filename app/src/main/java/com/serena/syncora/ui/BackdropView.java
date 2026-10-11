@@ -21,6 +21,7 @@ public final class BackdropView extends View {
     private int plainBg;
     private final Rect dst = new Rect();
     private Bitmap tiny;
+    private Bitmap sourceArt;
     private String key = "";
     private int shaderHeight;
     private int shaderBg;
@@ -31,7 +32,10 @@ public final class BackdropView extends View {
     }
 
     public void setArt(Bitmap art, String key) {
-        this.key = key == null ? "" : key;
+        String safeKey = key == null ? "" : key;
+        if (art == sourceArt && safeKey.equals(this.key)) return;
+        this.key = safeKey;
+        sourceArt = art;
         Bitmap newTiny = null;
         if (art != null) {
             try {
@@ -41,6 +45,7 @@ public final class BackdropView extends View {
             }
         }
         tiny = newTiny;
+        Theme.setArtworkPalette(this.key, ArtworkPalette.extract(newTiny));
         invalidate();
     }
 

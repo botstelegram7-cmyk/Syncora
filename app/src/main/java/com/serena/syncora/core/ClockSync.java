@@ -14,6 +14,8 @@ public final class ClockSync {
     private int next;
     private long offsetNanos;
     private long bestRttNanos = -1;
+    /** Conservative clock-offset uncertainty: network asymmetry plus the latest estimator residual. */
+    private long uncertaintyNanos;
     private boolean valid;
     private boolean measured;
 
@@ -44,6 +46,7 @@ public final class ClockSync {
             }
         }
         long candidate = sum / n;
+        long residual = absoluteDifference(candidate, offsetNanos);
         if (!valid || !measured) {
             offsetNanos = candidate;
         } else {
@@ -51,6 +54,7 @@ public final class ClockSync {
             offsetNanos += Math.abs(diff) > JUMP_NANOS ? diff : diff / 3;
         }
         bestRttNanos = best;
+        uncertaintyNanos = Math.max(best / 2, residual);
         valid = true;
         measured = true;
     }
@@ -74,6 +78,7 @@ public final class ClockSync {
         valid = false;
         measured = false;
         offsetNanos = 0;
+        uncertaintyNanos = 0;
     }
 
     public synchronized long offsetNanos() {
@@ -90,6 +95,16 @@ public final class ClockSync {
 
     public synchronized long bestRttNanos() {
         return bestRttNanos;
+    }
+
+    /** Estimated clock-offset uncertainty in nanoseconds; zero until an NTP sample arrives. */
+    public synchronized long uncertaintyNanos() {
+        return uncertaintyNanos;
+    }
+
+    private static long absoluteDifference(long a, long b) {
+        long difference = a - b;
+        return difference == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(difference);
     }
 
     public synchronized int sampleCount() {

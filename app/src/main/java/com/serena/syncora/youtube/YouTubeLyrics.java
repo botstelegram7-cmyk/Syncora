@@ -6,7 +6,7 @@ import com.serena.syncora.lyrics.SubtitleParser;
 
 import java.util.List;
 
-/** Finds lyrics for a YouTube video: synchronised lyrics from LRCLIB first, then the video's captions. */
+/** Finds lyrics for a YouTube video: synchronized lyrics from LRCLIB first, then the video's captions. */
 public final class YouTubeLyrics {
 
     private YouTubeLyrics() {
@@ -14,9 +14,15 @@ public final class YouTubeLyrics {
 
     /** Blocking. Returns null when nothing was found. */
     public static Lyrics find(YouTubeVideo video) {
+        return find(video, new LyricsClient.Request());
+    }
+
+    /** Blocking and cancellable for the LRCLIB lookup. */
+    public static Lyrics find(YouTubeVideo video, LyricsClient.Request request) {
         String[] parts = splitTitle(video.title, video.author);
-        Lyrics found = LyricsClient.find(parts[1], parts[0], "", video.durationMs);
+        Lyrics found = request.find(parts[1], parts[0], "", video.durationMs);
         if (found != null && found.synced()) return found;
+        if (request.isCancelled()) return null;
         Lyrics captions = captions(video);
         if (captions != null) return captions;
         return found;

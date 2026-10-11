@@ -31,6 +31,10 @@ public final class GroupClient {
         void onSet(String json);
 
         void onClosed(String reason, boolean refused);
+
+        /** Cumulative audio transport counters, sampled at most once per second. */
+        default void onTransportMetrics(long packetsReceived, long packetGaps) {
+        }
     }
 
     private final Listener listener;
@@ -40,6 +44,12 @@ public final class GroupClient {
     private volatile boolean closedByUs;
     private volatile Socket socket;
     private volatile OutputStream out;
+    private volatile long audioPacketsReceived;
+    private volatile long packetGaps;
+    private int lastAudioEpoch = Integer.MIN_VALUE;
+    private int lastAudioSequence;
+    private boolean haveAudioSequence;
+    private long lastMetricsCallbackNanos;
     private Thread thread;
 
     public GroupClient(Listener listener) {
@@ -61,6 +71,14 @@ public final class GroupClient {
     public boolean isConnected() {
         Socket s = socket;
         return s != null && s.isConnected() && !s.isClosed() && !closedByUs;
+    }
+
+    public long audioPacketsReceived() {
+        return audioPacketsReceived;
+    }
+
+    public long packetGaps() {
+        return packetGaps;
     }
 
     public void sendHello(String json) {
@@ -118,6 +136,26 @@ public final class GroupClient {
         }
     }
 
+    private void recordAudio(PcmChunk chunk) {
+        if (chunk.epoch != lastAudioEpoch) {
+            lastAudioEpoch = chunk.epoch;
+            haveAudioSequence = false;
+        }
+        if (haveAudioSequence) {
+            long distance = (long) chunk.seq - (long) lastAudioSequence;
+            // A source restart can reset seq without changing epoch on a gapless track boundary; that is not a gap.
+            if (distance > 1 && distance < 1_000_000L) packetGaps += distance - 1;
+        }
+        lastAudioSequence = chunk.seq;
+        haveAudioSequence = true;
+        audioPacketsReceived++;
+        long now = System.nanoTime();
+        if (lastMetricsCallbackNanos == 0 || now - lastMetricsCallbackNanos >= 1_000_000_000L) {
+            lastMetricsCallbackNanos = now;
+            listener.onTransportMetrics(audioPacketsReceived, packetGaps);
+        }
+    }
+
     private void runConnection(String host, int port, String code, String id, String name) {
         String reason = "Connection lost";
         boolean refused = false;
@@ -162,12 +200,21 @@ public final class GroupClient {
                     case FrameCodec.T_STATE:
                         listener.onState(frame.text());
                         break;
-                    case FrameCodec.T_AUDIO:
-                        listener.onAudio(FrameCodec.decodeAudio(frame.payload));
+                    case FrameCodec.T_AUDIO: {
+                        PcmChunk chunk = FrameCodec.decodeAudio(frame.payload);
+                        recordAudio(chunk);
+                        listener.onAudio(chunk);
                         break;
-                    case FrameCodec.T_FLUSH:
-                        listener.onFlush(FrameCodec.decodeFlush(frame.payload));
+                    }
+                    case FrameCodec.T_FLUSH: {
+                        int newEpoch = FrameCodec.decodeFlush(frame.payload);
+                        if (newEpoch != lastAudioEpoch) {
+                            lastAudioEpoch = newEpoch;
+                            haveAudioSequence = false;
+                        }
+                        listener.onFlush(newEpoch);
                         break;
+                    }
                     case FrameCodec.T_SET:
                         listener.onSet(frame.text());
                         break;

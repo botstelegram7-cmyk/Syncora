@@ -3,6 +3,7 @@ package com.serena.syncora.core;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Plays timestamped PCM so that every chunk is heard at the moment the host said it should be heard.
@@ -64,7 +65,8 @@ public final class ScheduledPlayer {
         }
     };
 
-    private static final int MAX_QUEUE = 400;
+    /** At 40 ms per chunk, a local backlog beyond four seconds is no longer useful for synchronised playback. */
+    private static final int MAX_QUEUE = 100;
     /** Misalignment that is always corrected at once, whatever the re-sync interval says (at least this, or 2x tolerance). */
     private static final long MIN_IMMEDIATE_ERROR_NANOS = 30_000_000L;
     private static final long IDLE_RELEASE_NANOS = 3_000_000_000L;
@@ -91,6 +93,10 @@ public final class ScheduledPlayer {
     private volatile boolean forceResync;
     private volatile long lastErrorNanos;
     private volatile boolean aligned;
+    private final AtomicLong droppedChunks = new AtomicLong();
+    private final AtomicLong underrunCount = new AtomicLong();
+    private final AtomicLong recoveryFlushes = new AtomicLong();
+    private volatile long outputLatencyNanos;
 
     // Only touched by the player thread.
     private boolean opened;
@@ -149,7 +155,21 @@ public final class ScheduledPlayer {
     public void enqueue(PcmChunk chunk) {
         if (chunk.epoch < minEpoch) return;
         queue.offer(chunk);
-        while (queue.size() > MAX_QUEUE) queue.poll();
+        if (queue.size() > MAX_QUEUE) {
+            int discarded = queue.size();
+            queue.clear();
+            // Start again at the live edge instead of letting the output play seconds behind indefinitely.
+            queue.offer(chunk);
+            droppedChunks.addAndGet(Math.max(0, discarded - 1));
+            recoveryFlushes.incrementAndGet();
+            releaseRequested = true;
+            forceResync = true;
+            try {
+                sink.pause();
+            } catch (RuntimeException ignored) {
+                // best effort: the player thread releases and reopens the sink before the next chunk
+            }
+        }
     }
 
     /** Drops everything that is queued, silences the output and ignores chunks older than {@code newEpoch}. */
@@ -231,6 +251,23 @@ public final class ScheduledPlayer {
         return queue.size();
     }
 
+    public long droppedChunks() {
+        return droppedChunks.get();
+    }
+
+    public long underrunCount() {
+        return underrunCount.get();
+    }
+
+    public long recoveryFlushCount() {
+        return recoveryFlushes.get();
+    }
+
+    /** Best estimate of time until the next sample leaves this device's audio output. */
+    public long outputLatencyNanos() {
+        return outputLatencyNanos;
+    }
+
     private void applyGain() {
         float gain = muted ? 0f : volume * volume * duck;
         try {
@@ -244,6 +281,7 @@ public final class ScheduledPlayer {
 
     private void loop() {
         long idleSince = clock.nanoTime();
+        boolean underrunWindow = false;
         try {
             while (running) {
                 if (releaseRequested) {
@@ -256,9 +294,16 @@ public final class ScheduledPlayer {
                 }
                 PcmChunk chunk = queue.poll(40, TimeUnit.MILLISECONDS);
                 if (chunk == null) {
+                    if (opened && started && !underrunWindow) {
+                        underrunCount.incrementAndGet();
+                        aligned = false;
+                        forceResync = true;
+                        underrunWindow = true;
+                    }
                     if (opened && clock.nanoTime() - idleSince > IDLE_RELEASE_NANOS) releaseSink();
                     continue;
                 }
+                underrunWindow = false;
                 idleSince = clock.nanoTime();
                 try {
                     handle(chunk);
@@ -307,7 +352,9 @@ public final class ScheduledPlayer {
 
             long now = clock.nanoTime();
             long target = baseTarget + framesToNanos(done, rate);
-            long error = predictRender(now, rate) - target;
+            long predictedRender = predictRender(now, rate);
+            outputLatencyNanos = Math.max(0, predictedRender - now);
+            long error = predictedRender - target;
             long tolerance = lastTimestampValid ? toleranceNanos : toleranceNanos * 3;
             lastErrorNanos = error;
             boolean within = Math.abs(error) <= tolerance;

@@ -35,6 +35,7 @@ import com.serena.syncora.core.Json;
 import com.serena.syncora.core.PcmChunk;
 import com.serena.syncora.core.PlayQueue;
 import com.serena.syncora.core.ScheduledPlayer;
+import com.serena.syncora.core.SleepTimer;
 import com.serena.syncora.core.Track;
 import com.serena.syncora.dlna.DlnaRenderer;
 import com.serena.syncora.dlna.SsdpAdvertiser;
@@ -117,6 +118,8 @@ public final class SyncoraService extends Service {
     private final List<Listener> listeners = new ArrayList<>();
     private final ArtStore artStore = new ArtStore();
     private final PlayQueue queue = new PlayQueue();
+    private final SleepTimer sleepTimer = new SleepTimer();
+    private boolean sleepTimerMuted;
 
     private Prefs prefs;
     private MediaNotifier notifier;
@@ -142,6 +145,7 @@ public final class SyncoraService extends Service {
     private int outOffsetMs;
     private volatile boolean localOutputEnabled = true;
     private boolean focusMuted;
+    private boolean speakerPaused;
     private boolean resumeAfterFocus;
     private boolean interrupted;
     /** Brings speaker mode back by itself after a call, a notification or another app took the audio focus. */
@@ -221,12 +225,21 @@ public final class SyncoraService extends Service {
     private Lyrics lyrics;
     private String lyricsKey = "";
     private String lyricsStatus = "";
+    private LyricsClient.Request activeLyricsRequest;
+    private LyricsWork currentLyricsWork;
+    private long lyricsGeneration;
     private String lastIcyTitle = "";
     /** Lyrics already found, as JSON, keyed by song (most recent last). Read by the HTTP thread too. */
     private final LinkedHashMap<String, String> lyricsStore = new LinkedHashMap<String, String>(16, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
             return size() > 24;
+        }
+    };
+    private final LinkedHashMap<String, Long> lyricsMisses = new LinkedHashMap<String, Long>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Long> eldest) {
+            return size() > 64;
         }
     };
 
@@ -298,6 +311,10 @@ public final class SyncoraService extends Service {
         super.onCreate();
         debuggable = (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         prefs = new Prefs(this);
+        sleepTimer.restore(prefs.sleepTimerDeadlineWallMs(), prefs.sleepTimerAtTrackEnd());
+        sleepTimerMuted = prefs.sleepTimerMuted();
+        // Keep an elapsed deadline active and schedule it immediately below. This lets expiry use the
+        // saved source instead of silently losing a timer while the service was being recreated.
         queue.setShuffle(prefs.shuffle());
         queue.setRepeat(prefs.repeat());
         outVolume = prefs.volume();
@@ -341,6 +358,7 @@ public final class SyncoraService extends Service {
                 handleFocus(change);
             }
         }, main);
+        scheduleSleepTimer();
         main.postDelayed(tick, TICK_MS);
     }
 
@@ -466,6 +484,12 @@ public final class SyncoraService extends Service {
             publish();
             return;
         }
+        if (target != Source.SPEAKER && sleepTimerMuted) {
+            // The local sleep-mute only silences speaker-mode playback. Switching to a player source must not leave
+            // this device unexpectedly silent.
+            sleepTimerMuted = false;
+            prefs.setSleepTimerMuted(false);
+        }
         Source old = source;
         if (old == Source.SPEAKER) {
             leaveSpeaker();
@@ -505,6 +529,8 @@ public final class SyncoraService extends Service {
         anchorMediaMs = 0;
         stationStatus = "";
         stationNowPlaying = "";
+        cancelLyricsRequest();
+        currentLyricsWork = null;
         lyrics = null;
         lyricsKey = "";
         lyricsStatus = "";
@@ -514,32 +540,57 @@ public final class SyncoraService extends Service {
 
     public void togglePlay() {
         if (source == Source.SPEAKER) {
-            sendRemote(command("toggle"));
+            // A timer can mute this speaker without changing the room's playing state. Treat either local
+            // condition as paused so the next Play tap reliably resumes only this device.
+            boolean wasPausedHere = speakerPaused || sleepTimerMuted;
+            clearSleepMuteForUserAction();
+            speakerPaused = !wasPausedHere;
+            applyLocalOutput();
+            publish();
             return;
         }
         if (playing) pauseHost();
-        else resumeHost();
+        else {
+            clearSleepMuteForUserAction();
+            resumeHost();
+        }
     }
 
     public void play() {
         if (source == Source.SPEAKER) {
-            sendRemote(command("play"));
+            clearSleepMuteForUserAction();
+            speakerPaused = false;
+            applyLocalOutput();
+            publish();
         } else if (!playing) {
+            clearSleepMuteForUserAction();
             resumeHost();
         }
     }
 
     public void pause() {
         if (source == Source.SPEAKER) {
-            sendRemote(command("pause"));
+            speakerPaused = true;
+            applyLocalOutput();
+            publish();
         } else if (playing) {
             pauseHost();
         }
     }
 
+    private void clearSleepMuteForUserAction() {
+        if (!sleepTimerMuted) return;
+        sleepTimerMuted = false;
+        prefs.setSleepTimerMuted(false);
+    }
+
+    private void speakerOwnerOnly() {
+        message("Only the player can change the shared track, queue or playback position.");
+    }
+
     public void next() {
         if (source == Source.SPEAKER) {
-            sendRemote(command("next"));
+            speakerOwnerOnly();
         } else if (source == Source.MUSIC && !queue.isEmpty()) {
             if (queue.next() != null) playCurrentFrom(0);
         }
@@ -547,7 +598,7 @@ public final class SyncoraService extends Service {
 
     public void previous() {
         if (source == Source.SPEAKER) {
-            sendRemote(command("prev"));
+            speakerOwnerOnly();
         } else if (source == Source.MUSIC && !queue.isEmpty()) {
             if (hostPositionMs() > 3000) {
                 seekHost(0);
@@ -559,7 +610,7 @@ public final class SyncoraService extends Service {
 
     public void seekTo(long positionMs) {
         if (source == Source.SPEAKER) {
-            sendRemote(Json.put(command("seek"), "ms", positionMs));
+            speakerOwnerOnly();
         } else {
             seekHost(positionMs);
         }
@@ -567,7 +618,7 @@ public final class SyncoraService extends Service {
 
     public void setShuffle(boolean on) {
         if (source == Source.SPEAKER) {
-            sendRemote(Json.put(command("shuffle"), "on", on));
+            speakerOwnerOnly();
             return;
         }
         queue.setShuffle(on);
@@ -577,7 +628,7 @@ public final class SyncoraService extends Service {
 
     public void cycleRepeat() {
         if (source == Source.SPEAKER) {
-            sendRemote(Json.put(command("repeat"), "mode", remote.repeat.next().id));
+            speakerOwnerOnly();
             return;
         }
         queue.setRepeat(queue.getRepeat().next());
@@ -587,11 +638,100 @@ public final class SyncoraService extends Service {
 
     public void setRepeat(PlayQueue.Repeat mode) {
         if (source == Source.SPEAKER) {
-            sendRemote(Json.put(command("repeat"), "mode", mode.id));
+            speakerOwnerOnly();
             return;
         }
         queue.setRepeat(mode);
         prefs.setPlayMode(queue.isShuffle(), mode);
+        publish();
+    }
+
+    // ================================================================= public API: sleep timer
+
+    /** Starts a per-device countdown. On a player, expiry pauses the synchronized room; on a speaker it mutes only itself. */
+    public void startSleepTimerMinutes(int minutes) {
+        if (minutes <= 0) {
+            cancelSleepTimer();
+            return;
+        }
+        int safeMinutes = Math.min(24 * 60, minutes);
+        sleepTimer.startAfter(System.currentTimeMillis(), safeMinutes * 60_000L);
+        prefs.setSleepTimer(sleepTimer.deadlineWallTimeMs(), false);
+        scheduleSleepTimer();
+        message("Sleep timer set for " + safeMinutes + " minutes.");
+        updateForeground();
+        publish();
+    }
+
+    /** Stops at the next track boundary. Unsupported for live sources and when there is no known track. */
+    public void startSleepTimerAtTrackEnd() {
+        boolean knownTrack = source == Source.SPEAKER
+                ? remote.hasMedia && !remote.live && remote.durationMs > 0
+                : hasMedia && !liveSource && durationMs > 0
+                        && (source == Source.MUSIC || source == Source.YOUTUBE || source == Source.DLNA);
+        if (!knownTrack) {
+            message("End-of-track timer needs a seekable music track.");
+            return;
+        }
+        sleepTimer.endAtTrackBoundary();
+        prefs.setSleepTimer(0, true);
+        main.removeCallbacks(sleepTimerTick);
+        message("Sleep timer will stop at the end of this track.");
+        updateForeground();
+        publish();
+    }
+
+    public void cancelSleepTimer() {
+        sleepTimer.cancel();
+        prefs.clearSleepTimer();
+        main.removeCallbacks(sleepTimerTick);
+        updateForeground();
+        publish();
+    }
+
+    public long sleepTimerRemainingMs() {
+        return sleepTimer.remainingMs(System.currentTimeMillis());
+    }
+
+    private final Runnable sleepTimerTick = new Runnable() {
+        @Override
+        public void run() {
+            if (destroyed || !sleepTimer.active()) return;
+            long now = System.currentTimeMillis();
+            if (sleepTimer.consumeDeadline(now)) {
+                completeSleepTimer();
+                return;
+            }
+            long remaining = sleepTimer.remainingMs(now);
+            main.postDelayed(this, Math.max(250L, Math.min(remaining, 60_000L)));
+        }
+    };
+
+    private void scheduleSleepTimer() {
+        main.removeCallbacks(sleepTimerTick);
+        if (sleepTimer.kind() != SleepTimer.Kind.COUNTDOWN) return;
+        long remaining = sleepTimer.remainingMs(System.currentTimeMillis());
+        main.postDelayed(sleepTimerTick, Math.max(250L, Math.min(remaining, 60_000L)));
+    }
+
+    private void completeSleepTimer() {
+        prefs.clearSleepTimer();
+        // A restarted sticky service can reach an expired deadline before the UI binds and restores its saved
+        // source. Preserve speaker-local mute semantics in that short window as well.
+        boolean speakerSession = source == Source.SPEAKER || (!restored && prefs.lastSource() == Source.SPEAKER);
+        if (speakerSession) {
+            // A speaker may be using headphones; never send a group pause because of a local timer.
+            sleepTimerMuted = true;
+            prefs.setSleepTimerMuted(true);
+            applyLocalOutput();
+            message("Sleep timer finished. This speaker is muted; the room keeps playing.");
+        } else {
+            sleepTimerMuted = false;
+            prefs.setSleepTimerMuted(false);
+            if (playing) pauseHost();
+            message("Sleep timer finished. Playback paused.");
+        }
+        updateForeground();
         publish();
     }
 
@@ -609,7 +749,7 @@ public final class SyncoraService extends Service {
 
     public void playQueueIndex(int playOrderIndex) {
         if (source == Source.SPEAKER) {
-            sendRemote(Json.put(command("jump"), "index", playOrderIndex));
+            speakerOwnerOnly();
             return;
         }
         if (queue.jumpTo(playOrderIndex) != null) playCurrentFrom(0);
@@ -875,7 +1015,9 @@ public final class SyncoraService extends Service {
     /** Quickly re-measures clocks and re-aligns every device (no interruption of the music). */
     public void syncNow() {
         if (source == Source.SPEAKER) {
-            sendRemote(command("syncNow"));
+            if (timeClient != null) timeClient.burst();
+            if (player != null) player.requestResync();
+            message("Re-syncing this speaker only.");
             return;
         }
         if (player != null) player.requestResync();
@@ -885,7 +1027,7 @@ public final class SyncoraService extends Service {
 
     public void setAudioMode(String mode) {
         if (source == Source.SPEAKER) {
-            sendRemote(Json.put(command("audioMode"), "mode", mode));
+            speakerOwnerOnly();
             return;
         }
         if (mode.equals(prefs.audioMode())) return;
@@ -1013,7 +1155,7 @@ public final class SyncoraService extends Service {
     private void applyLocalOutput() {
         if (player == null) return;
         player.setVolume(outVolume);
-        player.setMuted(outMuted || !localOutputEnabled || focusMuted);
+        player.setMuted(outMuted || !localOutputEnabled || focusMuted || sleepTimerMuted || speakerPaused);
         player.setChannelMode(outChannel);
         player.setUserDelayMs(outOffsetMs);
     }
@@ -1422,55 +1564,11 @@ public final class SyncoraService extends Service {
         }
     };
 
-    private void handleRemoteCommand(GroupHost.ClientInfo from, JSONObject c) {
-        if (source == Source.SPEAKER) return;
-        String cmd = c.optString("cmd", "");
-        switch (cmd) {
-            case "toggle":
-                togglePlay();
-                break;
-            case "play":
-                play();
-                break;
-            case "pause":
-                pause();
-                break;
-            case "next":
-                next();
-                break;
-            case "prev":
-                previous();
-                break;
-            case "seek":
-                seekTo(c.optLong("ms", 0));
-                break;
-            case "shuffle":
-                setShuffle(c.optBoolean("on", false));
-                break;
-            case "repeat":
-                setRepeat(PlayQueue.Repeat.fromId(c.optString("mode", "off")));
-                break;
-            case "jump":
-                playQueueIndex(c.optInt("index", 0));
-                break;
-            case "setDevice": {
-                String id = c.optString("id", "");
-                JSONObject fields = new JSONObject();
-                for (String key : new String[]{"volume", "muted", "channel", "offsetMs"}) {
-                    if (c.has(key)) Json.put(fields, key, c.opt(key));
-                }
-                changeDevice(id, fields);
-                break;
-            }
-            case "syncNow":
-                syncNow();
-                break;
-            case "audioMode":
-                setAudioMode(c.optString("mode", AudioProfile.BALANCED));
-                break;
-            default:
-                break;
-        }
+    private void handleRemoteCommand(GroupHost.ClientInfo from, JSONObject command) {
+        if (source == Source.SPEAKER || from == null || command == null) return;
+        // Playback ownership stays with the player. A speaker may request the read-only lyrics document to refresh,
+        // but its pause/skip/seek buttons must never change the host's track or pause the rest of the room.
+        if ("refreshLyrics".equals(command.optString("cmd", ""))) refreshLyrics();
     }
 
     // ================================================================= playback (player role)
@@ -1563,6 +1661,10 @@ public final class SyncoraService extends Service {
     };
 
     private void onPumpEnded(long endAtNanos) {
+        if (sleepTimer.consumeTrackBoundary()) {
+            completeSleepTimer();
+            return;
+        }
         switch (source) {
             case MUSIC: {
                 Track next = queue.onTrackEnded();
@@ -1706,9 +1808,9 @@ public final class SyncoraService extends Service {
                             lastIcyTitle = streamTitle;
                             requestLyrics("s" + Integer.toHexString(streamTitle.hashCode()), new LyricsWork() {
                                 @Override
-                                public Lyrics load() {
+                                public Lyrics load(LyricsClient.Request request) {
                                     String[] parts = YouTubeLyrics.splitTitle(streamTitle, "");
-                                    return LyricsClient.find(parts[1], parts[0], "", 0);
+                                    return request.find(parts[1], parts[0], "", 0);
                                 }
                             });
                         }
@@ -1842,9 +1944,9 @@ public final class SyncoraService extends Service {
         hasMedia = true;
         requestLyrics("m" + t.id, new LyricsWork() {
             @Override
-            public Lyrics load() {
+            public Lyrics load(LyricsClient.Request request) {
                 String artist = "<unknown>".equals(t.artist) ? "" : t.artist;
-                return LyricsClient.find(t.title, artist, t.album, t.durationMs);
+                return request.find(t.title, artist, t.album, t.durationMs);
             }
         });
         loadArtAsync(t.artKey(), new ArtSource() {
@@ -1872,13 +1974,15 @@ public final class SyncoraService extends Service {
         });
         requestLyrics("y" + v.id, new LyricsWork() {
             @Override
-            public Lyrics load() {
-                return YouTubeLyrics.find(v);
+            public Lyrics load(LyricsClient.Request request) {
+                return YouTubeLyrics.find(v, request);
             }
         });
     }
 
     private void nowPlayingFromStation(Station st) {
+        cancelLyricsRequest();
+        currentLyricsWork = null;
         lyrics = null;
         lyricsKey = "";
         lyricsStatus = "";
@@ -1917,19 +2021,39 @@ public final class SyncoraService extends Service {
     // ================================================================= lyrics
 
     private interface LyricsWork {
-        Lyrics load();
+        Lyrics load(LyricsClient.Request request);
+    }
+
+    /** Cancels the active connection as well as invalidating its eventual callback. */
+    private void cancelLyricsRequest() {
+        lyricsGeneration++;
+        LyricsClient.Request request = activeLyricsRequest;
+        activeLyricsRequest = null;
+        if (request != null) request.cancel();
     }
 
     /**
-     * Finds the lyrics of one song on a worker thread. Results are kept for the next time the song plays, and only
-     * count while the same song is still the one playing.
+     * Finds the lyrics on a worker thread. A track change cancels the old provider request and stale callbacks are
+     * ignored by both key and generation. Positive and short-lived negative results are cached independently.
      */
     private void requestLyrics(final String key, final LyricsWork work) {
-        lyrics = null;
+        requestLyrics(key, work, false);
+    }
+
+    private void requestLyrics(final String key, final LyricsWork work, boolean forceRefresh) {
+        if (key == null || key.isEmpty() || work == null) return;
+        if (!forceRefresh && key.equals(lyricsKey) && activeLyricsRequest != null) return;
+        cancelLyricsRequest();
+        final long generation = lyricsGeneration;
+        final Lyrics previousLyrics = lyrics;
+        currentLyricsWork = work;
+        if (!forceRefresh) lyrics = null;
         lyricsKey = key;
-        String cached;
-        synchronized (lyricsStore) {
-            cached = lyricsStore.get(key);
+        String cached = null;
+        if (!forceRefresh) {
+            synchronized (lyricsStore) {
+                cached = lyricsStore.get(key);
+            }
         }
         if (cached != null) {
             try {
@@ -1937,36 +2061,94 @@ public final class SyncoraService extends Service {
             } catch (JSONException ignored) {
                 lyrics = null;
             }
-            lyricsStatus = lyrics == null ? "No lyrics found for this song" : "";
-            if (lyrics != null) return;
-        }
-        lyricsStatus = "Looking for lyrics\u2026";
-        worker.execute(new Runnable() {
-            @Override
-            public void run() {
-                Lyrics found = null;
-                try {
-                    found = work.load();
-                } catch (RuntimeException ignored) {
-                    found = null;
-                }
-                final Lyrics result = found == null || found.isEmpty() ? null : found;
-                main.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (destroyed || !key.equals(lyricsKey)) return;
-                        lyrics = result;
-                        lyricsStatus = result == null ? "No lyrics found for this song" : "";
-                        if (result != null) {
-                            synchronized (lyricsStore) {
-                                lyricsStore.put(key, result.toJson().toString());
-                            }
-                        }
-                        publish();
-                    }
-                });
+            lyricsStatus = lyrics == null ? "Lyrics cache was invalid. Tap to refresh." : "";
+            if (lyrics != null) {
+                publish();
+                return;
             }
-        });
+        }
+        if (!forceRefresh) {
+            synchronized (lyricsMisses) {
+                Long retryAt = lyricsMisses.get(key);
+                if (retryAt != null && retryAt > System.currentTimeMillis()) {
+                    lyricsStatus = "No matching lyrics found. Tap Refresh to try again.";
+                    publish();
+                    return;
+                }
+                if (retryAt != null) lyricsMisses.remove(key);
+            }
+        }
+        lyricsStatus = "Looking for matching lyrics\u2026";
+        final LyricsClient.Request request = new LyricsClient.Request();
+        activeLyricsRequest = request;
+        try {
+            worker.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Lyrics found = null;
+                    try {
+                        found = work.load(request);
+                    } catch (RuntimeException ignored) {
+                        found = null;
+                    }
+                    final Lyrics result = found == null || found.isEmpty() ? null : found;
+                    final String failure = request.failure();
+                    main.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (destroyed || generation != lyricsGeneration || !key.equals(lyricsKey)
+                                    || activeLyricsRequest != request) return;
+                            activeLyricsRequest = null;
+                            lyrics = result == null && forceRefresh ? previousLyrics : result;
+                            if (result == null) {
+                                lyricsStatus = failure.isEmpty()
+                                        ? "No matching lyrics found. Tap Refresh to try again."
+                                        : failure + ". Tap Refresh to try again.";
+                                if (failure.isEmpty()) {
+                                    synchronized (lyricsMisses) {
+                                        lyricsMisses.put(key, System.currentTimeMillis() + 120_000L);
+                                    }
+                                }
+                            } else {
+                                lyricsStatus = "";
+                                synchronized (lyricsStore) {
+                                    lyricsStore.put(key, result.toJson().toString());
+                                }
+                                synchronized (lyricsMisses) {
+                                    lyricsMisses.remove(key);
+                                }
+                            }
+                            publish();
+                        }
+                    });
+                }
+            });
+        } catch (RuntimeException rejected) {
+            activeLyricsRequest = null;
+            lyricsStatus = "Lyrics lookup could not start. Tap Refresh to try again.";
+        }
+        publish();
+    }
+
+    /** Refreshes the current host/player lyrics without changing the song or its playback position. */
+    public void refreshLyrics() {
+        if (source == Source.SPEAKER) {
+            sendRemote(command("refreshLyrics"));
+            return;
+        }
+        if (currentLyricsWork == null || lyricsKey.isEmpty()) {
+            message("Choose a track with lyrics metadata first.");
+            return;
+        }
+        synchronized (lyricsMisses) {
+            lyricsMisses.remove(lyricsKey);
+        }
+        requestLyrics(lyricsKey, currentLyricsWork, true);
+    }
+
+    /** Appearance changes only publish state; they never touch the player or playback timeline. */
+    public void lyricsAppearanceChanged() {
+        publish();
     }
 
     /** Speakers ask the player for the lyrics of the song it is playing. */
@@ -2256,6 +2438,7 @@ public final class SyncoraService extends Service {
         stopPlaybackInternal();
         closeRoom();
         userDisconnected = false;
+        speakerPaused = false;
         remote.reset();
         remoteArt = null;
         remoteArtLoadedKey = "";
@@ -2308,6 +2491,7 @@ public final class SyncoraService extends Service {
         remoteArt = null;
         rooms.clear();
         focusMuted = false;
+        speakerPaused = false;
         clearInterrupt();
         connection = SessionState.Connection.NONE;
         connectionText = "";
@@ -2541,7 +2725,14 @@ public final class SyncoraService extends Service {
         Json.put(o, "channel", outChannel.id);
         Json.put(o, "offsetMs", outOffsetMs);
         Json.put(o, "syncErrMs", (int) (lastSyncErrorNanos / 1_000_000L));
-        Json.put(o, "status", deviceStatus(player));
+        Json.put(o, "queueDepth", player.queuedChunks());
+        Json.put(o, "packetGaps", c.packetGaps());
+        Json.put(o, "packetsReceived", c.audioPacketsReceived());
+        Json.put(o, "droppedAudioChunks", player.droppedChunks());
+        Json.put(o, "underruns", player.underrunCount());
+        Json.put(o, "clockOffsetErrorMs", (int) (clockSync.uncertaintyNanos() / 1_000_000L));
+        Json.put(o, "latencyMs", (int) (player.outputLatencyNanos() / 1_000_000L));
+        Json.put(o, "status", speakerPaused || sleepTimerMuted ? "paused" : deviceStatus(player));
         c.sendState(o.toString());
     }
 
@@ -2574,6 +2765,9 @@ public final class SyncoraService extends Service {
         JSONObject o = Json.parse(json);
         if (o == null) return;
         Remote r = remote;
+        boolean wasPlaying = r.playing;
+        String oldTitle = r.title;
+        int oldQueueIndex = r.queueIndex;
         r.source = Source.fromId(o.optString("source", "music"));
         r.playing = o.optBoolean("playing", false);
         r.hasMedia = o.optBoolean("hasMedia", false);
@@ -2638,12 +2832,25 @@ public final class SyncoraService extends Service {
                 device.channel = d.optString("channel", "stereo");
                 device.offsetMs = d.optInt("offsetMs", 0);
                 device.syncErrMs = d.optInt("syncErrMs", 0);
+                device.queueDepth = d.optInt("queueDepth", 0);
+                device.peakQueueDepth = d.optInt("peakQueueDepth", device.queueDepth);
+                device.packetGaps = d.optLong("packetGaps", 0);
+                device.packetsReceived = d.optLong("packetsReceived", 0);
+                device.droppedAudioChunks = d.optLong("droppedAudioChunks", 0);
+                device.underruns = d.optLong("underruns", 0);
+                device.clockOffsetErrorMs = d.optInt("clockOffsetErrorMs", 0);
+                device.latencyMs = d.optInt("latencyMs", 0);
                 device.status = d.optString("status", "synced");
                 devices.add(device);
             }
         }
         r.devices = devices;
 
+        if (source == Source.SPEAKER && wasPlaying
+                && (!r.playing || !oldTitle.equals(r.title) || oldQueueIndex != r.queueIndex)
+                && sleepTimer.consumeTrackBoundary()) {
+            completeSleepTimer();
+        }
         fetchRemoteArtIfNeeded();
         fetchRemoteLyricsIfNeeded();
         publish();
@@ -2809,6 +3016,9 @@ public final class SyncoraService extends Service {
         s.micGain = prefs.micGain();
         s.aligned = player != null && player.isAligned();
         s.syncErrMs = (int) (lastSyncErrorNanos / 1_000_000L);
+        s.sleepTimerRemainingMs = sleepTimer.remainingMs(System.currentTimeMillis());
+        s.sleepTimerAtTrackEnd = sleepTimer.kind() == SleepTimer.Kind.END_OF_TRACK;
+        s.sleepTimerMuted = sleepTimerMuted;
 
         if (source == Source.SPEAKER) {
             fillSpeaker(s);
@@ -2862,6 +3072,10 @@ public final class SyncoraService extends Service {
         self.muted = outMuted || !localOutputEnabled;
         self.channel = outChannel.id;
         self.offsetMs = outOffsetMs;
+        self.queueDepth = player == null ? 0 : player.queuedChunks();
+        self.droppedAudioChunks = player == null ? 0 : player.droppedChunks();
+        self.underruns = player == null ? 0 : player.underrunCount();
+        self.latencyMs = player == null ? 0 : (int) (player.outputLatencyNanos() / 1_000_000L);
         self.status = localOutputEnabled ? "synced" : "muted";
         devices.add(self);
         GroupHost h = host;
@@ -2876,6 +3090,14 @@ public final class SyncoraService extends Service {
                 d.channel = c.channel;
                 d.offsetMs = c.offsetMs;
                 d.syncErrMs = c.syncErrMs;
+                d.queueDepth = c.queueDepth;
+                d.peakQueueDepth = c.peakQueueDepth;
+                d.packetGaps = c.packetGaps;
+                d.packetsReceived = c.packetsReceived;
+                d.droppedAudioChunks = c.droppedAudioChunks;
+                d.underruns = c.underruns;
+                d.clockOffsetErrorMs = c.clockOffsetErrorMs;
+                d.latencyMs = c.latencyMs;
                 d.status = c.status;
                 devices.add(d);
             }
@@ -2910,6 +3132,7 @@ public final class SyncoraService extends Service {
         s.roomPort = remotePort;
         s.roomCode = remoteCode;
         s.playing = connected && r.playing;
+        s.localPaused = speakerPaused || sleepTimerMuted;
         s.hasMedia = connected && r.hasMedia;
         s.title = connected ? r.title : "";
         s.subtitle = connected ? r.subtitle : "";
@@ -2922,8 +3145,9 @@ public final class SyncoraService extends Service {
         s.durationMs = r.durationMs;
         s.live = r.live;
         s.positionMs = connected ? remotePositionMs() : 0;
-        s.canSeek = connected && r.canSeek;
-        s.canSkip = connected && r.canSkip;
+        // A speaker can mute/pause its own output, but only the player owns shared transport and queue controls.
+        s.canSeek = false;
+        s.canSkip = false;
         s.shuffle = r.shuffle;
         s.repeat = r.repeat;
         s.queueIndex = r.queueIndex;
@@ -2946,6 +3170,14 @@ public final class SyncoraService extends Service {
             copy.channel = d.channel;
             copy.offsetMs = d.offsetMs;
             copy.syncErrMs = d.syncErrMs;
+            copy.queueDepth = d.queueDepth;
+            copy.peakQueueDepth = d.peakQueueDepth;
+            copy.packetGaps = d.packetGaps;
+            copy.packetsReceived = d.packetsReceived;
+            copy.droppedAudioChunks = d.droppedAudioChunks;
+            copy.underruns = d.underruns;
+            copy.clockOffsetErrorMs = d.clockOffsetErrorMs;
+            copy.latencyMs = d.latencyMs;
             copy.status = d.status;
             if (d.id.equals(prefs.deviceId())) {
                 copy.self = true;
@@ -2955,7 +3187,14 @@ public final class SyncoraService extends Service {
                 copy.channel = outChannel.id;
                 copy.offsetMs = outOffsetMs;
                 copy.syncErrMs = (int) (lastSyncErrorNanos / 1_000_000L);
-                copy.status = deviceStatus(player);
+                copy.queueDepth = player == null ? 0 : player.queuedChunks();
+                copy.packetGaps = client == null ? 0 : client.packetGaps();
+                copy.packetsReceived = client == null ? 0 : client.audioPacketsReceived();
+                copy.droppedAudioChunks = player == null ? 0 : player.droppedChunks();
+                copy.underruns = player == null ? 0 : player.underrunCount();
+                copy.clockOffsetErrorMs = (int) (clockSync.uncertaintyNanos() / 1_000_000L);
+                copy.latencyMs = player == null ? 0 : (int) (player.outputLatencyNanos() / 1_000_000L);
+                copy.status = speakerPaused || sleepTimerMuted ? "paused" : deviceStatus(player);
                 sawSelf = true;
             }
             devices.add(copy);
@@ -2969,7 +3208,14 @@ public final class SyncoraService extends Service {
             self.muted = outMuted;
             self.channel = outChannel.id;
             self.offsetMs = outOffsetMs;
-            self.status = connected ? deviceStatus(player) : "connecting";
+            self.queueDepth = player == null ? 0 : player.queuedChunks();
+            self.packetGaps = client == null ? 0 : client.packetGaps();
+            self.packetsReceived = client == null ? 0 : client.audioPacketsReceived();
+            self.droppedAudioChunks = player == null ? 0 : player.droppedChunks();
+            self.underruns = player == null ? 0 : player.underrunCount();
+            self.clockOffsetErrorMs = (int) (clockSync.uncertaintyNanos() / 1_000_000L);
+            self.latencyMs = player == null ? 0 : (int) (player.outputLatencyNanos() / 1_000_000L);
+            self.status = connected ? (speakerPaused || sleepTimerMuted ? "paused" : deviceStatus(player)) : "connecting";
             devices.add(self);
         }
         s.devices = devices;
@@ -3034,6 +3280,14 @@ public final class SyncoraService extends Service {
             Json.put(j, "channel", d.channel);
             Json.put(j, "offsetMs", d.offsetMs);
             Json.put(j, "syncErrMs", d.syncErrMs);
+            Json.put(j, "queueDepth", d.queueDepth);
+            Json.put(j, "peakQueueDepth", d.peakQueueDepth);
+            Json.put(j, "packetGaps", d.packetGaps);
+            Json.put(j, "packetsReceived", d.packetsReceived);
+            Json.put(j, "droppedAudioChunks", d.droppedAudioChunks);
+            Json.put(j, "underruns", d.underruns);
+            Json.put(j, "clockOffsetErrorMs", d.clockOffsetErrorMs);
+            Json.put(j, "latencyMs", d.latencyMs);
             Json.put(j, "status", d.status);
             devices.put(j);
         }
@@ -3044,7 +3298,7 @@ public final class SyncoraService extends Service {
     // ================================================================= foreground, locks, notification
 
     private boolean needForeground() {
-        if (playing || micOn || dlnaOn) return true;
+        if (playing || micOn || dlnaOn || sleepTimer.active()) return true;
         if (source == Source.SPEAKER && connection != SessionState.Connection.NONE && !userDisconnected) return true;
         GroupHost h = host;
         return h != null && h.clientCount() > 0;

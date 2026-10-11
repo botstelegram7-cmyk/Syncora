@@ -47,6 +47,18 @@ public final class GroupHost {
         public volatile String channel = "stereo";
         public volatile int offsetMs;
         public volatile int syncErrMs;
+        /** Client-side audio diagnostics (updated once per second by the speaker). */
+        public volatile int queueDepth;
+        public volatile int peakQueueDepth;
+        public volatile long packetGaps;
+        public volatile long packetsReceived;
+        public volatile long underruns;
+        public volatile int clockOffsetErrorMs;
+        public volatile int latencyMs;
+        /** Host-side backlog diagnostics. */
+        public volatile int peakQueuedBytes;
+        public volatile long droppedAudioChunks;
+        public volatile long recoveryFlushes;
         public volatile String status = "connecting";
         public volatile long lastSeen = System.currentTimeMillis();
 
@@ -66,19 +78,43 @@ public final class GroupHost {
             if (closed) return;
             queuedBytes.addAndGet(frame.length);
             queue.offer(frame);
+            int depth = queue.size();
+            queueDepth = depth;
+            if (depth > peakQueueDepth) peakQueueDepth = depth;
+            int bytes = queuedBytes.get();
+            if (bytes > peakQueuedBytes) peakQueuedBytes = bytes;
         }
 
-        /** Removes audio that has not been written yet (used when the timeline is flushed). */
-        void dropQueuedAudio() {
+        /** Removes audio that has not been written yet and returns the number of discarded chunks. */
+        int dropQueuedAudio() {
+            int dropped = 0;
             Iterator<byte[]> it = queue.iterator();
             while (it.hasNext()) {
                 byte[] frame = it.next();
-                if (frame[0] == (byte) FrameCodec.T_AUDIO && queue.remove(frame)) queuedBytes.addAndGet(-frame.length);
+                if (frame.length > 0 && frame[0] == (byte) FrameCodec.T_AUDIO && queue.remove(frame)) {
+                    queuedBytes.addAndGet(-frame.length);
+                    dropped++;
+                }
             }
+            queueDepth = queue.size();
+            return dropped;
         }
 
         int queuedBytes() {
             return queuedBytes.get();
+        }
+
+        int queuedFrames() {
+            return queue.size();
+        }
+
+        byte[] pollFrame(long timeout, TimeUnit unit) throws InterruptedException {
+            byte[] frame = queue.poll(timeout, unit);
+            if (frame != null) {
+                queuedBytes.addAndGet(-frame.length);
+                queueDepth = queue.size();
+            }
+            return frame;
         }
 
         void close() {
@@ -180,7 +216,7 @@ public final class GroupHost {
         try {
             OutputStream out = client.socket.getOutputStream();
             while (!client.closed) {
-                byte[] frame = client.queue.poll(1000, TimeUnit.MILLISECONDS);
+                byte[] frame = client.pollFrame(1000, TimeUnit.MILLISECONDS);
                 if (frame == null) {
                     if (System.currentTimeMillis() - lastWrite > 2000) {
                         out.write(FrameCodec.encode(FrameCodec.T_PING, new byte[0]));
@@ -189,7 +225,6 @@ public final class GroupHost {
                     }
                     continue;
                 }
-                client.queuedBytes.addAndGet(-frame.length);
                 out.write(frame);
                 lastWrite = System.currentTimeMillis();
             }
@@ -234,6 +269,15 @@ public final class GroupHost {
         if (json.has("channel")) client.channel = json.optString("channel", client.channel);
         if (json.has("offsetMs")) client.offsetMs = json.optInt("offsetMs", client.offsetMs);
         if (json.has("syncErrMs")) client.syncErrMs = json.optInt("syncErrMs", client.syncErrMs);
+        if (json.has("queueDepth")) {
+            client.queueDepth = Math.max(0, json.optInt("queueDepth", client.queueDepth));
+            client.peakQueueDepth = Math.max(client.peakQueueDepth, client.queueDepth);
+        }
+        if (json.has("packetGaps")) client.packetGaps = Math.max(0, json.optLong("packetGaps", client.packetGaps));
+        if (json.has("packetsReceived")) client.packetsReceived = Math.max(0, json.optLong("packetsReceived", client.packetsReceived));
+        if (json.has("underruns")) client.underruns = Math.max(0, json.optLong("underruns", client.underruns));
+        if (json.has("clockOffsetErrorMs")) client.clockOffsetErrorMs = Math.max(0, json.optInt("clockOffsetErrorMs", client.clockOffsetErrorMs));
+        if (json.has("latencyMs")) client.latencyMs = Math.max(0, json.optInt("latencyMs", client.latencyMs));
         if (json.has("status")) client.status = json.optString("status", client.status);
     }
 
@@ -247,17 +291,31 @@ public final class GroupHost {
 
     // ---------------------------------------------------------------- fan-out
 
+    /**
+     * Drops queued audio after the high-water mark and inserts a flush marker to re-cue the receiver. Package-private
+     * so a deterministic test can verify the control/audio ordering without a real congested Wi-Fi network.
+     */
+    int recoverBacklog(ClientInfo client, int epoch) {
+        int dropped = client.dropQueuedAudio();
+        if (dropped > 0) {
+            client.droppedAudioChunks += dropped;
+            client.recoveryFlushes++;
+            client.enqueue(FrameCodec.encodeFlush(epoch));
+        }
+        return dropped;
+    }
+
     public void broadcastAudio(PcmChunk chunk) {
         if (clients.isEmpty()) return;
         byte[] frame = FrameCodec.encodeAudio(chunk);
         for (ClientInfo client : clients.values()) {
             if (client.queuedBytes() > MAX_QUEUED_BYTES) {
-                // The audio chunks are timestamped independently, so queued audio that is already late is
-                // less useful than keeping the room connection alive. Drop that backlog and continue with
-                // the live edge; ScheduledPlayer will skip any stale chunks already in the socket buffer.
-                client.dropQueuedAudio();
+                // The audio chunks are timestamped independently. Remove the stale backlog, then put a flush
+                // marker BEFORE the next live chunk so the speaker clears its own audio queue and re-cues against
+                // the current timeline instead of remaining seconds behind the player.
+                recoverBacklog(client, chunk.epoch);
                 if (client.queuedBytes() > MAX_QUEUED_BYTES) {
-                    // Control frames should never reach this limit, but keep a hard bound if they do.
+                    // Control frames should never reach this limit; close rather than allow unbounded memory growth.
                     client.close();
                     continue;
                 }

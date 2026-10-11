@@ -11,17 +11,18 @@ same audio at the same moment. Everything runs on your own Wi-Fi or phone hotspo
 |---|---|
 | **My Music** | Every song on the phone is listed inside the app (search, sort, *Shuffle*). No file picker. |
 | **Shuffle · Loop · Repeat** | Shuffle the queue, loop the whole queue, or repeat one song. |
-| **Same player everywhere** | Cover art, title, progress and controls are mirrored on every speaker; speakers can control playback too. |
+| **Same player everywhere** | Cover art, title and progress are mirrored on every speaker. The player owns shared track/queue controls; pausing or muting from a speaker affects only that speaker. |
 | **Volume for every device** | Tap the speaker button: each connected device gets its own slider, mute and an *All devices* fader. |
 | **Sync** | One-tap *Sync now* and a **Low-latency sync** switch (shorter buffer, tighter alignment). |
 | **Sources** | My Music · Online Radio · YouTube · DLNA Renderer · Microphone / Aux · Speaker Mode |
 | **Radio** | Search worldwide, or browse bundled All India Radio / Akashvani HLS channels and popular Indian MP3 stations—even without the directory. |
 | **YouTube** | Paste a link: play the video's audio in sync, or save video with sound, audio only, thumbnail, lyrics and subtitles. Background download queue. Videos resolve through the [typetube](https://github.com/botstelegram7-cmyk/typetube) service first, with YouTube's own player API as a fallback. |
 | **Direct links** | Paste a direct media link (for example a telegram-file-to-links `…/stream?id=888` link): *Play audio in sync* streams it, *Save file* downloads it (`…&d=true`). |
-| **Lyrics** | Swipe the cover art for lyrics. Synced lyrics follow playback and can be tapped to jump. Speakers show them too. |
+| **Lyrics** | Swipe the cover for playback-synchronized lyrics; tap a timed line to seek. Karaoke highlights words only when the source provides real word timestamps; otherwise it stays line-synchronized. Classic, Karaoke, Cinematic, Minimal, Dual and Compact modes, 12 themes, typography/motion controls, live preview, refresh and fullscreen controls are available in Lyrics & Appearance. Speakers show the host lyrics too. |
 | **Audio settings** | Connection state, sync offset with **+ / −** and **Reset**, channels **Mono / Stereo / Left / Right** (two phones = a stereo pair). |
+| **Sync diagnostics** | The Devices tab reports playback queue depth, packet gaps, render/clock error, underruns, output latency and audio chunks dropped during congestion. A backlog drop sends a flush/re-cue before live audio resumes. |
 | **Speaker mode** | Shows the player and its status (*Waiting for connection*), nearby players, connect by IP, auto connect. A call or another app that steals the audio shows the **INTERRUPTED** badge and the sound comes back by itself. |
-| **Settings** | Device name, IP address for connect, theme (Dark / AMOLED / Light / System) + accent, audio mode, animations, speaker options (auto connect, re-sync frequency). |
+| **Settings** | Device name, IP address for connect, theme (Dark / AMOLED / Light / System) + accent, audio mode, animations, speaker options (auto connect, re-sync frequency), and a sleep timer (15–90 minutes, custom, or end of track). A player timer pauses the room; a speaker timer mutes only that speaker. |
 | **Premium look** | Blurred cover backdrops, generated covers, animated visuals, media notification with lock-screen controls. |
 
 ## How it works
@@ -38,6 +39,8 @@ Older versions let each phone stream the same *file* and nudge itself by seeking
    frames to hit the planned time — within 10–35 ms depending on the audio mode — and re-checks as often as the
    *Re-sync frequency* setting says.
 5. The per-device **sync offset** (+/−) compensates for slow outputs such as Bluetooth speakers.
+6. A congested speaker queue is bounded. When stale audio must be dropped, the host queues an explicit flush/re-cue
+   before the next live chunk; the speaker discards stale queued PCM and aligns to the shared timeline again.
 
 Speakers need no files and no internet; radio is fetched once by the player. Cover art is served at `/art`.
 
@@ -90,4 +93,12 @@ The key is public by design — fine for sideloading, never for a store. See `si
 - Streams use no transport encryption: use networks you trust. Anyone on the network who knows the room code can join.
 - Radio supports MP3 and AAC/ADTS streams, plus HLS (`.m3u8`) playlists that carry MP3/AAC directly or in MPEG-TS (AES-128 HLS is supported). Fragmented-MP4 HLS, other encryption modes, Ogg/FLAC/Opus streams and video playback are not supported.
 - YouTube reads public stream and caption addresses directly, without a decoding step for protected (ciphered) streams, which are skipped. Playback or downloads can stop working when YouTube changes its service. Save only content you have the right to keep, and respect YouTube's terms.
-- Lyrics come from LRCLIB and YouTube captions. Matches are by title and artist, so a song can get the wrong lyrics.
+- Lyrics come from LRCLIB and YouTube captions. Syncora validates the title, artist and duration before showing a match, but imperfect provider metadata can still misidentify a recording. The editor shows a clear unavailable state when no match exists. Translations and romanizations appear only when supplied by a source; Syncora does not invent them. Word-level karaoke is shown only for source-provided enhanced-LRC timestamps; ordinary line-timed lyrics remain line-timed.
+- Sync diagnostics and the 2/3/5/10-device fan-out checks are software tests, not a substitute for testing congested Wi-Fi, incoming calls, Bluetooth disconnects, speaker routing, battery use or audio latency on real Android devices.
+
+## Credits
+
+Syncora is created by **Technical Serena** and **XioquiXin**.
+
+- Telegram: [@TechnicalSerena](https://t.me/TechnicalSerena) · [@XioquiXin](https://t.me/XioquiXin)
+- Instagram: [@Prnce572002](https://instagram.com/Prnce572002)

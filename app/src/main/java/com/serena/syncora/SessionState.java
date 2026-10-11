@@ -28,6 +28,14 @@ public final class SessionState {
         public String channel = "stereo";
         public int offsetMs;
         public int syncErrMs;
+        public int queueDepth;
+        public int peakQueueDepth;
+        public long packetGaps;
+        public long packetsReceived;
+        public long droppedAudioChunks;
+        public long underruns;
+        public int clockOffsetErrorMs;
+        public int latencyMs;
         /** synced, buffering, resyncing, connecting */
         public String status = "synced";
     }
@@ -42,6 +50,8 @@ public final class SessionState {
     // what is playing
     public Source source = Source.MUSIC;
     public boolean playing;
+    /** On a speaker, true when this device alone is locally paused/muted; it does not pause the host. */
+    public boolean localPaused;
     public boolean buffering;
     public boolean hasMedia;
     public String title = "";
@@ -91,6 +101,9 @@ public final class SessionState {
     public boolean interrupted;
     /** While interrupted: true when the app is still taking the focus back by itself, false when the user must. */
     public boolean interruptRetrying;
+    public long sleepTimerRemainingMs;
+    public boolean sleepTimerAtTrackEnd;
+    public boolean sleepTimerMuted;
 
     // radio / dlna / mic
     public String stationName = "";

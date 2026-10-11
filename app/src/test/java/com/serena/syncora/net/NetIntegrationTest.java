@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.serena.syncora.core.ClockSync;
+import com.serena.syncora.core.FrameCodec;
 import com.serena.syncora.core.PcmChunk;
 
 import org.json.JSONObject;
@@ -41,6 +42,7 @@ public class NetIntegrationTest {
 
     private final MiniHttpServer http = new MiniHttpServer();
     private final TimeServer timeServer = new TimeServer();
+    private final List<GroupClient> activeClients = Collections.synchronizedList(new ArrayList<GroupClient>());
     private TimeClient timeClient;
     private GroupClient client;
     private GroupHost host;
@@ -51,6 +53,10 @@ public class NetIntegrationTest {
     @After
     public void tearDown() {
         if (client != null) client.close();
+        synchronized (activeClients) {
+            for (GroupClient connected : activeClients) connected.close();
+            activeClients.clear();
+        }
         if (timeClient != null) timeClient.stop();
         timeServer.stop();
         if (host != null) host.shutdown();
@@ -281,9 +287,102 @@ public class NetIntegrationTest {
             Thread.sleep(300);
             assertEquals("a slow reader remains connected while its stale queue is trimmed", 1, host.clientCount());
             assertEquals(null, rx.closedReason);
+            GroupHost.ClientInfo diagnostics = host.client("slow-speaker");
+            assertNotNull(diagnostics);
+            assertTrue("backlog was accounted", diagnostics.droppedAudioChunks > 0);
+            assertTrue("recovery flush was queued", diagnostics.recoveryFlushes > 0);
         } finally {
             releaseAudio.countDown();
         }
+        assertTrue("speaker receives the recovery cue after the read side resumes", waitFor(new Condition() {
+            public boolean ok() {
+                return !rx.flushes.isEmpty();
+            }
+        }, 5000));
+
+        host.broadcastFlush(4);
+        host.broadcastAudio(new PcmChunk(4, 0, System.nanoTime() + 200_000_000L, 44100, 2, 882, new short[882 * 2]));
+        assertTrue("fresh audio is accepted after the explicit re-cue", waitFor(new Condition() {
+            public boolean ok() {
+                synchronized (rx.audio) {
+                    for (PcmChunk chunk : rx.audio) if (chunk.epoch == 4 && chunk.seq == 0) return true;
+                }
+                return false;
+            }
+        }, 5000));
+    }
+
+    @Test
+    public void roomFanoutWorksForTwoThreeFiveAndTenTotalDevices() throws Exception {
+        final int port = startHost();
+        int[] totals = {2, 3, 5, 10};
+        for (int totalDevices : totals) {
+            final int speakers = totalDevices - 1;
+            final List<Received> receivers = new ArrayList<>();
+            List<GroupClient> clients = new ArrayList<>();
+            for (int i = 0; i < speakers; i++) {
+                final Received receiver = new Received();
+                receivers.add(receiver);
+                GroupClient device = new GroupClient(receiver);
+                clients.add(device);
+                activeClients.add(device);
+                device.connect("127.0.0.1", port, "SYNC-TEST01", "fanout-" + totalDevices + "-" + i,
+                        "Device " + totalDevices + "." + i);
+            }
+            assertTrue("all " + totalDevices + " total devices joined", waitFor(new Condition() {
+                public boolean ok() {
+                    return host.clientCount() == speakers;
+                }
+            }, 6000));
+
+            short[] pcm = new short[882 * 2];
+            for (int seq = 0; seq < 12; seq++) {
+                host.broadcastAudio(new PcmChunk(20 + totalDevices, seq, System.nanoTime() + 300_000_000L + seq * 40_000_000L,
+                        44100, 2, 882, pcm));
+            }
+            assertTrue("every speaker receives the full fan-out for " + totalDevices + " devices", waitFor(new Condition() {
+                public boolean ok() {
+                    for (Received receiver : receivers) if (receiver.audio.size() < 12) return false;
+                    return true;
+                }
+            }, 8000));
+            for (Received receiver : receivers) {
+                for (int seq = 0; seq < 12; seq++) assertEquals(seq, receiver.audio.get(seq).seq);
+            }
+            for (GroupClient device : clients) device.close();
+            assertTrue("speakers clean up after " + totalDevices + "-device room", waitFor(new Condition() {
+                public boolean ok() {
+                    return host.clientCount() == 0;
+                }
+            }, 5000));
+            activeClients.removeAll(clients);
+        }
+    }
+
+    @Test
+    public void queuedAudioRecoveryPreservesControlOrderingAndMarksTheGap() throws Exception {
+        startHost();
+        GroupHost.ClientInfo slow = new GroupHost.ClientInfo("slow", "127.0.0.1", "Slow", new Socket());
+        slow.enqueue(FrameCodec.encodeText(FrameCodec.T_STATE, "state"));
+        byte[] queuedAudio = new byte[4000];
+        queuedAudio[0] = (byte) FrameCodec.T_AUDIO;
+        for (int i = 0; i < 200; i++) slow.enqueue(queuedAudio);
+        assertTrue(slow.queuedBytes() > 640 * 1024);
+
+        assertEquals(200, host.recoverBacklog(slow, 7));
+        assertEquals(200L, slow.droppedAudioChunks);
+        assertEquals(1L, slow.recoveryFlushes);
+        assertEquals(2, slow.queuedFrames());
+        slow.enqueue(FrameCodec.encodeAudio(new PcmChunk(7, 900, 1_000_000L, 44100, 2, 0, new short[0])));
+
+        byte[] state = slow.pollFrame(0, TimeUnit.MILLISECONDS);
+        byte[] flush = slow.pollFrame(0, TimeUnit.MILLISECONDS);
+        byte[] live = slow.pollFrame(0, TimeUnit.MILLISECONDS);
+        assertEquals(FrameCodec.T_STATE, state[0] & 0xff);
+        assertEquals(FrameCodec.T_FLUSH, flush[0] & 0xff);
+        assertEquals(7, FrameCodec.decodeFlush(java.util.Arrays.copyOfRange(flush, 5, flush.length)));
+        assertEquals(FrameCodec.T_AUDIO, live[0] & 0xff);
+        slow.close();
     }
 
     @Test

@@ -70,6 +70,15 @@ public class ClockSyncTest {
     }
 
     @Test
+    public void reportsAConservativeOffsetUncertaintyFromTheBestRtt() {
+        ClockSync sync = new ClockSync();
+        sync.addSample(100, 110, 112, 122);
+        assertEquals(0L, sync.offsetNanos());
+        assertEquals(10L, sync.uncertaintyNanos());
+        assertEquals(20L, sync.bestRttNanos());
+    }
+
+    @Test
     public void negativeRoundTripIsIgnored() {
         ClockSync sync = new ClockSync();
         sync.addSample(100, 0, 0, 50); // reply 'arrives' before the request was sent: nonsense
