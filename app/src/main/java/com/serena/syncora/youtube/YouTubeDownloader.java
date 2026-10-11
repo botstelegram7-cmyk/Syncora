@@ -18,6 +18,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /** Downloads YouTube streams to files and muxes a video-only stream with its audio into one MP4. */
 public final class YouTubeDownloader {
 
+    /** What Syncora calls itself when fetching web pages and media files. */
+    public static final String USER_AGENT = "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 "
+            + "(KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36";
+
     public interface Progress {
         /** 0..1 */
         void onProgress(float fraction);

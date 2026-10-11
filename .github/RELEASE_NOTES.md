@@ -1,3 +1,20 @@
+## Syncora v0.7.0 — YouTube That Keeps Working, Direct Links
+
+**New**
+- **TypeTube YouTube resolution** — YouTube videos are resolved through the [typetube](https://github.com/botstelegram7-cmyk/typetube) stream service first (the TAP protocol, implemented natively in the app — no extra install). When that cannot answer, the app falls back to YouTube's own player API, so playback and downloads keep working even when one method breaks.
+- **Direct media links** — paste a link like `https://telegram-file-to-links.onrender.com/stream?id=888` on the YouTube page and it just works: **Play audio in sync** streams from the stream link (`/stream?id=…`) on every speaker, and **Save file** downloads through the download link (`/stream?id=…&d=true`). Other direct http(s) media links play and save the same way.
+
+**Improved**
+- Clearer errors when a video cannot be read (both resolvers explain what failed).
+- The pasted text is normalized (HTML-escaped `&amp;` in links is handled).
+
+**Install**
+Install `Syncora-v0.7.0.apk` on Android 8.0 (API 26) or newer. Devices must be on the same Wi-Fi or hotspot; the player needs internet for radio, lyrics and YouTube.
+
+> APKs remain signed with Syncora's repository sideload key, so v0.2.0 and later can update in place.
+
+---
+
 ## Syncora v0.6.0 — Akashvani Radio and Reliable Speakers
 
 **New**

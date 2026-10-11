@@ -16,7 +16,8 @@ same audio at the same moment. Everything runs on your own Wi-Fi or phone hotspo
 | **Sync** | One-tap *Sync now* and a **Low-latency sync** switch (shorter buffer, tighter alignment). |
 | **Sources** | My Music · Online Radio · YouTube · DLNA Renderer · Microphone / Aux · Speaker Mode |
 | **Radio** | Search worldwide, or browse bundled All India Radio / Akashvani HLS channels and popular Indian MP3 stations—even without the directory. |
-| **YouTube** | Paste a link: play the video's audio in sync, or save video with sound, audio only, thumbnail, lyrics and subtitles. Background download queue. |
+| **YouTube** | Paste a link: play the video's audio in sync, or save video with sound, audio only, thumbnail, lyrics and subtitles. Background download queue. Videos resolve through the [typetube](https://github.com/botstelegram7-cmyk/typetube) service first, with YouTube's own player API as a fallback. |
+| **Direct links** | Paste a direct media link (for example a telegram-file-to-links `…/stream?id=888` link): *Play audio in sync* streams it, *Save file* downloads it (`…&d=true`). |
 | **Lyrics** | Swipe the cover art for lyrics. Synced lyrics follow playback and can be tapped to jump. Speakers show them too. |
 | **Audio settings** | Connection state, sync offset with **+ / −** and **Reset**, channels **Mono / Stereo / Left / Right** (two phones = a stereo pair). |
 | **Speaker mode** | Shows the player and its status (*Waiting for connection*), nearby players, connect by IP, auto connect. |
@@ -71,7 +72,8 @@ gradle assembleDebug          # Gradle 8.9, JDK 17, Android SDK 35
 gradle testDebugUnitTest      # sync engine, wire format, network, DLNA and radio tests
 ```
 
-The app has no third-party runtime dependencies. Releases are built by `.github/workflows/android-release.yml`
+The app has no third-party runtime dependencies (the typetube stream service is spoken natively over its TAP
+protocol). Releases are built by `.github/workflows/android-release.yml`
 (on every push to `main`, or manually) and published to GitHub Releases. `.github/workflows/ci.yml` builds and runs the
 unit tests on every push to an `arena/**` branch; put `[emulator]` in a commit message (or run the workflow by hand) to
 also drive the app on an Android emulator: UI tour with screenshots, an independent protocol client talking to the

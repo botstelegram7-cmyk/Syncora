@@ -22,14 +22,19 @@ import com.serena.syncora.SessionState;
 import com.serena.syncora.Source;
 import com.serena.syncora.SyncoraService;
 import com.serena.syncora.audio.ArtLoader;
+import com.serena.syncora.youtube.DirectLink;
+import com.serena.syncora.youtube.DirectLinkActions;
 import com.serena.syncora.youtube.DownloadQueue;
 import com.serena.syncora.youtube.DownloadStore;
+import com.serena.syncora.youtube.TypeTube;
 import com.serena.syncora.youtube.YouTubeActions;
 import com.serena.syncora.youtube.YouTubeClient;
+import com.serena.syncora.youtube.YouTubeDownloader;
 import com.serena.syncora.youtube.YouTubeFormat;
 import com.serena.syncora.youtube.YouTubeIds;
 import com.serena.syncora.youtube.YouTubeVideo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +42,8 @@ import java.util.concurrent.Executors;
 /**
  * YouTube: paste a link, then play the video's audio in sync (on the phone and every speaker), or save the video,
  * an audio stream, the thumbnail, lyrics or subtitles. Downloads run in the background and are listed below.
+ * Direct media links (like telegram-file-to-links {@code /stream?id=} links) play from their stream link and
+ * save through their download link.
  */
 final class YouTubeView extends SourceView {
     private static final ExecutorService IO = Executors.newCachedThreadPool();
@@ -54,6 +61,7 @@ final class YouTubeView extends SourceView {
         }
     };
     private YouTubeVideo video;
+    private DirectLink direct;
     private int fetchId;
 
     YouTubeView(Context context, UiHost host) {
@@ -72,7 +80,7 @@ final class YouTubeView extends SourceView {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         input = new EditText(context);
-        input.setHint("Paste a YouTube link or video ID");
+        input.setHint("Paste a YouTube or media link");
         input.setHintTextColor(Theme.subtle);
         input.setTextColor(Theme.text);
         input.setTextSize(15);
@@ -153,39 +161,72 @@ final class YouTubeView extends SourceView {
     // ================================================================= fetching
 
     private void fetch() {
-        final String id = YouTubeIds.parse(input.getText().toString());
-        if (id == null) {
-            status.setText("That doesn't look like a YouTube link or video ID.");
+        String text = DirectLink.normalize(input.getText().toString());
+        final String id = YouTubeIds.parse(text);
+        if (id != null) {
+            fetchYouTube(id);
             return;
         }
+        DirectLink link = DirectLink.parse(text);
+        if (link != null) {
+            fetchDirect(link);
+            return;
+        }
+        status.setText("That doesn't look like a YouTube link, video ID or media link.");
+    }
+
+    /** Resolves a YouTube video: the TypeTube cluster first, then YouTube's own player API. */
+    private void fetchYouTube(final String id) {
         final int request = ++fetchId;
         status.setText("Reading the video\u2026");
         IO.execute(new Runnable() {
             @Override
             public void run() {
+                YouTubeVideo found = null;
+                String why = "";
                 try {
-                    final YouTubeVideo found = YouTubeClient.fetch(id);
-                    main.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (request == fetchId) show(found);
-                        }
-                    });
+                    found = TypeTube.fetch(id);
                 } catch (Exception e) {
-                    final String why = e.getMessage() == null ? "network error" : e.getMessage();
-                    main.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (request == fetchId) status.setText("Couldn't read this video: " + why);
-                        }
-                    });
+                    why = e.getMessage() == null ? "network error" : e.getMessage();
                 }
+                if (found == null) {
+                    try {
+                        found = YouTubeClient.fetch(id);
+                    } catch (Exception e) {
+                        String also = e.getMessage() == null ? "network error" : e.getMessage();
+                        why = why.isEmpty() ? also : why + " / YouTube: " + also;
+                    }
+                }
+                final YouTubeVideo result = found;
+                final String reason = why;
+                main.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (request != fetchId) return;
+                        if (result != null) show(result);
+                        else status.setText("Couldn't read this video: " + reason);
+                    }
+                });
             }
         });
     }
 
+    /** A direct media link: one stream link to play, one download link to save. */
+    private void fetchDirect(final DirectLink link) {
+        ++fetchId;
+        List<YouTubeFormat> formats = new ArrayList<>();
+        formats.add(new YouTubeFormat(0, YouTubeFormat.Kind.AUDIO_ONLY, "", "", link.streamUrl,
+                0, 0, 0, "", 0, 2, 0));
+        direct = link;
+        video = new YouTubeVideo("d" + Integer.toHexString(link.streamUrl.hashCode()), link.title,
+                link.host, 0, "", YouTubeDownloader.USER_AGENT, formats, new ArrayList<YouTubeVideo.Caption>());
+        status.setText("");
+        renderDetails();
+    }
+
     private void show(YouTubeVideo loaded) {
         video = loaded;
+        direct = null;
         status.setText(loaded.formats.isEmpty() ? "No downloadable streams were found for this video." : "");
         renderDetails();
     }
@@ -197,6 +238,11 @@ final class YouTubeView extends SourceView {
         final YouTubeVideo v = video;
         if (v == null) return;
         Context c = getContext();
+
+        if (direct != null) {
+            renderDirect(v, direct);
+            return;
+        }
 
         // card with the thumbnail
         LinearLayout card = new LinearLayout(c);
@@ -311,6 +357,47 @@ final class YouTubeView extends SourceView {
             details.addView(Ui.text(c, "This video has no subtitle or caption tracks.", 13, Theme.muted, Ui.REGULAR),
                     Ui.lin(Ui.MATCH, Ui.WRAP));
         }
+    }
+
+    /** Compact card for a direct media link: play its stream link, save through its download link. */
+    private void renderDirect(final YouTubeVideo v, final DirectLink link) {
+        Context c = getContext();
+
+        LinearLayout card = new LinearLayout(c);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(Ui.dp(14), Ui.dp(12), Ui.dp(14), Ui.dp(12));
+        Ui.setBackground(card, Ui.stroke(Theme.surface, Theme.line, 1, 16));
+        card.addView(Ui.text(c, "Direct link \u00B7 " + link.host, 12, Theme.muted, Ui.REGULAR),
+                Ui.lin(Ui.MATCH, Ui.WRAP));
+        TextView title = Ui.text(c, link.title, 15, Theme.text, Ui.MEDIUM);
+        title.setMaxLines(3);
+        title.setEllipsize(TextUtils.TruncateAt.END);
+        card.addView(title, Ui.lin(Ui.MATCH, Ui.WRAP, 0, Ui.dp(4), 0, 0));
+        details.addView(card, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(14)));
+
+        TextView play = Ui.primaryButton(c, "Play audio in sync");
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playAudio();
+            }
+        });
+        Ui.pressable(play);
+        details.addView(play, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(6)));
+        details.addView(Ui.text(c, "Streams from the link and plays the audio on this phone and any "
+                + "speakers in the room.", 12, Theme.subtle, Ui.REGULAR),
+                Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(4)));
+
+        details.addView(sectionLabel(c, "Save the file"), Ui.lin(Ui.MATCH, Ui.WRAP, 0, Ui.dp(14), 0, Ui.dp(6)));
+        details.addView(itemRow(c, link.title + " \u00B7 from the download link", "Save",
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        start("File", v, DirectLinkActions.save(getContext(), link));
+                    }
+                }), Ui.lin(Ui.MATCH, Ui.WRAP, 0, 0, 0, Ui.dp(6)));
+        details.addView(Ui.text(c, "Files go to " + DownloadStore.locationHint() + ".", 12, Theme.subtle,
+                Ui.REGULAR), Ui.lin(Ui.MATCH, Ui.WRAP));
     }
 
     private void renderJobs() {
