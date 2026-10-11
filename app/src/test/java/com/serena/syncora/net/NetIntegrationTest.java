@@ -100,7 +100,7 @@ public class NetIntegrationTest {
         return http.start(38000, 38100);
     }
 
-    static final class Received implements GroupClient.Listener {
+    static class Received implements GroupClient.Listener {
         final List<PcmChunk> audio = Collections.synchronizedList(new ArrayList<PcmChunk>());
         final List<String> states = Collections.synchronizedList(new ArrayList<String>());
         final List<Integer> flushes = Collections.synchronizedList(new ArrayList<Integer>());
