@@ -67,7 +67,8 @@ public class HlsStreamTest {
 
         AdtsFrameReader audio = new AdtsFrameReader(new PeekStream(new ByteArrayInputStream(stream)));
         assertTrue(audio.prime(1024));
-        assertEquals(27, audio.nextFrame().length);
-        assertEquals(27, audio.nextFrame().length);
+        // AdtsFrameReader removes the seven-byte ADTS header before passing AAC to MediaCodec.
+        assertEquals(20, audio.nextFrame().length);
+        assertEquals(20, audio.nextFrame().length);
     }
 }
