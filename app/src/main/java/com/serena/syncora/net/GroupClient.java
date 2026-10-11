@@ -125,6 +125,7 @@ public final class GroupClient {
         try {
             s.connect(new InetSocketAddress(host, port), 5000);
             s.setTcpNoDelay(true);
+            s.setKeepAlive(true);
             s.setSoTimeout(10_000);
             s.setReceiveBufferSize(256 * 1024);
             socket = s;
@@ -169,6 +170,9 @@ public final class GroupClient {
                         break;
                     case FrameCodec.T_SET:
                         listener.onSet(frame.text());
+                        break;
+                    case FrameCodec.T_PING:
+                        send(FrameCodec.T_PONG, "");
                         break;
                     case FrameCodec.T_BYE:
                         reason = byeReason(frame.text());

@@ -23,13 +23,15 @@ public class RadioDirectoryTest {
                 "{\"stationuuid\":\"i\",\"name\":\"Not http\",\"url_resolved\":\"rtsp://i.example/s\",\"codec\":\"MP3\",\"lastcheckok\":1}" +
                 "]";
         List<Station> list = RadioDirectory.parse(json);
-        assertEquals(3, list.size());
+        assertEquals(4, list.size());
         assertEquals("Radio One", list.get(0).name);
         assertEquals("http://one.example/stream", list.get(0).url);
         assertEquals("Pop \u00B7 India \u00B7 128 kbps", list.get(0).subtitle());
-        assertEquals("AAC plus", list.get(1).name);
-        assertEquals("Fallback to url", list.get(2).name);
-        assertEquals("http://g.example/s", list.get(2).url);
+        assertEquals("HLS station", list.get(1).name);
+        assertEquals("http://c.example/live.m3u8", list.get(1).url);
+        assertEquals("AAC plus", list.get(2).name);
+        assertEquals("Fallback to url", list.get(3).name);
+        assertEquals("http://g.example/s", list.get(3).url);
     }
 
     @Test

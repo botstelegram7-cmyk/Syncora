@@ -1,0 +1,362 @@
+[
+ {
+  "id": "e928bf7b-7de2-4447-87ec-369d1be1b9f5",
+  "name": "Bollywood Gaane Purane",
+  "url": "https://stream.zeno.fm/6n6ewddtad0uv",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "273c4a22-5a4a-11e8-b0ce-52543be04c81",
+  "name": "Fnf.Fm Hindi",
+  "url": "http://192.99.8.192:5032/;stream",
+  "tags": "bollywood",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 64
+ },
+ {
+  "id": "0e54935f-bdef-4c90-9e76-0be87465a8f2",
+  "name": "MY RADIO DJ",
+  "url": "http://stream.zeno.fm/84h97t3ewg0uv",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 48
+ },
+ {
+  "id": "2067334b-59e7-11e8-b0ce-52543be04c81",
+  "name": "Radio BollyFm",
+  "url": "http://stream.radiobollyfm.in:8201/hd?t=1526570335",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "33fcdf94-5605-49bb-8e34-206f38c335dc",
+  "name": "Goldy Evergreen",
+  "url": "https://stream.zeno.fm/n2fd0edh9k8uv",
+  "tags": "",
+  "country": "India",
+  "codec": "AAC",
+  "bitrate": 128
+ },
+ {
+  "id": "6de7e6da-5c4f-4264-ab2d-bbc731219f7d",
+  "name": "Hits Of Bollywood",
+  "url": "http://stream.zeno.fm/8ty8szwpwfeuv",
+  "tags": "bollywood,desi,hindi",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "902ea231-d537-4dc8-8708-6819418086d0",
+  "name": "Vivid Bharti",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8",
+  "tags": "classical",
+  "country": "India",
+  "codec": "AAC",
+  "bitrate": 93
+ },
+ {
+  "id": "b657d1ab-bca6-11e8-aaf2-52543be04c81",
+  "name": "2B! Radio Sangam Krishna",
+  "url": "http://millenniumhits.out.airtime.pro:8000/millenniumhits_a",
+  "tags": "mantra,spiritual",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 48
+ },
+ {
+  "id": "6124c9b3-024c-4650-9c68-a5de9a7d89eb",
+  "name": "Hits Of Lata Mangeshkar",
+  "url": "http://stream.zeno.fm/g95zm67prfhvv",
+  "tags": "bollywood,desi,hindi",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "cdd3b5a0-47f6-46d5-8209-b78e8b10ff6e",
+  "name": "Radio Mirchi Hindi",
+  "url": "https://eu8.fastcast4u.com/proxy/clyedupq/stream",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "8a76a0d5-8d10-400a-b6eb-a7725646d314",
+  "name": "MY CLUB REMIX",
+  "url": "http://stream.zeno.fm/u7eee0hyzp8uv",
+  "tags": "bollywood,club,dj remix",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "6b36ba4f-6d29-4272-b3c0-9aeeb64e61ec",
+  "name": "Mirchi Top 20",
+  "url": "https://drive.uber.radio/uber/bollywoodnow/icecast.audio",
+  "tags": "bollywood,hindi,mirchi",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "d9125a0f-bca6-11e8-aaf2-52543be04c81",
+  "name": "2B! Radio Sangam Shri Ram",
+  "url": "http://dard.out.airtime.pro:8000/dard_a",
+  "tags": "mantra,spiritual",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 48
+ },
+ {
+  "id": "62a5bcf1-ebc5-4cb6-afeb-d40ac4195ab3",
+  "name": "Hits Of Kishor Kumar",
+  "url": "http://stream.zeno.fm/pg6rqp8ztm0uv",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "93827f24-837c-4e10-8069-4ca006d0c77c",
+  "name": "Hits Of Mohammed Rafi",
+  "url": "http://stream.zeno.fm/0zkr7x8ztm0uv",
+  "tags": "bollywood,desi,hindi",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "8ded23e8-bca6-11e8-aaf2-52543be04c81",
+  "name": "2B! Radio Sangam Shiva",
+  "url": "http://hot.out.airtime.pro:8000/hot_a",
+  "tags": "mantra,spiritual",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 48
+ },
+ {
+  "id": "0e5dfcc8-99e2-4fed-a232-7f4bf23ba3c3",
+  "name": "Mirchi Love",
+  "url": "https://drive.uber.radio/uber/bollywoodlove/icecast.audio",
+  "tags": "india,love,mirchi",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "81cee789-221c-45a5-abe0-cc07e8e9589f",
+  "name": "Goldy Cool",
+  "url": "https://stream.zeno.fm/3k1fb86tfm8uv",
+  "tags": "",
+  "country": "India",
+  "codec": "AAC",
+  "bitrate": 96
+ },
+ {
+  "id": "24b4b919-ea81-4e48-8682-ba0fdf9e3a46",
+  "name": "Goldy Mukesh",
+  "url": "https://stream.zeno.fm/t39watus1p8uv",
+  "tags": "bollywood,hindu,oldies",
+  "country": "India",
+  "codec": "AAC",
+  "bitrate": 112
+ },
+ {
+  "id": "9ae30654-b1a6-4eff-81f3-6400d105b340",
+  "name": "Rafi hit songs",
+  "url": "https://stream-143.zeno.fm/0zkr7x8ztm0uv?zs=WTPQx8TiQXSo11XU0iyTAQ",
+  "tags": "classic hits 60s 70a 80s",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "63ebf295-bca6-11e8-aaf2-52543be04c81",
+  "name": "2B! Radio Sangam Devi Maa",
+  "url": "http://ibadat.out.airtime.pro:8000/ibadat_a",
+  "tags": "mantra,spiritual",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 64
+ },
+ {
+  "id": "baae978e-a9d0-422c-8ad4-ec803da4ef8c",
+  "name": "RADIO BOLLYWOOD 90s",
+  "url": "https://stream.zeno.fm/rm4i9pdex3cuv",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "7dd71b85-139b-4362-81b1-4206133a517c",
+  "name": "Hindi Gold Radio",
+  "url": "https://azuracast.vibesounds.in:8010/radio.mp3",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "2c1982bb-cee2-43c2-b5f7-acc09b158af8",
+  "name": "My 90s Bengali",
+  "url": "http://stream.zeno.fm/2k6xfu1pvs8uv",
+  "tags": "90s,bangla,bengali",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 64
+ },
+ {
+  "id": "0db90d9a-4ecc-450c-b8fa-695405b24587",
+  "name": "Bollywood 2010's",
+  "url": "https://drive.uber.radio/uber/bollywood2010s/icecast.audio",
+  "tags": "bollywood,hindi",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "486ea90c-e280-45ed-8ea7-03c08a80a826",
+  "name": "Kalai Fm-TAMIL",
+  "url": "https://stream.zenolive.com/2vghnwshsqzuv.aac",
+  "tags": "entertainment,fun,live",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "8b764ac8-3add-496d-9653-f0b21148f543",
+  "name": "radioBollyFM",
+  "url": "http://stream.zeno.fm/zu59ykebs2zuv",
+  "tags": "international",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "74c09a82-e6f1-4276-8afc-d25ea6d02898",
+  "name": "Vividh Bharti",
+  "url": "http://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8",
+  "tags": "",
+  "country": "India",
+  "codec": "AAC",
+  "bitrate": 93
+ },
+ {
+  "id": "fe1cfd86-5aaa-11e9-a622-52543be04c81",
+  "name": "RADIO MARIA INDIA",
+  "url": "http://dreamsiteradiocp.com:8002/stream",
+  "tags": "catholic,religion,talk",
+  "country": "India",
+  "codec": "AAC+",
+  "bitrate": 64
+ },
+ {
+  "id": "db5a1f42-7f91-4531-895b-1b7f1ff45bc8",
+  "name": "Hindi Retro",
+  "url": "https://stream.zeno.fm/v2zfmxef798uv",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "3bdaedc5-bca6-11e8-aaf2-52543be04c81",
+  "name": "2B! Radio Sangam Ganesha",
+  "url": "http://radio2bindia.out.airtime.pro:8000/radio2bindia_a",
+  "tags": "mantra,spiritual",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 48
+ },
+ {
+  "id": "6560f39b-7a31-4f77-abf1-8cb9528c51c0",
+  "name": "Radio Retro Bollywood 90s",
+  "url": "https://stream-143.zeno.fm/fdgs82xkzhhvv",
+  "tags": "bollywood,hindi bollywood",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "5b7687b7-7bef-40ac-b854-81a89c011610",
+  "name": "Diverse FM",
+  "url": "https://carol.epichosts.co.uk:8570/;",
+  "tags": "",
+  "country": "India",
+  "codec": "AAC+",
+  "bitrate": 128
+ },
+ {
+  "id": "c1437982-06c6-4af7-90c0-24aa688bea13",
+  "name": "Tamil 80's Radio",
+  "url": "https://psrlive2.listenon.in/80?station=tamil80shitsradio",
+  "tags": "south india,tamil",
+  "country": "India",
+  "codec": "AAC+",
+  "bitrate": 64
+ },
+ {
+  "id": "964f8acd-0601-11e8-ae97-52543be04c81",
+  "name": "TORi-Live-8000",
+  "url": "http://173.203.133.187:9700/;stream/1",
+  "tags": "country,telugu",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 64
+ },
+ {
+  "id": "7b130d03-6142-4de2-85db-a821b5949468",
+  "name": "latamangeshkarradio",
+  "url": "https://stream.zeno.fm/87xam8pf7tzuv",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "55c98b93-bca7-11e8-aaf2-52543be04c81",
+  "name": "2B! Radio Sangam Meditation",
+  "url": "http://djbeat.out.airtime.pro:8000/djbeat_a",
+  "tags": "meditation,spiritual",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 48
+ },
+ {
+  "id": "84cdb7d9-9058-4a39-8ad5-bf3e57d299e2",
+  "name": "Bhojpuri Songs",
+  "url": "https://stream.zeno.fm/yz0ncx9gha0uv",
+  "tags": "bhojpuri",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "1bbb4664-d187-49f1-b328-b2f3888fef36",
+  "name": "New Hits Of Bollywood",
+  "url": "https://stream-146.zeno.fm/rqqps6cbe3quv?zs=loHp_DNyRPiAxC52AL95hg",
+  "tags": "",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ },
+ {
+  "id": "a2002b37-4ebf-4a60-96d0-ce03d7e45a83",
+  "name": "Bollywood_Dance",
+  "url": "http://drive.uber.radio/uber/bollywooddance/icecast.audio",
+  "tags": "dance,music",
+  "country": "India",
+  "codec": "MP3",
+  "bitrate": 128
+ }
+]

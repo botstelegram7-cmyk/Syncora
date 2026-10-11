@@ -40,6 +40,8 @@ import com.serena.syncora.ui.StateListener;
 import com.serena.syncora.ui.Theme;
 import com.serena.syncora.ui.Ui;
 import com.serena.syncora.ui.UiHost;
+import com.serena.syncora.radio.RadioCatalog;
+import com.serena.syncora.radio.Station;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -662,6 +664,20 @@ public final class MainActivity extends Activity implements UiHost {
             case "radio":
                 s.playStation(com.serena.syncora.radio.RadioDirectory.featured().get(0));
                 break;
+            case "akashvani": {
+                List<Station> channels = RadioCatalog.akashvani(getApplicationContext());
+                Station liveNews = RadioCatalog.findById(channels, "air-5");
+                if (liveNews == null && !channels.isEmpty()) liveNews = channels.get(0);
+                if (liveNews != null) s.playStation(liveNews);
+                else android.util.Log.e("Syncora", "Bundled Akashvani catalog is empty");
+                break;
+            }
+            case "india-mp3": {
+                Station indian = RadioCatalog.firstByCodec(RadioCatalog.india(getApplicationContext()), "MP3");
+                if (indian != null) s.playStation(indian);
+                else android.util.Log.e("Syncora", "Bundled India MP3 catalog is empty");
+                break;
+            }
             case "mic":
                 s.startMic(null, false, "Automatic input");
                 break;

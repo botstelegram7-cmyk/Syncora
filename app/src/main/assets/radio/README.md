@@ -10,9 +10,9 @@ reads them; `Station` is the model. Every entry is a **live audio stream address
 | `india.json` | Indian private and community stations (Bollywood, regional, devotional, news) | radio-browser.info, most voted first |
 | `world.json` | a few of the best stations from ~50 other countries | radio-browser.info, most voted first |
 
-All three are HLS-heavy: the Akashvani channels are **all** `.m3u8`, which is why Syncora has its
-own HLS reader (`audio/HlsStream`, `audio/MpegTsReader`, `audio/Mp4StreamReader`) and plays the
-audio track only, even when a playlist also offers video.
+All three are HLS-heavy: the Akashvani channels are **all** `.m3u8`. Syncora follows HLS master
+and media playlists with `audio/HlsStream`; `audio/MpegTsReader` extracts supported AAC/MP3 audio
+from MPEG-TS segments. The app plays audio only—never the video track.
 
 ## Field shape
 

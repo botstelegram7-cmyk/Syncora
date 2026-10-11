@@ -2673,10 +2673,11 @@ public final class SyncoraService extends Service {
     private void logDiagnostics() {
         GroupHost h = host;
         boolean isPlaying = source == Source.SPEAKER ? remote.playing : playing;
+        String stationId = source == Source.RADIO && station != null ? station.id : "-";
         android.util.Log.i("SyncoraDiag", "src=" + source + " playing=" + isPlaying + " pos=" + (source == Source.SPEAKER ? remotePositionMs() : hostPositionMs())
                 + " epoch=" + epoch + " clients=" + (h == null ? 0 : h.clientCount()) + " syncErrMs=" + (lastSyncErrorNanos / 1_000_000L)
                 + " aligned=" + (player != null && player.isAligned()) + " queuedChunks=" + (player == null ? -1 : player.queuedChunks())
-                + " conn=" + connection + " room=" + roomPort);
+                + " conn=" + connection + " room=" + roomPort + " buffering=" + buffering + " station=" + stationId);
     }
 
     private void pruneRooms() {

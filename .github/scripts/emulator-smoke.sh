@@ -137,15 +137,26 @@ launch --es tab source; sleep 1; shot 19_dlna_page_casting
 pkill -f "http.server 9000" >/dev/null 2>&1
 publish_partial "DLNA"
 
-note "internet radio"
-launch --es source radio --es play radio --es tab player; sleep 18
-shot 20_radio_playing
-RADIO_LINES=$(adb logcat -d -s SyncoraDiag:I | grep -c 'src=RADIO playing=true')
-note "radio diagnostics lines: $RADIO_LINES"
-echo "radio diag lines with playing=true: $RADIO_LINES" > "$OUT/radio.txt"
-adb logcat -d -s Syncora:I Syncora:W | grep -i "radio\|source error" | tail -n 5 >> "$OUT/radio.txt"
-if [ "$RADIO_LINES" -lt 5 ]; then fail "radio did not start playing (needs internet from the emulator)"; fi
-publish_partial "radio"
+note "Akashvani HLS radio"
+launch --es source radio --es play akashvani --es tab player; sleep 30
+shot 20_radio_akashvani_hls
+HLS_PLAYING=$(adb logcat -d -s SyncoraDiag:I | grep -c 'src=RADIO playing=true.*station=air-5' || true)
+HLS_READY=$(adb logcat -d -s SyncoraDiag:I | grep 'src=RADIO playing=true' | grep -c 'buffering=false station=air-5' || true)
+note "Akashvani HLS diagnostics: playing=$HLS_PLAYING ready=$HLS_READY"
+echo "Akashvani HLS: src=RADIO playing=true lines=$HLS_PLAYING decoded/ready lines=$HLS_READY" > "$OUT/radio.txt"
+if [ "$HLS_PLAYING" -lt 5 ] || [ "$HLS_READY" -lt 3 ]; then fail "Akashvani HLS radio did not produce playing PCM diagnostics"; fi
+publish_partial "Akashvani HLS radio"
+
+note "Indian MP3 radio"
+launch --es source radio --es play india-mp3 --es tab player; sleep 24
+shot 20b_radio_india_mp3
+INDIA_PLAYING=$(adb logcat -d -s SyncoraDiag:I | grep 'src=RADIO playing=true' | grep -vc 'station=air-5' || true)
+INDIA_READY=$(adb logcat -d -s SyncoraDiag:I | grep 'src=RADIO playing=true' | grep 'buffering=false' | grep -vc 'station=air-5' || true)
+note "Indian MP3 diagnostics: playing=$INDIA_PLAYING ready=$INDIA_READY"
+echo "Indian MP3: src=RADIO playing=true lines=$INDIA_PLAYING decoded/ready lines=$INDIA_READY" >> "$OUT/radio.txt"
+adb logcat -d -s Syncora:I Syncora:W | grep -i "radio\|source error" | tail -n 8 >> "$OUT/radio.txt"
+if [ "$INDIA_PLAYING" -lt 5 ] || [ "$INDIA_READY" -lt 3 ]; then fail "Indian MP3 radio did not produce playing PCM diagnostics"; fi
+publish_partial "Indian MP3 radio"
 
 note "microphone / aux capture"
 timeout 60 adb logcat -d -t 1 >/dev/null 2>&1

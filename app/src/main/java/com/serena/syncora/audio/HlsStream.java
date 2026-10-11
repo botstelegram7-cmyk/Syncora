@@ -24,8 +24,8 @@ import javax.crypto.spec.SecretKeySpec;
  * as the show runs: fetch segments, hand their bytes out, refetch the playlist, wait for the next
  * segment. AES-128 encrypted segments are decrypted on the way.
  *
- * <p>What the segments contain (MPEG-TS, fragmented MP4, plain AAC/MP3) is decided afterwards by
- * {@link StreamSniffer}: this class only produces the bytes.
+ * <p>The segments' audio container is inspected by {@link RadioSource} after the HLS bytes are available;
+ * this class only produces the bytes.
  */
 final class HlsStream extends InputStream {
 
@@ -337,11 +337,17 @@ final class HlsStream extends InputStream {
     @Override
     public void close() {
         closed = true;
+        closeFetcher();
     }
 
     /** Lets RadioSource stop a waiting stream from another thread. */
     void abort() {
         closed = true;
+        closeFetcher();
+    }
+
+    private void closeFetcher() {
+        if (fetcher instanceof HttpFetcher) ((HttpFetcher) fetcher).close();
     }
 
     // ------------------------------------------------------------------ the default HTTP fetcher
@@ -350,6 +356,8 @@ final class HlsStream extends InputStream {
     static final class HttpFetcher implements Fetcher {
         private final String userAgent;
         private final int readTimeoutMs;
+        private volatile HttpURLConnection active;
+        private volatile boolean closed;
 
         HttpFetcher(String userAgent, int readTimeoutMs) {
             this.userAgent = userAgent;
@@ -359,49 +367,51 @@ final class HlsStream extends InputStream {
         @Override
         public Response get(String url, long offset, long length) throws IOException {
             URL target = new URL(url);
-            HttpURLConnection connection = null;
             for (int hop = 0; hop < 8; hop++) {
-                connection = (HttpURLConnection) target.openConnection();
-                connection.setInstanceFollowRedirects(false);
-                connection.setConnectTimeout(10_000);
-                connection.setReadTimeout(readTimeoutMs);
-                connection.setRequestProperty("User-Agent", userAgent);
-                connection.setRequestProperty("Accept", "*/*");
-                if (offset > 0 || length >= 0) {
-                    String end = length > 0 ? String.valueOf(offset + length - 1) : "";
-                    connection.setRequestProperty("Range", "bytes=" + offset + "-" + end);
-                }
-                int status = connection.getResponseCode();
-                if (status == 301 || status == 302 || status == 303 || status == 307 || status == 308) {
-                    String location = connection.getHeaderField("Location");
-                    connection.disconnect();
-                    if (location == null) throw new IOException("The station redirected without a new address");
-                    target = new URL(target, location);
-                    continue;
-                }
-                if (status == 416) {
-                    connection.disconnect();
-                    throw new IOException("The station does not have these bytes");
-                }
-                if (status / 100 != 2) {
-                    connection.disconnect();
-                    return new Response(status, connection.getContentType(), target.toString(), new byte[0]);
-                }
-                InputStream in = connection.getInputStream();
-                byte[] body;
+                if (closed) throw new IOException("Stopped");
+                HttpURLConnection connection = (HttpURLConnection) target.openConnection();
+                active = connection;
                 try {
-                    body = HlsPlaylist.readAll(in);
-                } finally {
-                    try {
-                        in.close();
-                    } catch (IOException ignored) {
-                        // the connection is closed anyway
+                    if (closed) throw new IOException("Stopped");
+                    connection.setInstanceFollowRedirects(false);
+                    connection.setConnectTimeout(10_000);
+                    connection.setReadTimeout(readTimeoutMs);
+                    connection.setRequestProperty("User-Agent", userAgent);
+                    connection.setRequestProperty("Accept", "*/*");
+                    if (offset > 0 || length >= 0) {
+                        String end = length > 0 ? String.valueOf(offset + length - 1) : "";
+                        connection.setRequestProperty("Range", "bytes=" + offset + "-" + end);
                     }
+                    int status = connection.getResponseCode();
+                    String contentType = connection.getContentType();
+                    if (status == 301 || status == 302 || status == 303 || status == 307 || status == 308) {
+                        String location = connection.getHeaderField("Location");
+                        if (location == null) throw new IOException("The station redirected without a new address");
+                        target = new URL(target, location);
+                        continue;
+                    }
+                    if (status == 416) throw new IOException("The station does not have these bytes");
+                    if (status / 100 != 2) {
+                        return new Response(status, contentType, target.toString(), new byte[0]);
+                    }
+                    byte[] body;
+                    try (InputStream in = connection.getInputStream()) {
+                        body = HlsPlaylist.readAll(in);
+                    }
+                    if (closed) throw new IOException("Stopped");
+                    return new Response(status, contentType, target.toString(), body);
+                } finally {
+                    if (active == connection) active = null;
                     connection.disconnect();
                 }
-                return new Response(status, connection.getContentType(), target.toString(), body);
             }
             throw new IOException("Too many redirects from " + url);
+        }
+
+        void close() {
+            closed = true;
+            HttpURLConnection connection = active;
+            if (connection != null) connection.disconnect();
         }
     }
 
