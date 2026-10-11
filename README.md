@@ -20,7 +20,7 @@ same audio at the same moment. Everything runs on your own Wi-Fi or phone hotspo
 | **Direct links** | Paste a direct media link (for example a telegram-file-to-links `…/stream?id=888` link): *Play audio in sync* streams it, *Save file* downloads it (`…&d=true`). |
 | **Lyrics** | Swipe the cover art for lyrics. Synced lyrics follow playback and can be tapped to jump. Speakers show them too. |
 | **Audio settings** | Connection state, sync offset with **+ / −** and **Reset**, channels **Mono / Stereo / Left / Right** (two phones = a stereo pair). |
-| **Speaker mode** | Shows the player and its status (*Waiting for connection*), nearby players, connect by IP, auto connect. |
+| **Speaker mode** | Shows the player and its status (*Waiting for connection*), nearby players, connect by IP, auto connect. A call or another app that steals the audio shows the **INTERRUPTED** badge and the sound comes back by itself. |
 | **Settings** | Device name, IP address for connect, theme (Dark / AMOLED / Light / System) + accent, audio mode, animations, speaker options (auto connect, re-sync frequency). |
 | **Premium look** | Blurred cover backdrops, generated covers, animated visuals, media notification with lock-screen controls. |
 

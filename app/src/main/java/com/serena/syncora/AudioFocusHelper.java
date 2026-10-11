@@ -51,4 +51,14 @@ final class AudioFocusHelper {
         request = null;
         held = false;
     }
+
+    /**
+     * Takes the focus back after an interruption. A plain {@link #request()} would do nothing while the framework
+     * still counts this app as the focus owner, so the focus is released first and then requested again; the
+     * previous owner gets an {@code AUDIOFOCUS_LOSS} and playback can be heard again immediately.
+     */
+    boolean reRequest() {
+        abandon();
+        return request();
+    }
 }

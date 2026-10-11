@@ -114,6 +114,17 @@ timeout 20 adb shell input keyevent KEYCODE_BACK; sleep 1
 launch --es cmd toggle; sleep 3; shot 26_speaker_paused_by_command
 launch --es cmd toggle; sleep 4
 launch --es cmd next; sleep 4; shot 27_speaker_next_song
+note "speaker mode recovers the audio after an interruption"
+# pretend the framework reported a focus loss and never sent the gain callback back: the watchdog must take the
+# audio focus again on its own, so the last diagnostics line has to return to interrupt=0 without any user action.
+launch --es cmd focus_loss; shot 29_speaker_interrupted; sleep 6
+INTERRUPTED_LINES=$(adb logcat -d -s SyncoraDiag:I | grep -c 'interrupt=1' || true)
+FOCUS_STATE=$(adb logcat -d -s SyncoraDiag:I | grep -o 'interrupt=[01]' | tail -n 1)
+if [ "${INTERRUPTED_LINES:-0}" -ge 1 ] && [ "$FOCUS_STATE" = "interrupt=0" ]; then
+  note "speaker mode showed INTERRUPTED and took the audio back by itself"
+else
+  fail "speaker mode did not recover the audio (interrupt=1 lines: ${INTERRUPTED_LINES:-0}, last state: ${FOCUS_STATE:-none})"
+fi
 launch --es cmd seek; sleep 3
 launch --es cmd offset; sleep 2
 launch --es cmd left; sleep 2
