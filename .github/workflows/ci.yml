@@ -72,6 +72,43 @@ jobs:
               print('::notice title=Lint errors (%d)::%s' % (len(errors), body[:3500]))
           PY
 
+      # The runner has internet access, which the sandbox where Syncora is developed does not:
+      # this is where the bundled station lists are verified (and, on request, rebuilt).
+      - name: Rebuild the station catalogs from radio-browser.info (only for "[catalog]" commits)
+        if: contains(github.event.head_commit.message, '[catalog]')
+        continue-on-error: true
+        run: python3 .github/scripts/radio_catalog.py --refresh
+
+      - name: Check that every All India Radio station still streams
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python3 .github/scripts/radio_probe.py \
+            --catalog app/src/main/assets/radio/akashvani.json \
+            --report akashvani-probe.json \
+            --filter-out ci-output/akashvani-working.json \
+            --dropped-out ci-output/akashvani-dead.json 2>&1 | tee akashvani-probe.log
+
+      - name: Check the other bundled radio stations
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python3 .github/scripts/radio_probe.py \
+            --catalog app/src/main/assets/radio/india.json \
+            --catalog app/src/main/assets/radio/world.json \
+            --report radio-probe.json 2>&1 | tee radio-probe.log
+
+      - name: Publish the radio probe (and rebuilt catalogs) to the branch
+        if: always() && github.event_name == 'push' && contains(github.event.head_commit.message, '[ci-shots]')
+        run: |
+          git config user.name "syncora-ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -f ci-output app/src/main/assets/radio 2>/dev/null || true
+          git diff --cached --quiet && { echo "nothing to publish"; exit 0; }
+          git commit -m "CI: radio stream probe results [skip ci]"
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning::could not push the radio probe"
+
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: debug-apk
