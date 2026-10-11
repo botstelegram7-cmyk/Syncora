@@ -1,0 +1,1850 @@
+[
+ {
+  "id": "air-5",
+  "name": "Live News 24x7",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airdelhi01/air001_Auto.m3u8",
+  "state": "NATIONAL",
+  "language": "Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/128"
+ },
+ {
+  "id": "air-4",
+  "name": "Raagam",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airbang04/air036_Auto.m3u8",
+  "state": "NATIONAL",
+  "language": "Hindi, Tamil, Telugu, Malayalam",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/349"
+ },
+ {
+  "id": "air-1",
+  "name": "Vividh Bharati",
+  "url": "https://radio.wavespb.com/live/146ed6ec6dea5a24/146ed6ec6dea5a24.m3u8",
+  "state": "NATIONAL",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/133"
+ },
+ {
+  "id": "air-42",
+  "name": "Akashvani Sri Vijaya Puram (Akashvani Port Blair)",
+  "url": "https://radio.wavespb.com/live/dc9ff2a05098df5b/dc9ff2a05098df5b.m3u8",
+  "state": "ANDAMAN NICOBAR",
+  "language": "Hindi, English, Nicobarese",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/345"
+ },
+ {
+  "id": "air-304",
+  "name": "Vividh Bharati Vijayapuram",
+  "url": "https://radio.wavespb.com/live/fbc6b60c0bdf0293/fbc6b60c0bdf0293.m3u8",
+  "state": "ANDAMAN NICOBAR",
+  "language": "Hindi, English, Nicobarese",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/#"
+ },
+ {
+  "id": "air-43",
+  "name": "Akashvani Anantapur",
+  "url": "https://radio.wavespb.com/live/3bcd83926d6c3cca/3bcd83926d6c3cca.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/347"
+ },
+ {
+  "id": "air-49",
+  "name": "Akashvani Andhra Pradesh",
+  "url": "https://radio.wavespb.com/live/2d38e3dcb8d4e0a4/2d38e3dcb8d4e0a4.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/356"
+ },
+ {
+  "id": "air-44",
+  "name": "Akashvani Kadapa",
+  "url": "https://radio.wavespb.com/live/26ec521ec4f7c684/26ec521ec4f7c684.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/389"
+ },
+ {
+  "id": "air-45",
+  "name": "Akashvani Kurnool",
+  "url": "https://radio.wavespb.com/live/57d77b93b7580e24/57d77b93b7580e24.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/388"
+ },
+ {
+  "id": "air-46",
+  "name": "Akashvani Markapur",
+  "url": "https://radio.wavespb.com/live/b11784e3b37b7620/b11784e3b37b7620.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/177"
+ },
+ {
+  "id": "air-48",
+  "name": "Akashvani Tirupati",
+  "url": "https://radio.wavespb.com/live/1119aa26b4e9f653/1119aa26b4e9f653.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/411"
+ },
+ {
+  "id": "air-52",
+  "name": "Akashvani Visakhapatnam",
+  "url": "https://radio.wavespb.com/live/8362d532bd498fd0/8362d532bd498fd0.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/283"
+ },
+ {
+  "id": "air-50",
+  "name": "FM Rainbow Vijayawada",
+  "url": "https://radio.wavespb.com/live/bad174fd7eac38d0/bad174fd7eac38d0.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/358"
+ },
+ {
+  "id": "air-53",
+  "name": "FM Rainbow Visakhapatnam",
+  "url": "https://radio.wavespb.com/live/147314c8aedf4389/147314c8aedf4389.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/289"
+ },
+ {
+  "id": "air-47",
+  "name": "FM Simahapuri Nellore",
+  "url": "https://radio.wavespb.com/live/8bc9175bb717c13b/8bc9175bb717c13b.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/416"
+ },
+ {
+  "id": "air-51",
+  "name": "VB Telugu Vijayawada",
+  "url": "https://radio.wavespb.com/live/0beac8e921bbfdbb/0beac8e921bbfdbb.m3u8",
+  "state": "ANDHRA PRADESH",
+  "language": "Telugu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/357"
+ },
+ {
+  "id": "air-54",
+  "name": "Akashvani Itanagar",
+  "url": "https://radio.wavespb.com/live/098c57a7f382c0d4/098c57a7f382c0d4.m3u8",
+  "state": "ARUNACHAL PRADESH",
+  "language": "Hindi, English​",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/335"
+ },
+ {
+  "id": "air-58",
+  "name": "Akashvani Tezu",
+  "url": "https://radio.wavespb.com/live/7579db5ef9660a6e/7579db5ef9660a6e.m3u8",
+  "state": "ARUNACHAL PRADESH",
+  "language": "Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/404"
+ },
+ {
+  "id": "air-300",
+  "name": "Akashvani Ziro",
+  "url": "https://radio.wavespb.com/live/1f4ec5a1ea8e9015/1f4ec5a1ea8e9015.m3u8",
+  "state": "ARUNACHAL PRADESH",
+  "language": "Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/434"
+ },
+ {
+  "id": "air-55",
+  "name": "FM Arun Itanagar",
+  "url": "https://radio.wavespb.com/live/174624e09dbdcdde/174624e09dbdcdde.m3u8",
+  "state": "ARUNACHAL PRADESH",
+  "language": "Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/336"
+ },
+ {
+  "id": "air-59",
+  "name": "Akashvani Dibrugarh",
+  "url": "https://radio.wavespb.com/live/6db6683f71f6df13/6db6683f71f6df13.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/275"
+ },
+ {
+  "id": "air-60",
+  "name": "Akashvani Diphu",
+  "url": "https://radio.wavespb.com/live/24092163948ab5d8/24092163948ab5d8.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/538"
+ },
+ {
+  "id": "air-61",
+  "name": "Akashvani Guwahati Mahabahu",
+  "url": "https://radio.wavespb.com/live/d1712a1355f27abb/d1712a1355f27abb.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/261"
+ },
+ {
+  "id": "air-62",
+  "name": "Akashvani Guwahati Prayagjyotishpur",
+  "url": "https://radio.wavespb.com/live/c8a130239e27ded0/c8a130239e27ded0.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/383"
+ },
+ {
+  "id": "air-63",
+  "name": "Akashvani Haflong",
+  "url": "https://radio.wavespb.com/live/0625378643a5d9ba/0625378643a5d9ba.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/458"
+ },
+ {
+  "id": "air-64",
+  "name": "Akashvani Jorhat",
+  "url": "https://radio.wavespb.com/live/202fb3b9e2e3f6f1/202fb3b9e2e3f6f1.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/445"
+ },
+ {
+  "id": "air-295",
+  "name": "Akashvani Kokrajhar",
+  "url": "https://radio.wavespb.com/live/f6fa349221f25803/f6fa349221f25803.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/282"
+ },
+ {
+  "id": "air-65",
+  "name": "Akashvani Nagaon",
+  "url": "https://radio.wavespb.com/live/f2619d605f469c55/f2619d605f469c55.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/425"
+ },
+ {
+  "id": "air-66",
+  "name": "Akashvani Silchar",
+  "url": "https://radio.wavespb.com/live/389a55127e012f97/389a55127e012f97.m3u8",
+  "state": "ASSAM",
+  "language": "Bengali, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/217"
+ },
+ {
+  "id": "air-67",
+  "name": "Akashvani Tezpur",
+  "url": "https://radio.wavespb.com/live/9260e7a38d76ffda/9260e7a38d76ffda.m3u8",
+  "state": "ASSAM",
+  "language": "Assamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/392"
+ },
+ {
+  "id": "air-74",
+  "name": "Akashvani Sasaram",
+  "url": "https://radio.wavespb.com/live/cd626d48acead509/cd626d48acead509.m3u8",
+  "state": "BIHAR",
+  "language": "Maithili, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/201"
+ },
+ {
+  "id": "air-75",
+  "name": "Akashvani Chandigarh",
+  "url": "https://radio.wavespb.com/live/db4a912ff7882d9d/db4a912ff7882d9d.m3u8",
+  "state": "CHANDIGARH",
+  "language": "Punjabi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/208"
+ },
+ {
+  "id": "air-77",
+  "name": "Akashvani Bilaspur",
+  "url": "https://radio.wavespb.com/live/10dd6162d75fb6a4/10dd6162d75fb6a4.m3u8",
+  "state": "CHHATISGARH",
+  "language": "Chhattisgarhi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/316"
+ },
+ {
+  "id": "air-80",
+  "name": "Akashvani Chhattisgarh",
+  "url": "https://radio.wavespb.com/live/5ed52a2deec8534e/5ed52a2deec8534e.m3u8",
+  "state": "CHHATISGARH",
+  "language": "Chhattisgarhi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/319"
+ },
+ {
+  "id": "air-82",
+  "name": "Akashvani Saraipali",
+  "url": "https://radio.wavespb.com/live/5ed52a2deec8534e/5ed52a2deec8534e.m3u8",
+  "state": "CHHATISGARH",
+  "language": "Chhattisgarhi, Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-83",
+  "name": "Akashvani Daman",
+  "url": "https://radio.wavespb.com/live/c124a58382e75a46/c124a58382e75a46.m3u8",
+  "state": "DAMAN AND DIU",
+  "language": "Gujarati, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/260"
+ },
+ {
+  "id": "air-296",
+  "name": "Akashvani Aaradhana",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airdelhi05/air005_Auto.m3u8",
+  "state": "DELHI",
+  "language": "Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-2",
+  "name": "FM Gold Delhi",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airdelhi03/air003_Auto.m3u8",
+  "state": "DELHI",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/244"
+ },
+ {
+  "id": "air-3",
+  "name": "FM Rainbow Delhi",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airdelhi02/air002_Auto.m3u8",
+  "state": "DELHI",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/243"
+ },
+ {
+  "id": "air-40",
+  "name": "Indraprastha",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airdelhi06/air006_Auto.m3u8",
+  "state": "DELHI",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/247"
+ },
+ {
+  "id": "air-41",
+  "name": "VBS Delhi",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airdelhi04/air004_Auto.m3u8",
+  "state": "DELHI",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/334"
+ },
+ {
+  "id": "air-302",
+  "name": "VBS Panaji",
+  "url": "https://radio.wavespb.com/live/39dd51a3e97b19b1/39dd51a3e97b19b1.m3u8",
+  "state": "GOA",
+  "language": "Konkani, Marathi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/#"
+ },
+ {
+  "id": "air-89",
+  "name": "Akashvani Godhra",
+  "url": "https://radio.wavespb.com/live/3fa69e2c950b70e8/3fa69e2c950b70e8.m3u8",
+  "state": "GUJARAT",
+  "language": "Gujarati, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/307"
+ },
+ {
+  "id": "air-90",
+  "name": "Akashvani Himmatnagar",
+  "url": "https://radio.wavespb.com/live/76ca5a0d02d6ba94/76ca5a0d02d6ba94.m3u8",
+  "state": "GUJARAT",
+  "language": "Gujarati, Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-93",
+  "name": "Akashvani Surat",
+  "url": "https://radio.wavespb.com/live/fc6ce69c53a3d739/fc6ce69c53a3d739.m3u8",
+  "state": "GUJARAT",
+  "language": "Gujarati, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/175"
+ },
+ {
+  "id": "air-94",
+  "name": "Akashvani Vadodara",
+  "url": "https://radio.wavespb.com/live/e1c63b2c2b58921f/e1c63b2c2b58921f.m3u8",
+  "state": "GUJARAT",
+  "language": "Gujarati, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/146"
+ },
+ {
+  "id": "air-294",
+  "name": "Akashwani Gujarati",
+  "url": "https://radio.wavespb.com/live/8a1bb2ca9d2a6741/8a1bb2ca9d2a6741.m3u8",
+  "state": "GUJARAT",
+  "language": "Gujarati, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/135"
+ },
+ {
+  "id": "air-86",
+  "name": "VBS Ahmedabad",
+  "url": "https://radio.wavespb.com/live/983903b6acb669f3/983903b6acb669f3.m3u8",
+  "state": "GUJARAT",
+  "language": "Gujarati, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/339"
+ },
+ {
+  "id": "air-95",
+  "name": "Akashvani Hisar",
+  "url": "https://radio.wavespb.com/live/d3f37eacc0dc6495/d3f37eacc0dc6495.m3u8",
+  "state": "HARYANA",
+  "language": "Haryanvi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/225"
+ },
+ {
+  "id": "air-96",
+  "name": "Akashvani Kurukshetra",
+  "url": "https://radio.wavespb.com/live/f71ea3f12ae3111c/f71ea3f12ae3111c.m3u8",
+  "state": "HARYANA",
+  "language": "Haryanvi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/229"
+ },
+ {
+  "id": "air-97",
+  "name": "Akashvani Rohtak",
+  "url": "https://radio.wavespb.com/live/d617676f1e7ac0a1/d617676f1e7ac0a1.m3u8",
+  "state": "HARYANA",
+  "language": "Haryanvi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/303"
+ },
+ {
+  "id": "air-98",
+  "name": "Akashvani Dharamshala",
+  "url": "https://radio.wavespb.com/live/c3ae5f110a14d3ba/c3ae5f110a14d3ba.m3u8",
+  "state": "HIMACHAL PRADESH",
+  "language": "Pahari, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/314"
+ },
+ {
+  "id": "air-99",
+  "name": "Akashvani Hamirpur FM",
+  "url": "https://radio.wavespb.com/live/51244bb8a94ec8ec/51244bb8a94ec8ec.m3u8",
+  "state": "HIMACHAL PRADESH",
+  "language": "Pahari, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/227"
+ },
+ {
+  "id": "air-100",
+  "name": "Akashvani Shimla",
+  "url": "https://radio.wavespb.com/live/0b6f48bb61b49957/0b6f48bb61b49957.m3u8",
+  "state": "HIMACHAL PRADESH",
+  "language": "Pahari, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/393"
+ },
+ {
+  "id": "air-101",
+  "name": "Akashvani Shimla FM",
+  "url": "https://radio.wavespb.com/live/66f234a8585d2fe0/66f234a8585d2fe0.m3u8",
+  "state": "HIMACHAL PRADESH",
+  "language": "Pahari, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/265"
+ },
+ {
+  "id": "air-103",
+  "name": "Akashvani Jammu",
+  "url": "https://radio.wavespb.com/live/42c7dca503e95fec/42c7dca503e95fec.m3u8",
+  "state": "JAMMU & KASHMIR",
+  "language": "Dogri, Hindi, Urdu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/265"
+ },
+ {
+  "id": "air-104",
+  "name": "Akashvani Kathua",
+  "url": "https://radio.wavespb.com/live/b4173082e8f5e716/b4173082e8f5e716.m3u8",
+  "state": "JAMMU & KASHMIR",
+  "language": "Dogri, Hindi, Urdu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/291"
+ },
+ {
+  "id": "air-105",
+  "name": "Akashvani Srinagar",
+  "url": "https://radio.wavespb.com/live/01e2be674a0543a6/01e2be674a0543a6.m3u8",
+  "state": "JAMMU & KASHMIR",
+  "language": "Dogri, Hindi, Urdu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/214"
+ },
+ {
+  "id": "air-107",
+  "name": "Akashvani Daltonganj",
+  "url": "https://radio.wavespb.com/live/d94a676236c31713/d94a676236c31713.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/405"
+ },
+ {
+  "id": "air-108",
+  "name": "Akashvani Hazaribagh",
+  "url": "https://radio.wavespb.com/live/db054b48293b8eb4/db054b48293b8eb4.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/493"
+ },
+ {
+  "id": "air-109",
+  "name": "Akashvani Jamshedpur",
+  "url": "https://radio.wavespb.com/live/c27e3dffec59b473/c27e3dffec59b473.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/209"
+ },
+ {
+  "id": "air-111",
+  "name": "Akashvani Ranchi",
+  "url": "https://radio.wavespb.com/live/66b77f1dfee894bc/66b77f1dfee894bc.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/487"
+ },
+ {
+  "id": "air-112",
+  "name": "FM Rainbow Ranchi",
+  "url": "https://radio.wavespb.com/live/af6f533f997d4ae1/af6f533f997d4ae1.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/489"
+ },
+ {
+  "id": "air-110",
+  "name": "VBS Jamshedpur",
+  "url": "https://radio.wavespb.com/live/ce9c6a3206b624a7/ce9c6a3206b624a7.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/210"
+ },
+ {
+  "id": "air-113",
+  "name": "VBS Ranchi",
+  "url": "https://radio.wavespb.com/live/d839e1ea3f3fd644/d839e1ea3f3fd644.m3u8",
+  "state": "JHARKHAND",
+  "language": "Nagpuri, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/488"
+ },
+ {
+  "id": "air-114",
+  "name": "Akashvani Bellari",
+  "url": "https://radio.wavespb.com/live/5a457983e1e7e12f/5a457983e1e7e12f.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/403"
+ },
+ {
+  "id": "air-119",
+  "name": "Akashvani Bhadravati",
+  "url": "https://radio.wavespb.com/live/ad5b1f0e1fd2e000/ad5b1f0e1fd2e000.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/369"
+ },
+ {
+  "id": "air-120",
+  "name": "Akashvani Bijapur",
+  "url": "https://radio.wavespb.com/live/8a8894314ac7be31/8a8894314ac7be31.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-121",
+  "name": "Akashvani Chitradurga",
+  "url": "https://radio.wavespb.com/live/c0b739e6443d99be/c0b739e6443d99be.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/386"
+ },
+ {
+  "id": "air-122",
+  "name": "Akashvani Dharwad",
+  "url": "https://radio.wavespb.com/live/449dcf0b33491e65/449dcf0b33491e65.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/472"
+ },
+ {
+  "id": "air-124",
+  "name": "Akashvani Hassan",
+  "url": "https://radio.wavespb.com/live/9b1044084099f01c/9b1044084099f01c.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/379"
+ },
+ {
+  "id": "air-125",
+  "name": "Akashvani Hospet",
+  "url": "https://radio.wavespb.com/live/113d144f4ecf1dd5/113d144f4ecf1dd5.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/277"
+ },
+ {
+  "id": "air-123",
+  "name": "Akashvani Kalaburgi (Gulbarga)",
+  "url": "https://radio.wavespb.com/live/9b085f63b2c25275/9b085f63b2c25275.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-115",
+  "name": "Akashvani Karnataka",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airbang01/air033_Auto.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/249"
+ },
+ {
+  "id": "air-126",
+  "name": "Akashvani Karwar",
+  "url": "https://radio.wavespb.com/live/723ab703b250900f/723ab703b250900f.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-129",
+  "name": "Akashvani Madikeri",
+  "url": "https://radio.wavespb.com/live/5f58506ab7d090ec/5f58506ab7d090ec.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-128",
+  "name": "Akashvani Mangalore",
+  "url": "https://radio.wavespb.com/live/3c522579906d4dcb/3c522579906d4dcb.m3u8",
+  "state": "KARNATAKA",
+  "language": "Tulu, Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/344"
+ },
+ {
+  "id": "air-127",
+  "name": "Akashvani Mysuru",
+  "url": "https://radio.wavespb.com/live/9d18e57ddfb1d4b4/9d18e57ddfb1d4b4.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/350"
+ },
+ {
+  "id": "air-130",
+  "name": "Akashvani Raichur",
+  "url": "https://radio.wavespb.com/live/e39bab8a1a843e9e/e39bab8a1a843e9e.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-116",
+  "name": "Amrutvarshini",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio028/hlspbaudio028_Auto.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-117",
+  "name": "Rainbow Kannada Kaamanbilu",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airbang02/air034_Auto.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/355"
+ },
+ {
+  "id": "air-118",
+  "name": "VB KANNADA",
+  "url": "https://d3r9rhourdc02u.cloudfront.net/assets/radio/airbang03/air035_Auto.m3u8",
+  "state": "KARNATAKA",
+  "language": "Kannada, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/290"
+ },
+ {
+  "id": "air-135",
+  "name": "Akashvani Calicut",
+  "url": "https://radio.wavespb.com/live/8321393de70015fc/8321393de70015fc.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": ""
+ },
+ {
+  "id": "air-132",
+  "name": "Akashvani Kannur",
+  "url": "https://radio.wavespb.com/live/b82c91a395fc4a7d/b82c91a395fc4a7d.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/322"
+ },
+ {
+  "id": "air-12",
+  "name": "Akashvani Kerala",
+  "url": "https://radio.wavespb.com/live/6ff13de7ea9b53d7/6ff13de7ea9b53d7.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/188"
+ },
+ {
+  "id": "air-134",
+  "name": "Akashvani Kochi",
+  "url": "https://radio.wavespb.com/live/70400e7510e87cdf/70400e7510e87cdf.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/329"
+ },
+ {
+  "id": "air-136",
+  "name": "Akashvani Kozhikode Real FM",
+  "url": "https://radio.wavespb.com/live/b69c296065db7627/b69c296065db7627.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/197"
+ },
+ {
+  "id": "air-137",
+  "name": "Akashvani Manjeri",
+  "url": "https://radio.wavespb.com/live/58390a2ed33cea4a/58390a2ed33cea4a.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/302"
+ },
+ {
+  "id": "air-138",
+  "name": "Akashvani Thrissur",
+  "url": "https://radio.wavespb.com/live/f70fdeca437dc326/f70fdeca437dc326.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/224"
+ },
+ {
+  "id": "air-133",
+  "name": "FM Rainbow Kochi",
+  "url": "https://radio.wavespb.com/live/7df6f2a8c3c4d33b/7df6f2a8c3c4d33b.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/430"
+ },
+ {
+  "id": "air-139",
+  "name": "VB MALAYALAM",
+  "url": "https://radio.wavespb.com/live/ad3a8436a329e2d6/ad3a8436a329e2d6.m3u8",
+  "state": "KERALA",
+  "language": "Malayalam, English",
+  "epg": ""
+ },
+ {
+  "id": "air-141",
+  "name": "Akashvani Leh",
+  "url": "https://radio.wavespb.com/live/f0dd9a4b04d3df3f/f0dd9a4b04d3df3f.m3u8",
+  "state": "LADAKH",
+  "language": "Ladakhi, Hindi​",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/365"
+ },
+ {
+  "id": "air-142",
+  "name": "Akashvani Kavaratti",
+  "url": "https://radio.wavespb.com/live/ffb3825f86c4b9e3/ffb3825f86c4b9e3.m3u8",
+  "state": "LAKSHADWEEP",
+  "language": "Malayalam, Hindi​, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/412"
+ },
+ {
+  "id": "air-143",
+  "name": "Akashvani Balaghat",
+  "url": "https://radio.wavespb.com/live/971411cf78525ddb/971411cf78525ddb.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/293"
+ },
+ {
+  "id": "air-148",
+  "name": "Akashvani Chhindwara",
+  "url": "https://radio.wavespb.com/live/cd036f6c29b7c386/cd036f6c29b7c386.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/195"
+ },
+ {
+  "id": "air-149",
+  "name": "Akashvani Guna",
+  "url": "https://radio.wavespb.com/live/e1d62b96207fe4b7/e1d62b96207fe4b7.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/421"
+ },
+ {
+  "id": "air-150",
+  "name": "Akashvani Gwalior",
+  "url": "https://radio.wavespb.com/live/4934ba16034cf481/4934ba16034cf481.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/310"
+ },
+ {
+  "id": "air-155",
+  "name": "Akashvani Khandwa",
+  "url": "https://radio.wavespb.com/live/76260628792d0528/76260628792d0528.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/252"
+ },
+ {
+  "id": "air-157",
+  "name": "Akashvani Sagar",
+  "url": "https://radio.wavespb.com/live/b60eae3df5a29197/b60eae3df5a29197.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/305"
+ },
+ {
+  "id": "air-158",
+  "name": "Akashvani Shahdol",
+  "url": "https://radio.wavespb.com/live/0f046e291da2017b/0f046e291da2017b.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/317"
+ },
+ {
+  "id": "air-159",
+  "name": "Akashvani Shivpuri",
+  "url": "https://radio.wavespb.com/live/db8c03f2dcb2e896/db8c03f2dcb2e896.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/250"
+ },
+ {
+  "id": "air-299",
+  "name": "Akashvani Ujjain",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio233/playlist.m3u8",
+  "state": "MADHYA PRADESH",
+  "language": "Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-160",
+  "name": "Akashvani Ahilyanagar (Ahmednagar)",
+  "url": "https://radio.wavespb.com/live/e52945b98fa63678/e52945b98fa63678.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/182"
+ },
+ {
+  "id": "air-161",
+  "name": "Akashvani Akola",
+  "url": "https://radio.wavespb.com/live/5dd27f81c839f0f5/5dd27f81c839f0f5.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/262"
+ },
+ {
+  "id": "air-162",
+  "name": "Akashvani Amravati",
+  "url": "https://radio.wavespb.com/live/662185c15bea296f/662185c15bea296f.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/173"
+ },
+ {
+  "id": "air-164",
+  "name": "Akashvani Beed",
+  "url": "https://radio.wavespb.com/live/3f62bdf39635ed61/3f62bdf39635ed61.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/181"
+ },
+ {
+  "id": "air-165",
+  "name": "Akashvani Chandrapur",
+  "url": "https://radio.wavespb.com/live/8469b942291df38f/8469b942291df38f.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/286"
+ },
+ {
+  "id": "air-177",
+  "name": "Akashvani Dharashiv",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio132/playlist.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/161"
+ },
+ {
+  "id": "air-166",
+  "name": "Akashvani Dhule",
+  "url": "https://radio.wavespb.com/live/c0040b54233d76a1/c0040b54233d76a1.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/134"
+ },
+ {
+  "id": "air-167",
+  "name": "Akashvani Jalgaon",
+  "url": "https://radio.wavespb.com/live/bd41e24a31710397/bd41e24a31710397.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/309"
+ },
+ {
+  "id": "air-168",
+  "name": "Akashvani Kolhapur",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio063/playlist.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/137"
+ },
+ {
+  "id": "air-6",
+  "name": "Akashvani Marathi Mumbai Asmita",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio010/hlspbaudio010_Auto.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/126"
+ },
+ {
+  "id": "air-174",
+  "name": "Akashvani Nagpur",
+  "url": "https://radio.wavespb.com/live/84ad8273437552d7/84ad8273437552d7.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/138"
+ },
+ {
+  "id": "air-175",
+  "name": "Akashvani Nanded",
+  "url": "https://radio.wavespb.com/live/111df0bc650820de/111df0bc650820de.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/226"
+ },
+ {
+  "id": "air-176",
+  "name": "Akashvani Nasik",
+  "url": "https://radio.wavespb.com/live/810a1db2ef684745/810a1db2ef684745.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/155"
+ },
+ {
+  "id": "air-178",
+  "name": "Akashvani Parbhani",
+  "url": "https://radio.wavespb.com/live/825fdd17744384f5/825fdd17744384f5.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/583"
+ },
+ {
+  "id": "air-179",
+  "name": "Akashvani Pune",
+  "url": "https://radio.wavespb.com/live/39d650ca0476a1fe/39d650ca0476a1fe.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/162"
+ },
+ {
+  "id": "air-181",
+  "name": "Akashvani Ratnagiri",
+  "url": "https://radio.wavespb.com/live/615b82703c7e8a4c/615b82703c7e8a4c.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/170"
+ },
+ {
+  "id": "air-184",
+  "name": "Akashvani Satara",
+  "url": "https://radio.wavespb.com/live/6878cc031c86befd/6878cc031c86befd.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/142"
+ },
+ {
+  "id": "air-182",
+  "name": "Akashvani Sindhudurg",
+  "url": "https://radio.wavespb.com/live/77aa8f10f47897a3/77aa8f10f47897a3.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/406"
+ },
+ {
+  "id": "air-185",
+  "name": "Akashvani Solapur",
+  "url": "https://radio.wavespb.com/live/2792d5e06dbdc800/2792d5e06dbdc800.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/272"
+ },
+ {
+  "id": "air-169",
+  "name": "FM Gold Mumbai",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio007/hlspbaudio007_Auto.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/128"
+ },
+ {
+  "id": "air-170",
+  "name": "FM Rainbow Mumbai",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio008/hlspbaudio008_Auto.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/129"
+ },
+ {
+  "id": "air-171",
+  "name": "Samvadita Mumbai",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio009/hlspbaudio009_Auto.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/127"
+ },
+ {
+  "id": "air-172",
+  "name": "VBS Mumbai",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio011/hlspbaudio011_Auto.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/133"
+ },
+ {
+  "id": "air-173",
+  "name": "VBS Nagpur",
+  "url": "https://radio.wavespb.com/live/019f90c3d79daeb9/019f90c3d79daeb9.m3u8",
+  "state": "MAHARASHTRA",
+  "language": "Marathi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/139"
+ },
+ {
+  "id": "air-190",
+  "name": "Akashvani Jowai",
+  "url": "https://radio.wavespb.com/live/56465e7d42632ff1/56465e7d42632ff1.m3u8",
+  "state": "MEGHALAYA",
+  "language": "Khasi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/715"
+ },
+ {
+  "id": "air-193",
+  "name": "Akashvani North East Livestream",
+  "url": "https://radio.wavespb.com/live/0ce240322bab1873/0ce240322bab1873.m3u8",
+  "state": "MEGHALAYA",
+  "language": "Khasi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/376"
+ },
+ {
+  "id": "air-191",
+  "name": "Akashvani Shillong",
+  "url": "https://radio.wavespb.com/live/8d920d17847ba75e/8d920d17847ba75e.m3u8",
+  "state": "MEGHALAYA",
+  "language": "Khasi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/263"
+ },
+ {
+  "id": "air-194",
+  "name": "Akashvani Tura",
+  "url": "https://radio.wavespb.com/live/a4c3a057df68d422/a4c3a057df68d422.m3u8",
+  "state": "MEGHALAYA",
+  "language": "Khasi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/477"
+ },
+ {
+  "id": "air-192",
+  "name": "FM Jongphi Shillong",
+  "url": "https://radio.wavespb.com/live/989abf4a5fee9240/989abf4a5fee9240.m3u8",
+  "state": "MEGHALAYA",
+  "language": "Khasi, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/715"
+ },
+ {
+  "id": "air-195",
+  "name": "Akashvani Aizawl",
+  "url": "https://radio.wavespb.com/live/6893614bef61d497/6893614bef61d497.m3u8",
+  "state": "MIZORAM",
+  "language": "Mizo, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/426"
+ },
+ {
+  "id": "air-197",
+  "name": "Akashvani Lunglei",
+  "url": "https://radio.wavespb.com/live/3ab311dc7cdb60a1/3ab311dc7cdb60a1.m3u8",
+  "state": "MIZORAM",
+  "language": "Mizo, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/475"
+ },
+ {
+  "id": "air-196",
+  "name": "FM Zoawi Aizawl",
+  "url": "https://radio.wavespb.com/live/443b0a952fbbe057/443b0a952fbbe057.m3u8",
+  "state": "MIZORAM",
+  "language": "Mizo, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/427"
+ },
+ {
+  "id": "air-199",
+  "name": "Akashvani Kohima",
+  "url": "https://radio.wavespb.com/live/f5861f9687811aae/f5861f9687811aae.m3u8",
+  "state": "NAGALAND",
+  "language": "Nagamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/536"
+ },
+ {
+  "id": "air-198",
+  "name": "Akashvani Mokokchung",
+  "url": "https://radio.wavespb.com/live/4bf7a85c38f41705/4bf7a85c38f41705.m3u8",
+  "state": "NAGALAND",
+  "language": "Nagamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/717"
+ },
+ {
+  "id": "air-200",
+  "name": "FM Tragopan Kohima",
+  "url": "https://radio.wavespb.com/live/fff99886b825e2ae/fff99886b825e2ae.m3u8",
+  "state": "NAGALAND",
+  "language": "Nagamese, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/244"
+ },
+ {
+  "id": "air-204",
+  "name": "Akashvani Balangir",
+  "url": "https://radio.wavespb.com/live/6a8a1c15dc441c4e/6a8a1c15dc441c4e.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-201",
+  "name": "Akashvani Baripada",
+  "url": "https://radio.wavespb.com/live/9a5be453a1319cad/9a5be453a1319cad.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/418"
+ },
+ {
+  "id": "air-202",
+  "name": "Akashvani Berhampur",
+  "url": "https://radio.wavespb.com/live/9ff9e2581893d28d/9ff9e2581893d28d.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/409"
+ },
+ {
+  "id": "air-203",
+  "name": "Akashvani Bhawanipatna",
+  "url": "https://radio.wavespb.com/live/01249e3a4e4625bf/01249e3a4e4625bf.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-205",
+  "name": "Akashvani Cuttack",
+  "url": "https://radio.wavespb.com/live/fbcc67ea837b6ea7/fbcc67ea837b6ea7.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/180"
+ },
+ {
+  "id": "air-208",
+  "name": "Akashvani Jeypore",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio112/playlist.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/327"
+ },
+ {
+  "id": "air-209",
+  "name": "Akashvani Joranda",
+  "url": "https://radio.wavespb.com/live/3191cc8afa1d559b/3191cc8afa1d559b.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/432"
+ },
+ {
+  "id": "air-210",
+  "name": "Akashvani Keonjhar",
+  "url": "https://radio.wavespb.com/live/e1afe27f9ccb5046/e1afe27f9ccb5046.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/396"
+ },
+ {
+  "id": "air-213",
+  "name": "Akashvani Mahanadi Sambalpur",
+  "url": "https://radio.wavespb.com/live/a6aee9a607d6b17a/a6aee9a607d6b17a.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/390"
+ },
+ {
+  "id": "air-211",
+  "name": "Akashvani Puri FM",
+  "url": "https://radio.wavespb.com/live/82893b35c7d1fa49/82893b35c7d1fa49.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/218"
+ },
+ {
+  "id": "air-212",
+  "name": "Akashvani Rourkela",
+  "url": "https://radio.wavespb.com/live/6f4b24b6ac501e88/6f4b24b6ac501e88.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/221"
+ },
+ {
+  "id": "air-214",
+  "name": "Akashvani Sambalpur",
+  "url": "https://radio.wavespb.com/live/a6aee9a607d6b17a/a6aee9a607d6b17a.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/390"
+ },
+ {
+  "id": "air-206",
+  "name": "FM Rainbow Cuttack",
+  "url": "https://radio.wavespb.com/live/e0ad71c249a45867/e0ad71c249a45867.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/374"
+ },
+ {
+  "id": "air-207",
+  "name": "VBS Cuttack",
+  "url": "https://radio.wavespb.com/live/cde7bdd265f54e70/cde7bdd265f54e70.m3u8",
+  "state": "ODISHA",
+  "language": "Odia, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/343"
+ },
+ {
+  "id": "air-215",
+  "name": "Akashvani Karaikal",
+  "url": "https://radio.wavespb.com/live/51065e9e2f00e83e/51065e9e2f00e83e.m3u8",
+  "state": "PUDUCHERRY",
+  "language": "Tamil, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/407"
+ },
+ {
+  "id": "air-216",
+  "name": "Akashvani Puducherry",
+  "url": "https://radio.wavespb.com/live/6b93ba50696fddcd/6b93ba50696fddcd.m3u8",
+  "state": "PUDUCHERRY",
+  "language": "Tamil, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/373"
+ },
+ {
+  "id": "air-217",
+  "name": "FM Rainbow Puducherry",
+  "url": "https://radio.wavespb.com/live/0e2a3509c6d25e11/0e2a3509c6d25e11.m3u8",
+  "state": "PUDUCHERRY",
+  "language": "Tamil, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/373"
+ },
+ {
+  "id": "air-218",
+  "name": "Akashvani Bhatinda",
+  "url": "https://radio.wavespb.com/live/8651d3d0c2021750/8651d3d0c2021750.m3u8",
+  "state": "PUNJAB",
+  "language": "Punjabi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/509"
+ },
+ {
+  "id": "air-301",
+  "name": "Akashvani Ludhiana",
+  "url": "https://radio.wavespb.com/live/1a7150879f9e362c/1a7150879f9e362c.m3u8",
+  "state": "PUNJAB",
+  "language": "Punjabi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/535"
+ },
+ {
+  "id": "air-220",
+  "name": "Akashvani Patiala",
+  "url": "https://radio.wavespb.com/live/8d1636496b33c77e/8d1636496b33c77e.m3u8",
+  "state": "PUNJAB",
+  "language": "Punjabi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/230"
+ },
+ {
+  "id": "air-8",
+  "name": "Akashvani Punjabi",
+  "url": "https://radio.wavespb.com/live/5adc4acbbdd1f6cf/5adc4acbbdd1f6cf.m3u8",
+  "state": "PUNJAB",
+  "language": "Punjabi, Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-219",
+  "name": "FM Rainbow Jalandhar",
+  "url": "https://radio.wavespb.com/live/027744169f5fad66/027744169f5fad66.m3u8",
+  "state": "PUNJAB",
+  "language": "Punjabi, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/237"
+ },
+ {
+  "id": "air-221",
+  "name": "Akashvani Alwar",
+  "url": "https://radio.wavespb.com/live/67a9516c2ccd3fd5/67a9516c2ccd3fd5.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/172"
+ },
+ {
+  "id": "air-222",
+  "name": "Akashvani Banswara",
+  "url": "https://radio.wavespb.com/live/775687c68323aecb/775687c68323aecb.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": ""
+ },
+ {
+  "id": "air-224",
+  "name": "Akashvani Bikaner",
+  "url": "https://radio.wavespb.com/live/e2588cb0ff825cd9/e2588cb0ff825cd9.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/169"
+ },
+ {
+  "id": "air-226",
+  "name": "Akashvani Churu",
+  "url": "https://radio.wavespb.com/live/c6506b14b519d47c/c6506b14b519d47c.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/147"
+ },
+ {
+  "id": "air-227",
+  "name": "Akashvani Jaipur",
+  "url": "https://radio.wavespb.com/live/ad081b4086797344/ad081b4086797344.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/166"
+ },
+ {
+  "id": "air-231",
+  "name": "Akashvani Jodhpur",
+  "url": "https://radio.wavespb.com/live/520ec0fb4a9139a7/520ec0fb4a9139a7.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/192"
+ },
+ {
+  "id": "air-232",
+  "name": "Akashvani Jodhpur Sun City FM",
+  "url": "https://radio.wavespb.com/live/23ae73f45ccdd42d/23ae73f45ccdd42d.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/193"
+ },
+ {
+  "id": "air-233",
+  "name": "Akashvani Kota",
+  "url": "https://radio.wavespb.com/live/b5004d73a5aa6787/b5004d73a5aa6787.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/160"
+ },
+ {
+  "id": "air-306",
+  "name": "Akashvani Kotputli",
+  "url": "https://radio.wavespb.com/live/db62c9a589f741ac/db62c9a589f741ac.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/157"
+ },
+ {
+  "id": "air-234",
+  "name": "Akashvani Mount Abu",
+  "url": "https://radio.wavespb.com/live/550cfb9bbee7b16d/550cfb9bbee7b16d.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/186"
+ },
+ {
+  "id": "air-236",
+  "name": "Akashvani Sawai Madhopur",
+  "url": "https://radio.wavespb.com/live/9f2c9cb132d3ae49/9f2c9cb132d3ae49.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/159"
+ },
+ {
+  "id": "air-237",
+  "name": "Akashvani Suratgarh",
+  "url": "https://radio.wavespb.com/live/1c07d04e88eb31c8/1c07d04e88eb31c8.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/165"
+ },
+ {
+  "id": "air-238",
+  "name": "Akashvani Udaipur",
+  "url": "https://radio.wavespb.com/live/85190aca16096832/85190aca16096832.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/149"
+ },
+ {
+  "id": "air-239",
+  "name": "Akashvani Udaipur FM Lake City",
+  "url": "https://radio.wavespb.com/live/71d3cbef594e01a9/71d3cbef594e01a9.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/150"
+ },
+ {
+  "id": "air-228",
+  "name": "VBS Jaipur",
+  "url": "https://radio.wavespb.com/live/72d34573791c739b/72d34573791c739b.m3u8",
+  "state": "RAJASTHAN",
+  "language": "Rajasthani, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/152"
+ },
+ {
+  "id": "air-240",
+  "name": "Akashvani Gangtok",
+  "url": "https://radio.wavespb.com/live/a2fa73a479445b3d/a2fa73a479445b3d.m3u8",
+  "state": "SIKKIM",
+  "language": "Nepali, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/331"
+ },
+ {
+  "id": "air-243",
+  "name": "Akashvani Coimbatore",
+  "url": "https://radio.wavespb.com/live/a6eec8ec7d6ee49d/a6eec8ec7d6ee49d.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/280"
+ },
+ {
+  "id": "air-245",
+  "name": "Akashvani Dharmapuri",
+  "url": "https://radio.wavespb.com/live/36378083c1be092b/36378083c1be092b.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/624"
+ },
+ {
+  "id": "air-246",
+  "name": "Akashvani Kodaikanal",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio051/playlist.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/256"
+ },
+ {
+  "id": "air-247",
+  "name": "Akashvani Madurai",
+  "url": "https://radio.wavespb.com/live/5c28fdbb318c1f13/5c28fdbb318c1f13.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/385"
+ },
+ {
+  "id": "air-305",
+  "name": "Akashvani Madurai FM",
+  "url": "https://radio.wavespb.com/live/f910c4cf0415b953/f910c4cf0415b953.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/#"
+ },
+ {
+  "id": "air-249",
+  "name": "Akashvani Ooty",
+  "url": "https://radio.wavespb.com/live/e2ac3971fdada7d1/e2ac3971fdada7d1.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/156"
+ },
+ {
+  "id": "air-9",
+  "name": "Akashvani Tamil Nadu",
+  "url": "https://radio.wavespb.com/live/d533f2af4f49bd6f/d533f2af4f49bd6f.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/399"
+ },
+ {
+  "id": "air-250",
+  "name": "Akashvani Tiruchirappalli",
+  "url": "https://radio.wavespb.com/live/bd8f073da8cde368/bd8f073da8cde368.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/198"
+ },
+ {
+  "id": "air-251",
+  "name": "Akashvani Tiruchirappalli FM",
+  "url": "https://radio.wavespb.com/live/340834aaac8e1081/340834aaac8e1081.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/199"
+ },
+ {
+  "id": "air-252",
+  "name": "Akashvani Tirunelveli",
+  "url": "https://radio.wavespb.com/live/ee7f2a29ab3b6bf9/ee7f2a29ab3b6bf9.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/352"
+ },
+ {
+  "id": "air-254",
+  "name": "Akashvani Tuticorin",
+  "url": "https://radio.wavespb.com/live/2e8cfad789dc692d/2e8cfad789dc692d.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/312"
+ },
+ {
+  "id": "air-241",
+  "name": "FM Gold Chennai",
+  "url": "https://radio.wavespb.com/live/84ad819b3f45dc08/84ad819b3f45dc08.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/401"
+ },
+ {
+  "id": "air-248",
+  "name": "FM Nagercoil Kumari",
+  "url": "https://radio.wavespb.com/live/10c64309264eb009/10c64309264eb009.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/342"
+ },
+ {
+  "id": "air-297",
+  "name": "FM Rainbow Chennai",
+  "url": "https://radio.wavespb.com/live/b20ff2fc0bb34b3d/b20ff2fc0bb34b3d.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/401"
+ },
+ {
+  "id": "air-244",
+  "name": "FM Rainbow Coimbatore",
+  "url": "https://radio.wavespb.com/live/3622d8d5aa1809b2/3622d8d5aa1809b2.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/281"
+ },
+ {
+  "id": "air-253",
+  "name": "FM Rainbow Tirunelveli",
+  "url": "https://radio.wavespb.com/live/a8b9f00a52568fbd/a8b9f00a52568fbd.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/353"
+ },
+ {
+  "id": "air-242",
+  "name": "VB Tamil Chennai",
+  "url": "https://radio.wavespb.com/live/f893db91dedcb4ab/f893db91dedcb4ab.m3u8",
+  "state": "TAMIL NADU",
+  "language": "Tamil, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/474"
+ },
+ {
+  "id": "air-38",
+  "name": "Akashvani Adilabad",
+  "url": "https://radio.wavespb.com/live/e47c5f0cec4af335/e47c5f0cec4af335.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/295"
+ },
+ {
+  "id": "air-258",
+  "name": "Akashvani Kothagudem",
+  "url": "https://radio.wavespb.com/live/8416764ec0889597/8416764ec0889597.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/428"
+ },
+ {
+  "id": "air-259",
+  "name": "Akashvani Nizamabad",
+  "url": "https://radio.wavespb.com/live/5d9989b5189a8f4a/5d9989b5189a8f4a.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/491"
+ },
+ {
+  "id": "air-255",
+  "name": "Akashvani Telangana",
+  "url": "https://radio.wavespb.com/live/1c701f7b70df2568/1c701f7b70df2568.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/141"
+ },
+ {
+  "id": "air-260",
+  "name": "Akashvani Warangal",
+  "url": "https://radio.wavespb.com/live/deae7120a205bfff/deae7120a205bfff.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/464"
+ },
+ {
+  "id": "air-256",
+  "name": "FM Rainbow Hyderabad",
+  "url": "https://radio.wavespb.com/live/3a02c5c035815bb9/3a02c5c035815bb9.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Urdu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/207"
+ },
+ {
+  "id": "air-257",
+  "name": "VB Telugu Hyderabad",
+  "url": "https://radio.wavespb.com/live/89969ad91f106dde/89969ad91f106dde.m3u8",
+  "state": "TELANGANA",
+  "language": "Telugu, Urdu, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/354"
+ },
+ {
+  "id": "air-261",
+  "name": "Akashvani Agartala",
+  "url": "https://radio.wavespb.com/live/8e8696f98500ad60/8e8696f98500ad60.m3u8",
+  "state": "TRIPURA",
+  "language": "Bengali, Kokborok, Hindi, and English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/438"
+ },
+ {
+  "id": "air-263",
+  "name": "Akashvani Belonia",
+  "url": "https://radio.wavespb.com/live/00ff79c493fe8353/00ff79c493fe8353.m3u8",
+  "state": "TRIPURA",
+  "language": "Bengali, Kokborok, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/617"
+ },
+ {
+  "id": "air-264",
+  "name": "Akashvani Kailashahar",
+  "url": "https://radio.wavespb.com/live/c84f390b94a07703/c84f390b94a07703.m3u8",
+  "state": "TRIPURA",
+  "language": "Bengali, Kokborok, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/341"
+ },
+ {
+  "id": "air-262",
+  "name": "FM Ujjayanta Agartala",
+  "url": "https://radio.wavespb.com/live/d65912ef9829b8c9/d65912ef9829b8c9.m3u8",
+  "state": "TRIPURA",
+  "language": "Bengali, Kokborok, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/highlights/438"
+ },
+ {
+  "id": "air-265",
+  "name": "Akashvani Agra",
+  "url": "https://radio.wavespb.com/live/94e6de05aa9b04b0/94e6de05aa9b04b0.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi, Braj Bhasha",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/410"
+ },
+ {
+  "id": "air-268",
+  "name": "Akashvani Ayodhya",
+  "url": "https://radio.wavespb.com/live/750c49044bde8cfe/750c49044bde8cfe.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/212"
+ },
+ {
+  "id": "air-267",
+  "name": "Akashvani Bareilly",
+  "url": "https://radio.wavespb.com/live/e323812d96d7881d/e323812d96d7881d.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/219"
+ },
+ {
+  "id": "air-269",
+  "name": "Akashvani Gorakhpur",
+  "url": "https://radio.wavespb.com/live/90f2250fec262bde/90f2250fec262bde.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/184"
+ },
+ {
+  "id": "air-270",
+  "name": "Akashvani Jhansi",
+  "url": "https://radio.wavespb.com/live/f8f027390a964141/f8f027390a964141.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/380"
+ },
+ {
+  "id": "air-271",
+  "name": "Akashvani Kanpur",
+  "url": "https://radio.wavespb.com/live/278ca8613f27411e/278ca8613f27411e.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/215"
+ },
+ {
+  "id": "air-273",
+  "name": "Akashvani Lucknow",
+  "url": "https://radio.wavespb.com/live/75c01e54cb46ad29/75c01e54cb46ad29.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi, Urdu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/367"
+ },
+ {
+  "id": "air-275",
+  "name": "Akashvani Mathura",
+  "url": "https://radio.wavespb.com/live/5e42265becd8a816/5e42265becd8a816.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/297"
+ },
+ {
+  "id": "air-276",
+  "name": "Akashvani Najibabad",
+  "url": "https://radio.wavespb.com/live/4aaa85cab056e9c1/4aaa85cab056e9c1.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/228"
+ },
+ {
+  "id": "air-277",
+  "name": "Akashvani Obra",
+  "url": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio235/playlist.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/271"
+ },
+ {
+  "id": "air-266",
+  "name": "Akashvani Prayagraj",
+  "url": "https://radio.wavespb.com/live/7427fdb9d3f69c5d/7427fdb9d3f69c5d.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/533"
+ },
+ {
+  "id": "air-278",
+  "name": "Akashvani Rampur",
+  "url": "https://radio.wavespb.com/live/bc3b1ad27f1e2fda/bc3b1ad27f1e2fda.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/178"
+ },
+ {
+  "id": "air-279",
+  "name": "Akashvani Varanasi",
+  "url": "https://radio.wavespb.com/live/43290b0b741fd08f/43290b0b741fd08f.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi, Bhojpuri",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/257"
+ },
+ {
+  "id": "air-272",
+  "name": "FM Rainbow Kanpur",
+  "url": "https://radio.wavespb.com/live/c0df5324304ad39e/c0df5324304ad39e.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/216"
+ },
+ {
+  "id": "air-274",
+  "name": "FM Rainbow Lucknow",
+  "url": "https://radio.wavespb.com/live/81c465a355a1ea65/81c465a355a1ea65.m3u8",
+  "state": "UTTAR PRADESH",
+  "language": "Hindi, Urdu",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/368"
+ },
+ {
+  "id": "air-280",
+  "name": "Akashvani Almora",
+  "url": "https://radio.wavespb.com/live/38719309b3b91cdc/38719309b3b91cdc.m3u8",
+  "state": "UTTARAKHAND",
+  "language": "Garhwali, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/326"
+ },
+ {
+  "id": "air-281",
+  "name": "Akashvani Dehradun",
+  "url": "https://radio.wavespb.com/live/355939733d28e2e7/355939733d28e2e7.m3u8",
+  "state": "UTTARAKHAND",
+  "language": "Garhwali, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/408"
+ },
+ {
+  "id": "air-282",
+  "name": "Akashvani Pauri",
+  "url": "https://radio.wavespb.com/live/101ea47cdd9c59df/101ea47cdd9c59df.m3u8",
+  "state": "UTTARAKHAND",
+  "language": "Garhwali, Hindi",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/306"
+ },
+ {
+  "id": "air-283",
+  "name": "Akashvani Bangla",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio137/hlspbaudio137_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": ""
+ },
+ {
+  "id": "air-284",
+  "name": "Akashvani Kolkata Geetanjali",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio055/hlspbaudio055_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": ""
+ },
+ {
+  "id": "air-285",
+  "name": "Akashvani Kolkata Sanchayita",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio056/hlspbaudio056_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": ""
+ },
+ {
+  "id": "air-289",
+  "name": "Akashvani Kurseong",
+  "url": "https://radio.wavespb.com/live/1f781b48497e67d3/1f781b48497e67d3.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/287"
+ },
+ {
+  "id": "air-292",
+  "name": "Akashvani Maitree",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio245/hlspbaudio245_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": ""
+ },
+ {
+  "id": "air-291",
+  "name": "Akashvani Shantiniketan",
+  "url": "https://radio.wavespb.com/live/66249dfecaf80241/66249dfecaf80241.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": ""
+ },
+ {
+  "id": "air-293",
+  "name": "Akashvani Siliguri",
+  "url": "https://radio.wavespb.com/live/165856ba98ca031a/165856ba98ca031a.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/482"
+ },
+ {
+  "id": "air-286",
+  "name": "FM Gold Kolkata",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio057/hlspbaudio057_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-287",
+  "name": "FM Rainbow Kolkata",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio058/hlspbaudio058_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali, Hindi, English",
+  "epg": ""
+ },
+ {
+  "id": "air-288",
+  "name": "VBS Kolkata",
+  "url": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio275/hlspbaudio275_Auto.m3u8",
+  "state": "WEST BENGAL",
+  "language": "Bengali, Hindi, English",
+  "epg": "https://cuesheets.prasarbharati.org/viewsheet/413"
+ }
+]
