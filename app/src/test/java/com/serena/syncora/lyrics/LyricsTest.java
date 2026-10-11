@@ -44,6 +44,53 @@ public class LyricsTest {
     }
 
     @Test
+    public void enhancedLrcUsesOnlyTheWordTimestampsThatWereActuallyProvided() {
+        Lyrics lyrics = LrcParser.parse("[00:10.00]<00:10.00>Hello <00:10.45>world", "enhanced LRC");
+        assertTrue(lyrics.synced());
+        assertTrue(lyrics.wordSynced());
+        assertEquals("Hello world", lyrics.lines.get(0).text);
+        assertEquals(2, lyrics.lines.get(0).words.size());
+        assertEquals(10000, lyrics.lines.get(0).words.get(0).timeMs);
+        assertEquals(10450, lyrics.lines.get(0).words.get(1).timeMs);
+        assertEquals(-1, lyrics.lines.get(0).wordIndexAt(9999));
+        assertEquals(0, lyrics.lines.get(0).wordIndexAt(10000));
+        assertEquals(1, lyrics.lines.get(0).wordIndexAt(10450));
+
+        Lyrics lineOnly = LrcParser.parse("[00:10.00]Hello world", "line LRC");
+        assertTrue(lineOnly.synced());
+        assertFalse(lineOnly.wordSynced());
+        assertEquals(0, lineOnly.lines.get(0).words.size());
+    }
+
+    @Test
+    public void wordTimestampsAndLineOrderSurviveJsonRoundTrip() {
+        Lyrics original = LrcParser.parse("[00:03.00]<00:03.00>Third\n[00:01.00]<00:01.00>First", "LRCLIB");
+        Lyrics copy = Lyrics.fromJson(original.toJson());
+        assertTrue(copy.wordSynced());
+        assertEquals("First", copy.lines.get(0).text);
+        assertEquals(1000, copy.lines.get(0).words.get(0).timeMs);
+        assertEquals(0, copy.lines.get(0).wordIndexAt(1000));
+    }
+
+    @Test
+    public void duplicateAndOutOfOrderLineTimestampsAreHandledDeterministically() {
+        Lyrics lyrics = LrcParser.parse("[00:02.00]Later\n[00:01.00]First\n[00:01.00]First\n[00:01.00]Second", "test");
+        assertEquals(3, lyrics.lines.size());
+        assertEquals("First", lyrics.lines.get(0).text);
+        assertEquals("Second", lyrics.lines.get(1).text);
+        assertEquals("Later", lyrics.lines.get(2).text);
+        assertEquals(1, lyrics.indexAt(1000));
+        assertEquals(2, lyrics.indexAt(2000));
+    }
+
+    @Test
+    public void unrelatedSearchResultsAreNotPresentedAsMatchingLyrics() throws Exception {
+        JSONArray results = new JSONArray("[{\"trackName\":\"Unrelated song\",\"artistName\":\"Other artist\","
+                + "\"duration\":181,\"syncedLyrics\":\"[00:01.00]plausible words\"}]");
+        assertNull(LyricsClient.pickBest(results, "My song", "My artist", 181000));
+    }
+
+    @Test
     public void plainTextIsUnsynchronised() {
         Lyrics l = LrcParser.parse("Line one\n\nLine two", "test");
         assertFalse(l.synced());

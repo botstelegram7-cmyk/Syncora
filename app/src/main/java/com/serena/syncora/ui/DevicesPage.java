@@ -299,6 +299,15 @@ public final class DevicesPage extends FrameLayout implements StateListener {
             meta.setSingleLine(true);
             meta.setEllipsize(android.text.TextUtils.TruncateAt.END);
             texts.addView(meta, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 3, 0, 0));
+            String diagnostics = "queue " + d.queueDepth + (d.peakQueueDepth > d.queueDepth ? "/" + d.peakQueueDepth : "")
+                    + " · gaps " + d.packetGaps + " · sync " + (d.syncErrMs > 0 ? "+" : "") + d.syncErrMs + " ms"
+                    + " · clock ±" + d.clockOffsetErrorMs + " ms · underruns " + d.underruns
+                    + " · " + d.latencyMs + " ms latency";
+            if (d.droppedAudioChunks > 0) diagnostics += " · dropped " + d.droppedAudioChunks;
+            TextView stats = Ui.text(c, diagnostics, 10, Theme.subtle, Ui.REGULAR);
+            stats.setSingleLine(true);
+            stats.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            texts.addView(stats, Ui.lin(Ui.MATCH, Ui.WRAP, 0, 3, 0, 0));
             card.addView(texts, Ui.lin(0, Ui.WRAP, 1f));
 
             if (!s.isSpeaker() && !d.self) {

@@ -21,7 +21,7 @@ music once, hear it everywhere in sync, and fix any device that is a little earl
 - As a player, I paste a **YouTube link** and play its audio in sync with my speakers, or save the video, its audio,
   thumbnail, lyrics or subtitles to my phone in the background.
 - As a listener, I **swipe the cover art** to read the lyrics of the song that is playing; synced lyrics follow along.
-- As a speaker, I see the **same music player** (cover art, title, progress, controls) as the player does.
+- As a speaker, I see the **same music player** (cover art, title, progress) as the player does; the player owns shared track/queue controls, while speaker pause/mute is local to that device.
 - As anyone in the room, I open the **volume panel** and set the volume of every connected device with its own slider,
   and I can switch on **low-latency sync** or tap **Sync now**.
 - As anyone, I open **Audio settings** to see the connection state, nudge a device's sync with **+ / −**, **Reset** it,
@@ -62,6 +62,13 @@ music once, hear it everywhere in sync, and fix any device that is a little earl
 - Volume sliders change each device; *Sync now* and *Low latency* work; sync offset and channels apply on the right device.
 - Radio, DLNA casting and the microphone play on the speakers; Speaker Mode shows *Waiting for connection* until a player is found.
 - The APK installs and updates in place from the GitHub Release.
+
+## Credits
+
+Syncora is created by **Technical Serena** and **XioquiXin**.
+
+- Telegram: [@TechnicalSerena](https://t.me/TechnicalSerena) · [@XioquiXin](https://t.me/XioquiXin)
+- Instagram: [@Prnce572002](https://instagram.com/Prnce572002)
 
 ## Scope and known constraints
 

@@ -36,6 +36,8 @@ public final class PlayerPage extends FrameLayout implements StateListener {
     private final View devicesDot;
     private final ArtView art;
     private final LyricsView lyricsView;
+    private final FrameLayout lyricsPage;
+    private final LinearLayout lyricsActions;
     private final ViewPager pager;
     private final View[] dots = new View[2];
     private final TextView titleView;
@@ -132,7 +134,42 @@ public final class PlayerPage extends FrameLayout implements StateListener {
                 if (s != null && state.durationMs > 0 && !state.live) s.seekTo(positionMs);
             }
         });
-        final View[] pages = {art, lyricsView};
+        lyricsPage = new FrameLayout(c);
+        lyricsPage.addView(lyricsView, Ui.frame(Ui.MATCH, Ui.MATCH));
+        lyricsActions = new LinearLayout(c);
+        lyricsActions.setGravity(Gravity.CENTER_VERTICAL);
+        lyricsActions.setPadding(Ui.dp(14), Ui.dp(8), Ui.dp(14), Ui.dp(8));
+        lyricsActions.setBackgroundColor(Theme.alpha(Theme.bg, 135));
+        TextView lyricLabel = Ui.text(c, "LYRICS", 12, Theme.muted, Ui.BOLD);
+        lyricLabel.setLetterSpacing(0.12f);
+        lyricsActions.addView(lyricLabel, Ui.lin(0, Ui.WRAP, 1f));
+        ImageView refreshLyrics = Ui.iconButton(c, R.drawable.ic_refresh, 42, 20, Theme.muted, "Refresh lyrics");
+        refreshLyrics.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SyncoraService service = host.service();
+                if (service != null) service.refreshLyrics();
+            }
+        });
+        lyricsActions.addView(refreshLyrics, Ui.lin(Ui.dp(42), Ui.dp(42)));
+        ImageView lyricsStyle = Ui.iconButton(c, R.drawable.ic_tune, 42, 20, Theme.accent, "Lyrics appearance");
+        lyricsStyle.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LyricsEditorSheet.show(host);
+            }
+        });
+        lyricsActions.addView(lyricsStyle, Ui.lin(Ui.dp(42), Ui.dp(42), 4, 0, 4, 0));
+        ImageView fullscreen = Ui.iconButton(c, R.drawable.ic_expand, 42, 20, Theme.text, "Fullscreen lyrics");
+        fullscreen.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LyricsFullscreenDialog.show(host, state);
+            }
+        });
+        lyricsActions.addView(fullscreen, Ui.lin(Ui.dp(42), Ui.dp(42)));
+        lyricsPage.addView(lyricsActions, Ui.frame(Ui.MATCH, Ui.WRAP, Gravity.TOP));
+        final View[] pages = {art, lyricsPage};
         pager = new ViewPager(c);
         pager.setAdapter(new PagerAdapter() {
             @Override
@@ -354,6 +391,7 @@ public final class PlayerPage extends FrameLayout implements StateListener {
 
     public void setTopInset(int px) {
         header.setPadding(Ui.dp(16), Ui.dp(10) + px, Ui.dp(16), Ui.dp(6));
+        lyricsActions.setPadding(Ui.dp(14), Ui.dp(8) + px, Ui.dp(14), Ui.dp(8));
     }
 
     private void onPlayPressed() {
@@ -392,7 +430,7 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         if (dragging) return;
         long duration = state.durationMs;
         long position = state.positionNow();
-        lyricsView.setPosition(position);
+        if (pager.getCurrentItem() == 1) lyricsView.setPosition(position);
         if (state.live || duration <= 0) {
             seek.setProgress(0f);
             timeLeft.setText(state.live ? "" : Ui.formatTime(position));
@@ -466,7 +504,8 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         String status;
         if (s.isSpeaker()) {
             if (speakerConnected) {
-                status = "SPEAKER \u00B7 " + (s.hostName.isEmpty() ? "PLAYER" : s.hostName.toUpperCase()) + (s.playing ? syncSuffix(s) : "");
+                status = s.localPaused ? "PAUSED ON THIS SPEAKER · THE ROOM KEEPS PLAYING"
+                        : "SPEAKER · " + (s.hostName.isEmpty() ? "PLAYER" : s.hostName.toUpperCase()) + (s.playing ? syncSuffix(s) : "");
             } else {
                 status = s.connection == SessionState.Connection.CONNECTING ? s.connectionText.toUpperCase() : "LOOKING FOR PLAYERS ON THIS WI-FI";
             }
@@ -497,10 +536,12 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         backdrop.setArt(s.art, key);
 
         // lyrics (swipe page)
+        lyricsView.setAppearance(host.prefs().lyricsAppearance());
         lyricsView.show(s.lyricsKey, s.lyrics, s.hasMedia || s.isSpeaker() ? s.lyricsStatus : "");
 
         // controls
-        playIcon.setImageResource(s.playing ? R.drawable.ic_pause : R.drawable.ic_play);
+        playIcon.setImageResource(s.isSpeaker() && s.localPaused ? R.drawable.ic_play
+                : s.playing ? R.drawable.ic_pause : R.drawable.ic_play);
         playButton.setAlpha(1f);
         boolean skip = s.canSkip;
         prev.setAlpha(skip ? 1f : 0.3f);

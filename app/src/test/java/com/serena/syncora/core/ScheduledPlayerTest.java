@@ -362,6 +362,20 @@ public class ScheduledPlayerTest {
     }
 
     @Test
+    public void queueOverflowDropsTheBacklogAndStartsARecoveryCueAtTheLiveEdge() {
+        SimClock clock = new SimClock();
+        SimSink sink = new SimSink(clock, 4410, 30 * MS, 30 * MS, 1.0, true);
+        ScheduledPlayer player = new ScheduledPlayer(sink, clock, null);
+        short[] pcm = new short[0];
+        for (int i = 0; i < 101; i++) {
+            player.enqueue(new PcmChunk(4, i, clock.now + i * 40 * MS, 44100, 2, 0, pcm));
+        }
+        assertEquals("after overflow only the current live cue remains", 1, player.queuedChunks());
+        assertEquals(100L, player.droppedChunks());
+        assertEquals(1L, player.recoveryFlushCount());
+    }
+
+    @Test
     public void channelModesRouteTheRightSamplesAndNeverTouchTheSharedChunk() throws Exception {
         SimClock clock = new SimClock();
         short[] pcm = new short[]{1000, -1000, 2000, -2000, 3000, -3000, 4000, -4000};

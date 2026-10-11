@@ -8,6 +8,7 @@ import android.provider.Settings;
 import com.serena.syncora.core.AudioProfile;
 import com.serena.syncora.core.ChannelMode;
 import com.serena.syncora.core.PlayQueue;
+import com.serena.syncora.lyrics.LyricsAppearance;
 import com.serena.syncora.radio.Station;
 
 import org.json.JSONArray;
@@ -170,6 +171,81 @@ public final class Prefs {
         sp.edit().putBoolean("animations", value).apply();
     }
 
+    // ---------------------------------------------------------------- lyrics & appearance
+
+    /** Independent, version-tolerant lyric preferences; unrelated app settings are never reset with them. */
+    public LyricsAppearance lyricsAppearance() {
+        LyricsAppearance appearance = new LyricsAppearance();
+        appearance.mode = sp.getString("lyricsMode", LyricsAppearance.KARAOKE);
+        if (!LyricsAppearance.CLASSIC.equals(appearance.mode) && !LyricsAppearance.KARAOKE.equals(appearance.mode)
+                && !LyricsAppearance.CINEMATIC.equals(appearance.mode) && !LyricsAppearance.MINIMAL.equals(appearance.mode)
+                && !LyricsAppearance.DUAL.equals(appearance.mode) && !LyricsAppearance.COMPACT.equals(appearance.mode)) {
+            appearance.mode = LyricsAppearance.KARAOKE;
+        }
+        appearance.themeId = sp.getString("lyricsTheme", "dynamic");
+        appearance.themeName = sp.getString("lyricsThemeName", "");
+        if (!"custom".equals(appearance.themeId)) appearance.themeId = appearance.preset().id;
+        appearance.fontFamily = sp.getString("lyricsFont", LyricsAppearance.SANS);
+        if (!LyricsAppearance.SERIF.equals(appearance.fontFamily) && !LyricsAppearance.CONDENSED.equals(appearance.fontFamily)
+                && !LyricsAppearance.MONO.equals(appearance.fontFamily)) appearance.fontFamily = LyricsAppearance.SANS;
+        appearance.background = sp.getString("lyricsBackground", "");
+        if (!appearance.background.isEmpty() && !LyricsAppearance.BACKGROUND_ALBUM.equals(appearance.background)
+                && !LyricsAppearance.BACKGROUND_GRADIENT.equals(appearance.background)
+                && !LyricsAppearance.BACKGROUND_SOLID.equals(appearance.background)
+                && !LyricsAppearance.BACKGROUND_CLEAR.equals(appearance.background)) appearance.background = "";
+        appearance.fontSizeSp = clamp(sp.getInt("lyricsFontSize", 21), 14, 44);
+        appearance.lineSpacingPercent = clamp(sp.getInt("lyricsLineSpacing", 140), 90, 220);
+        appearance.letterSpacingPercent = clamp(sp.getInt("lyricsLetterSpacing", 0), -5, 20);
+        appearance.activeColor = sp.getInt("lyricsActiveColor", 0);
+        appearance.inactiveColor = sp.getInt("lyricsInactiveColor", 0);
+        appearance.backgroundColor = sp.getInt("lyricsBackgroundColor", 0);
+        appearance.animations = sp.getBoolean("lyricsAnimations", true);
+        appearance.reducedMotion = sp.getBoolean("lyricsReducedMotion", false);
+        appearance.boldActive = sp.getBoolean("lyricsBoldActive", true);
+        appearance.uppercase = sp.getBoolean("lyricsUppercase", false);
+        appearance.showTranslation = sp.getBoolean("lyricsShowTranslation", false);
+        appearance.showRomanization = sp.getBoolean("lyricsShowRomanization", false);
+        appearance.highContrast = sp.getBoolean("lyricsHighContrast", false);
+        return appearance;
+    }
+
+    public void setLyricsAppearance(LyricsAppearance appearance) {
+        if (appearance == null) return;
+        sp.edit()
+                .putString("lyricsMode", appearance.mode)
+                .putString("lyricsTheme", appearance.themeId)
+                .putString("lyricsThemeName", appearance.themeName == null ? "" : appearance.themeName)
+                .putString("lyricsFont", appearance.fontFamily)
+                .putString("lyricsBackground", appearance.background == null ? "" : appearance.background)
+                .putInt("lyricsFontSize", clamp(appearance.fontSizeSp, 14, 44))
+                .putInt("lyricsLineSpacing", clamp(appearance.lineSpacingPercent, 90, 220))
+                .putInt("lyricsLetterSpacing", clamp(appearance.letterSpacingPercent, -5, 20))
+                .putInt("lyricsActiveColor", appearance.activeColor)
+                .putInt("lyricsInactiveColor", appearance.inactiveColor)
+                .putInt("lyricsBackgroundColor", appearance.backgroundColor)
+                .putBoolean("lyricsAnimations", appearance.animations)
+                .putBoolean("lyricsReducedMotion", appearance.reducedMotion)
+                .putBoolean("lyricsBoldActive", appearance.boldActive)
+                .putBoolean("lyricsUppercase", appearance.uppercase)
+                .putBoolean("lyricsShowTranslation", appearance.showTranslation)
+                .putBoolean("lyricsShowRomanization", appearance.showRomanization)
+                .putBoolean("lyricsHighContrast", appearance.highContrast)
+                .apply();
+    }
+
+    public void resetLyricsAppearance() {
+        sp.edit().remove("lyricsMode").remove("lyricsTheme").remove("lyricsThemeName").remove("lyricsFont").remove("lyricsBackground")
+                .remove("lyricsFontSize").remove("lyricsLineSpacing").remove("lyricsLetterSpacing")
+                .remove("lyricsActiveColor").remove("lyricsInactiveColor").remove("lyricsBackgroundColor")
+                .remove("lyricsAnimations").remove("lyricsReducedMotion").remove("lyricsBoldActive")
+                .remove("lyricsUppercase").remove("lyricsShowTranslation").remove("lyricsShowRomanization")
+                .remove("lyricsHighContrast").apply();
+    }
+
+    private static int clamp(int value, int minimum, int maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
+    }
+
     public String audioMode() {
         return sp.getString("audioMode", AudioProfile.BALANCED);
     }
@@ -221,6 +297,32 @@ public final class Prefs {
 
     public void setPlayMode(boolean shuffle, PlayQueue.Repeat repeat) {
         sp.edit().putBoolean("shuffle", shuffle).putString("repeat", repeat.id).apply();
+    }
+
+    /** Persisted wall-clock deadline so a running service can restore its timer after process recreation. */
+    public long sleepTimerDeadlineWallMs() {
+        return Math.max(0, sp.getLong("sleepTimerDeadlineWallMs", 0));
+    }
+
+    public boolean sleepTimerAtTrackEnd() {
+        return sp.getBoolean("sleepTimerAtTrackEnd", false);
+    }
+
+    public boolean sleepTimerMuted() {
+        return sp.getBoolean("sleepTimerMuted", false);
+    }
+
+    public void setSleepTimerMuted(boolean muted) {
+        sp.edit().putBoolean("sleepTimerMuted", muted).apply();
+    }
+
+    public void setSleepTimer(long deadlineWallMs, boolean atTrackEnd) {
+        sp.edit().putLong("sleepTimerDeadlineWallMs", Math.max(0, deadlineWallMs))
+                .putBoolean("sleepTimerAtTrackEnd", atTrackEnd).apply();
+    }
+
+    public void clearSleepTimer() {
+        sp.edit().remove("sleepTimerDeadlineWallMs").putBoolean("sleepTimerAtTrackEnd", false).apply();
     }
 
     public float micGain() {

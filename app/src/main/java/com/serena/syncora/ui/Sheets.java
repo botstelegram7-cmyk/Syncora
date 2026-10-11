@@ -62,7 +62,9 @@ public final class Sheets {
             case "connecting":
                 return "Connecting\u2026";
             case "muted":
-                return "Not playing here";
+                return "Muted here";
+            case "paused":
+                return "Paused here · room continues";
             default:
                 return d.host || d.syncErrMs == 0 ? "In sync" : "In sync \u00B1" + Math.abs(d.syncErrMs) + " ms";
         }
@@ -75,6 +77,7 @@ public final class Sheets {
             case "connecting":
                 return Theme.warn;
             case "muted":
+            case "paused":
                 return Theme.subtle;
             default:
                 return Theme.good;
