@@ -1,3 +1,16 @@
+## Syncora v0.8.0 — Speaker Mode Comes Back on Its Own
+
+**Fixed**
+- **Speaker Mode audio recovery** — when a call, a notification or another app takes the audio focus, the phone now shows the **INTERRUPTED** badge and takes the sound back by itself within a few seconds. Before, a missed `AUDIOFOCUS_GAIN` callback left the speaker silent until you tapped play. Playback now retries every 1.5 s until the focus is back; a call that is still in progress is waited out instead of being played over, and unplugging headphones still waits for you.
+- The badge says whether the app is still reconnecting the audio (`INTERRUPTED · RECONNECTING AUDIO…`) or needs a tap (`INTERRUPTED · TAP PLAY TO RESUME`), and it is highlighted in red.
+
+**Install**
+Install `Syncora-v0.8.0.apk` on Android 8.0 (API 26) or newer. Devices must be on the same Wi-Fi or hotspot; the player needs internet for radio, lyrics and YouTube.
+
+> APKs remain signed with Syncora's repository sideload key, so v0.2.0 and later can update in place.
+
+---
+
 ## Syncora v0.7.0 — YouTube That Keeps Working, Direct Links
 
 **New**

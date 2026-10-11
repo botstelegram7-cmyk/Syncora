@@ -708,6 +708,12 @@ public final class MainActivity extends Activity implements UiHost {
             case "left":
                 s.setDeviceChannel(prefs.deviceId(), com.serena.syncora.core.ChannelMode.LEFT);
                 break;
+            case "focus_loss":
+                s.debugFocusChange(android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT);
+                break;
+            case "focus_gain":
+                s.debugFocusChange(android.media.AudioManager.AUDIOFOCUS_GAIN);
+                break;
             default:
                 break;
         }

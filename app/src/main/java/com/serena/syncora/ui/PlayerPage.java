@@ -479,9 +479,15 @@ public final class PlayerPage extends FrameLayout implements StateListener {
         } else {
             status = "";
         }
-        if (s.interrupted) status = "INTERRUPTED \u00B7 TAP PLAY TO RESUME";
+        if (s.interrupted) {
+            // the app takes the audio focus back on its own for a few seconds before it asks for a tap
+            status = s.interruptRetrying
+                    ? "INTERRUPTED \u00B7 RECONNECTING AUDIO\u2026"
+                    : "INTERRUPTED \u00B7 TAP PLAY TO RESUME";
+        }
         setText(statusView, status);
         statusView.setVisibility(status.isEmpty() ? GONE : VISIBLE);
+        statusView.setTextColor(s.interrupted ? Theme.danger : Theme.subtle);
 
         // artwork + backdrop
         int fallbackIcon = Sheets.sourceIcon(src);

@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 
 import com.serena.syncora.audio.ArtLoader;
 import com.serena.syncora.audio.AudioTrackSink;
@@ -29,6 +30,7 @@ import com.serena.syncora.audio.TrackDecoder;
 import com.serena.syncora.core.AudioProfile;
 import com.serena.syncora.core.ChannelMode;
 import com.serena.syncora.core.ClockSync;
+import com.serena.syncora.core.InterruptWatchdog;
 import com.serena.syncora.core.Json;
 import com.serena.syncora.core.PcmChunk;
 import com.serena.syncora.core.PlayQueue;
@@ -142,6 +144,8 @@ public final class SyncoraService extends Service {
     private boolean focusMuted;
     private boolean resumeAfterFocus;
     private boolean interrupted;
+    /** Brings speaker mode back by itself after a call, a notification or another app took the audio focus. */
+    private final InterruptWatchdog watchdog = new InterruptWatchdog();
     private volatile long lastSyncErrorNanos;
 
     // ---- room (player role)
@@ -829,10 +833,10 @@ public final class SyncoraService extends Service {
 
     /** After another app interrupted the audio: take it back. */
     public void reclaimAudio() {
-        interrupted = false;
+        clearInterrupt();
         focusMuted = false;
         applyLocalOutput();
-        requestFocus();
+        if (focus != null && !focus.reRequest()) message("Another app is using the audio output.");
         publish();
     }
 
@@ -1091,9 +1095,15 @@ public final class SyncoraService extends Service {
         if (!focus.request()) message("Another app is using the audio output.");
     }
 
+    /** Debug-only: pretend the audio focus changed, so the emulator checks can exercise the recovery. */
+    void debugFocusChange(int change) {
+        if (debuggable) handleFocus(change);
+    }
+
     private void handleFocus(int change) {
         switch (change) {
             case AudioManager.AUDIOFOCUS_GAIN:
+                clearInterrupt();
                 focusMuted = false;
                 if (player != null) player.setDuck(1f);
                 applyLocalOutput();
@@ -1101,15 +1111,13 @@ public final class SyncoraService extends Service {
                     resumeAfterFocus = false;
                     resumeHost();
                 }
-                interrupted = false;
                 break;
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 if (player != null) player.setDuck(0.3f);
                 break;
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                 if (source == Source.SPEAKER) {
-                    focusMuted = true;
-                    applyLocalOutput();
+                    interruptSpeaker();
                 } else if (playing) {
                     resumeAfterFocus = true;
                     pauseHost();
@@ -1118,9 +1126,7 @@ public final class SyncoraService extends Service {
             case AudioManager.AUDIOFOCUS_LOSS:
             default:
                 if (source == Source.SPEAKER) {
-                    focusMuted = true;
-                    interrupted = true;
-                    applyLocalOutput();
+                    interruptSpeaker();
                 } else if (playing) {
                     pauseHost();
                 }
@@ -1129,13 +1135,80 @@ public final class SyncoraService extends Service {
         publish();
     }
 
+    /**
+     * Speaker mode lost the audio focus: show the INTERRUPTED badge and take the sound back on our own. Android
+     * does not always deliver the {@code AUDIOFOCUS_GAIN} callback that would resume playback, which used to leave
+     * the phone silent until the user tapped play; the watchdog keeps asking for the focus instead.
+     */
+    private void interruptSpeaker() {
+        focusMuted = true;
+        interrupted = true;
+        watchdog.onInterrupt(SystemClock.uptimeMillis());
+        applyLocalOutput();
+        scheduleFocusWatchdog(InterruptWatchdog.RETRY_MS);
+    }
+
+    /** The focus is ours again (or the user took over): forget the interruption and stop retrying. */
+    private void clearInterrupt() {
+        watchdog.reset();
+        main.removeCallbacks(focusWatchdog);
+        interrupted = false;
+    }
+
+    private void scheduleFocusWatchdog(long delayMs) {
+        main.removeCallbacks(focusWatchdog);
+        main.postDelayed(focusWatchdog, delayMs);
+    }
+
+    /** True while a phone or VoIP call is still running: taking the focus back would play over the call. */
+    private boolean callInProgress() {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return false;
+        int mode = am.getMode();
+        return mode == AudioManager.MODE_IN_CALL || mode == AudioManager.MODE_IN_COMMUNICATION;
+    }
+
+    /** One automatic attempt to take the audio focus back; see {@link InterruptWatchdog}. */
+    private final Runnable focusWatchdog = new Runnable() {
+        @Override
+        public void run() {
+            if (destroyed || source != Source.SPEAKER || !watchdog.isRetrying()) return;
+            long now = SystemClock.uptimeMillis();
+            if (!watchdog.shouldRetry(now)) {
+                scheduleFocusWatchdog(InterruptWatchdog.RETRY_MS);
+                return;
+            }
+            if (callInProgress()) {
+                // let the call finish first, then try again without spending an attempt
+                watchdog.defer(now);
+                scheduleFocusWatchdog(InterruptWatchdog.RETRY_MS);
+                return;
+            }
+            boolean granted = focus != null && focus.reRequest();
+            watchdog.onAttempt(granted, now);
+            if (granted) {
+                focusMuted = false;
+                interrupted = false;
+                applyLocalOutput();
+                publish();
+            } else if (watchdog.isRetrying()) {
+                scheduleFocusWatchdog(InterruptWatchdog.RETRY_MS);
+            } else {
+                // out of attempts: the badge now asks the user to resume by hand
+                publish();
+            }
+        }
+    };
+
     private final BroadcastReceiver noisyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (!AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) return;
             if (source == Source.SPEAKER) {
+                // headphones unplugged: badge, but never start playing out of the phone speaker by itself
                 focusMuted = true;
                 interrupted = true;
+                watchdog.onManualInterrupt();
                 applyLocalOutput();
                 publish();
             } else if (playing) {
@@ -2235,7 +2308,7 @@ public final class SyncoraService extends Service {
         remoteArt = null;
         rooms.clear();
         focusMuted = false;
-        interrupted = false;
+        clearInterrupt();
         connection = SessionState.Connection.NONE;
         connectionText = "";
         applyLocalOutput();
@@ -2677,7 +2750,8 @@ public final class SyncoraService extends Service {
         android.util.Log.i("SyncoraDiag", "src=" + source + " playing=" + isPlaying + " pos=" + (source == Source.SPEAKER ? remotePositionMs() : hostPositionMs())
                 + " epoch=" + epoch + " clients=" + (h == null ? 0 : h.clientCount()) + " syncErrMs=" + (lastSyncErrorNanos / 1_000_000L)
                 + " aligned=" + (player != null && player.isAligned()) + " queuedChunks=" + (player == null ? -1 : player.queuedChunks())
-                + " conn=" + connection + " room=" + roomPort + " buffering=" + buffering + " station=" + stationId);
+                + " conn=" + connection + " room=" + roomPort + " buffering=" + buffering + " station=" + stationId
+                + " interrupt=" + (interrupted ? 1 : 0) + " retrying=" + (watchdog.isRetrying() ? 1 : 0));
     }
 
     private void pruneRooms() {
@@ -2908,6 +2982,7 @@ public final class SyncoraService extends Service {
         });
         s.rooms = list;
         s.interrupted = interrupted;
+        s.interruptRetrying = watchdog.isRetrying();
     }
 
     private String buildStateJson(SessionState s) {

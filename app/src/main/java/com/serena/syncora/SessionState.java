@@ -87,8 +87,10 @@ public final class SessionState {
     public int syncErrMs;
     public boolean autoConnect;
     public boolean shareRoom = true;
-    /** Another app took the audio focus (speaker mode): sound is muted until the user takes it back. */
+    /** Another app took the audio focus (speaker mode): sound is muted until the focus is back. */
     public boolean interrupted;
+    /** While interrupted: true when the app is still taking the focus back by itself, false when the user must. */
+    public boolean interruptRetrying;
 
     // radio / dlna / mic
     public String stationName = "";
