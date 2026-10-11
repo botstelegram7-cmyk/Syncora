@@ -20,6 +20,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetIntegrationTest {
@@ -98,7 +100,7 @@ public class NetIntegrationTest {
         return http.start(38000, 38100);
     }
 
-    static final class Received implements GroupClient.Listener {
+    static class Received implements GroupClient.Listener {
         final List<PcmChunk> audio = Collections.synchronizedList(new ArrayList<PcmChunk>());
         final List<String> states = Collections.synchronizedList(new ArrayList<String>());
         final List<Integer> flushes = Collections.synchronizedList(new ArrayList<Integer>());
@@ -218,6 +220,70 @@ public class NetIntegrationTest {
             }
         }, 3000));
         assertEquals("{\"volume\":0.9}", rx.sets.get(0));
+    }
+
+    @Test
+    public void idleKeepAlivePingsDoNotDropTheSpeaker() throws Exception {
+        int port = startHost();
+        final Received rx = new Received();
+        client = new GroupClient(rx);
+        client.connect("127.0.0.1", port, "SYNC-TEST01", "idle-speaker", "Idle phone");
+        assertTrue("welcome arrives", waitFor(new Condition() {
+            public boolean ok() {
+                return rx.welcome != null;
+            }
+        }, 5000));
+
+        final GroupHost.ClientInfo connected = host.client("idle-speaker");
+        assertNotNull(connected);
+        final long beforePing = connected.lastSeen;
+        assertTrue("host keep-alive is answered", waitFor(new Condition() {
+            public boolean ok() {
+                return connected.lastSeen > beforePing;
+            }
+        }, 5000));
+        assertEquals(1, host.clientCount());
+        assertEquals(null, rx.closedReason);
+    }
+
+    @Test
+    public void slowSpeakerDropsQueuedAudioInsteadOfDisconnecting() throws Exception {
+        int port = startHost();
+        final CountDownLatch audioEntered = new CountDownLatch(1);
+        final CountDownLatch releaseAudio = new CountDownLatch(1);
+        final Received rx = new Received() {
+            @Override
+            public void onAudio(PcmChunk chunk) {
+                super.onAudio(chunk);
+                audioEntered.countDown();
+                try {
+                    releaseAudio.await(15, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        };
+        client = new GroupClient(rx);
+        client.connect("127.0.0.1", port, "SYNC-TEST01", "slow-speaker", "Slow phone");
+        try {
+            assertTrue("welcome arrives", waitFor(new Condition() {
+                public boolean ok() {
+                    return rx.welcome != null;
+                }
+            }, 5000));
+            assertEquals(1, host.clientCount());
+
+            short[] pcm = new short[882 * 2];
+            for (int i = 0; i < 2500; i++) {
+                host.broadcastAudio(new PcmChunk(3, i, 1_000_000L * i, 44100, 2, 882, pcm));
+            }
+            assertTrue("reader stalled on audio", audioEntered.await(5, TimeUnit.SECONDS));
+            Thread.sleep(300);
+            assertEquals("a slow reader remains connected while its stale queue is trimmed", 1, host.clientCount());
+            assertEquals(null, rx.closedReason);
+        } finally {
+            releaseAudio.countDown();
+        }
     }
 
     @Test

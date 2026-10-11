@@ -45,6 +45,18 @@ final class MpegTsReader extends InputStream {
         this.in = in;
     }
 
+    /** True when the input begins on an MPEG-TS packet boundary. Leaves all bytes buffered. */
+    static boolean looksLikeTransportStream(PeekStream stream) throws IOException {
+        for (int offset = 0; offset < PACKET_SIZE; offset++) {
+            if (!stream.ensure(offset + 1)) return false;
+            if (stream.peek(offset) != 0x47) continue;
+            if (stream.ensure(offset + PACKET_SIZE + 1) && stream.peek(offset + PACKET_SIZE) == 0x47) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** The stream type of the audio being decoded (0 until the first PMT arrived). */
     int audioStreamType() {
         return audioType;

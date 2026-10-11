@@ -138,7 +138,7 @@ public final class RadioDirectory {
         }
     }
 
-    /** Parses a radio-browser response and keeps only working MP3/AAC (non-HLS) stations. */
+    /** Parses a radio-browser response and keeps working MP3/AAC and HLS stations with HTTP(S) stream URLs. */
     static List<Station> parse(String json) throws JSONException {
         JSONArray array = new JSONArray(json);
         List<Station> list = new ArrayList<>();
@@ -146,13 +146,17 @@ public final class RadioDirectory {
         for (int i = 0; i < array.length(); i++) {
             JSONObject o = array.optJSONObject(i);
             if (o == null) continue;
-            if (o.optInt("lastcheckok", 1) != 1 || o.optInt("hls", 0) == 1) continue;
+            if (o.optInt("lastcheckok", 1) != 1) continue;
             String codec = o.optString("codec", "").toUpperCase(Locale.US);
-            if (!(codec.equals("MP3") || codec.startsWith("AAC") || codec.isEmpty())) continue;
             String url = o.optString("url_resolved", "");
             if (url.isEmpty()) url = o.optString("url", "");
             String lower = url.toLowerCase(Locale.US);
-            if (!(lower.startsWith("http://") || lower.startsWith("https://")) || lower.endsWith(".m3u8")) continue;
+            String path = lower;
+            int query = path.indexOf('?');
+            if (query >= 0) path = path.substring(0, query);
+            boolean hls = o.optInt("hls", 0) == 1 || path.endsWith(".m3u8");
+            if (!(hls || codec.equals("MP3") || codec.startsWith("AAC") || codec.isEmpty())) continue;
+            if (!(lower.startsWith("http://") || lower.startsWith("https://"))) continue;
             String name = o.optString("name", "").trim();
             if (name.isEmpty() || !seen.add(name.toLowerCase(Locale.US))) continue;
             list.add(new Station(o.optString("stationuuid", ""), name, url, o.optString("tags", ""),

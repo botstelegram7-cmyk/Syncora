@@ -1,3 +1,21 @@
+## Syncora v0.6.0 — Akashvani Radio and Reliable Speakers
+
+**New**
+- **Akashvani radio** — browse the bundled All India Radio channels, including live HLS stations such as Live News 24x7 and Vividh Bharati.
+- **Indian MP3 stations** — popular Indian community and private stations are bundled for one-tap playback, even when radio-browser.info is unavailable.
+- **HLS audio** — play HLS playlists that carry MP3/AAC directly or in MPEG-TS. AES-128 HLS segments are supported; unsupported audio containers and encryption modes fail with a clear error.
+
+**Improved**
+- **Speaker connection recovery** — idle connections exchange keep-alive pings, and slow speakers discard audio that is already late instead of being disconnected when a short network backlog fills.
+- **Radio verification** — the emulator smoke test plays a real Akashvani HLS stream and an Indian MP3 station, and verifies that each reaches decoded playback (`src=RADIO playing=true`, not just a tap or loading screen).
+
+**Install**
+Install `Syncora-v0.6.0.apk` on Android 8.0 (API 26) or newer. Devices must be on the same Wi-Fi or hotspot; the player needs internet for radio, lyrics and YouTube.
+
+> APKs remain signed with Syncora's repository sideload key, so v0.2.0 and later can update in place.
+
+---
+
 ## Syncora v0.5.0 — YouTube, Lyrics and Fixes
 
 **New**

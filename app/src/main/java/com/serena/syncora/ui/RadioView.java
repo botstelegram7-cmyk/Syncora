@@ -25,6 +25,7 @@ import com.serena.syncora.R;
 import com.serena.syncora.SessionState;
 import com.serena.syncora.Source;
 import com.serena.syncora.SyncoraService;
+import com.serena.syncora.radio.RadioCatalog;
 import com.serena.syncora.radio.RadioDirectory;
 import com.serena.syncora.radio.Station;
 
@@ -35,7 +36,8 @@ import java.util.List;
 final class RadioView extends SourceView {
     private static final String[][] CHIPS = {
             {"featured", "Featured", "", ""}, {"favorites", "Favorites", "", ""}, {"top", "Top", "", ""},
-            {"country", "India", "", "IN"}, {"tag", "Pop", "pop", ""}, {"tag", "Rock", "rock", ""},
+            {"catalog", "Akashvani", "", ""}, {"country", "India", "", "IN"},
+            {"tag", "Pop", "pop", ""}, {"tag", "Rock", "rock", ""},
             {"tag", "Hip-hop", "hip hop", ""}, {"tag", "Jazz", "jazz", ""}, {"tag", "Chill", "chillout", ""},
             {"tag", "Classical", "classical", ""}, {"tag", "News", "news", ""}
     };
@@ -223,9 +225,24 @@ final class RadioView extends SourceView {
                 infoView.setText("Loading the most popular stations\u2026");
                 RadioDirectory.search("", "", "", callback(id));
                 break;
+            case "catalog": {
+                List<Station> catalog = RadioCatalog.akashvani(getContext());
+                setStations(catalog, catalog.size() + " All India Radio / Akashvani channels");
+                break;
+            }
             case "country":
-                infoView.setText("Loading stations\u2026");
-                RadioDirectory.search("", "", chip[3], callback(id));
+                if ("IN".equals(chip[3])) {
+                    List<Station> indian = RadioCatalog.india(getContext());
+                    if (!indian.isEmpty()) {
+                        setStations(indian, "Popular Indian stations · bundled for offline access");
+                    } else {
+                        infoView.setText("Loading stations…");
+                        RadioDirectory.search("", "", chip[3], callback(id));
+                    }
+                } else {
+                    infoView.setText("Loading stations…");
+                    RadioDirectory.search("", "", chip[3], callback(id));
+                }
                 break;
             default:
                 infoView.setText("Loading " + chip[1] + " stations\u2026");
@@ -258,7 +275,7 @@ final class RadioView extends SourceView {
     }
 
     private void addStream() {
-        Sheets.input(host, "Add a station", "Paste the address of an MP3 or AAC radio stream", "https://example.com/stream",
+        Sheets.input(host, "Add a station", "Paste the address of an MP3, AAC or HLS radio stream", "https://example.com/stream",
                 "", Sheets.urlInput(), "Play", new Sheets.TextListener() {
                     @Override
                     public void onText(String text) {

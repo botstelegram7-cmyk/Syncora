@@ -15,6 +15,7 @@ same audio at the same moment. Everything runs on your own Wi-Fi or phone hotspo
 | **Volume for every device** | Tap the speaker button: each connected device gets its own slider, mute and an *All devices* fader. |
 | **Sync** | One-tap *Sync now* and a **Low-latency sync** switch (shorter buffer, tighter alignment). |
 | **Sources** | My Music · Online Radio · YouTube · DLNA Renderer · Microphone / Aux · Speaker Mode |
+| **Radio** | Search worldwide, or browse bundled All India Radio / Akashvani HLS channels and popular Indian MP3 stations—even without the directory. |
 | **YouTube** | Paste a link: play the video's audio in sync, or save video with sound, audio only, thumbnail, lyrics and subtitles. Background download queue. |
 | **Lyrics** | Swipe the cover art for lyrics. Synced lyrics follow playback and can be tapped to jump. Speakers show them too. |
 | **Audio settings** | Connection state, sync offset with **+ / −** and **Reset**, channels **Mono / Stereo / Left / Right** (two phones = a stereo pair). |
@@ -85,6 +86,6 @@ The key is public by design — fine for sideloading, never for a store. See `si
 - Wi-Fi power saving, router *client isolation* and broadcast filtering can hide rooms (use a hotspot or type the IP).
 - Sync is as good as the weakest link: expect roughly ±10–30 ms on a healthy network, then tune with the offset.
 - Streams use no transport encryption: use networks you trust. Anyone on the network who knows the room code can join.
-- Radio supports MP3 and AAC (ADTS) streams; HLS (`.m3u8`) and Ogg/FLAC stations are not supported yet.
+- Radio supports MP3 and AAC/ADTS streams, plus HLS (`.m3u8`) playlists that carry MP3/AAC directly or in MPEG-TS (AES-128 HLS is supported). Fragmented-MP4 HLS, other encryption modes, Ogg/FLAC/Opus streams and video playback are not supported.
 - YouTube reads public stream and caption addresses directly, without a decoding step for protected (ciphered) streams, which are skipped. Playback or downloads can stop working when YouTube changes its service. Save only content you have the right to keep, and respect YouTube's terms.
 - Lyrics come from LRCLIB and YouTube captions. Matches are by title and artist, so a song can get the wrong lyrics.

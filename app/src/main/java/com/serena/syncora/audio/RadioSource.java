@@ -15,8 +15,8 @@ import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- * Internet radio: pulls an MP3 or AAC (ADTS) stream, strips the in-band song titles and decodes it to PCM.
- * The host does this once, so the speakers never need an internet connection of their own.
+ * Internet radio: pulls MP3 or AAC audio from a direct stream or HLS playlist, strips stream metadata and decodes to
+ * PCM. The player does this once, so speakers on the room never need internet access of their own.
  */
 public final class RadioSource implements PcmSource {
 
@@ -28,7 +28,7 @@ public final class RadioSource implements PcmSource {
         void onStatus(String status);
     }
 
-    private static final String USER_AGENT = "Syncora/0.2 (Android; Internet radio)";
+    private static final String USER_AGENT = "Syncora/0.6 (Android; Internet radio)";
     private static final int MAX_RETRIES = 6;
     /** How much of the stream is read before deciding whether it is MP3 or AAC (a few seconds of audio). */
     private static final int SNIFF_BYTES = 48 * 1024;
@@ -42,10 +42,12 @@ public final class RadioSource implements PcmSource {
     private volatile boolean aborted;
     private volatile boolean readerDone;
     private volatile IOException readerError;
-    private HttpURLConnection connection;
-    private Mp3FrameReader mp3;
-    private AdtsFrameReader adts;
-    private boolean aac;
+    private volatile HttpURLConnection connection;
+    private volatile HlsStream hlsStream;
+    private volatile HlsStream.HttpFetcher hlsFetcher;
+    private volatile Mp3FrameReader mp3;
+    private volatile AdtsFrameReader adts;
+    private volatile boolean aac;
     private long ptsUs;
     private long frameDurationUs = 26_000;
 
@@ -76,7 +78,8 @@ public final class RadioSource implements PcmSource {
         }, "syncora-radio-reader");
         reader.setDaemon(true);
         reader.start();
-        status("Live");
+        HlsStream stream = hlsStream;
+        status(stream == null ? "Live" : stream.describe());
     }
 
     @Override
@@ -182,19 +185,25 @@ public final class RadioSource implements PcmSource {
         return m.nextFrame();
     }
 
+    /** Follows redirects and ordinary .pls/.m3u playlists before choosing a direct or HLS audio stream. */
     private void connect() throws IOException {
         URL target = new URL(url);
-        HttpURLConnection c = null;
         for (int hop = 0; hop < 8; hop++) {
             if (aborted) throw new IOException("Stopped");
-            c = (HttpURLConnection) target.openConnection();
+            HttpURLConnection c = (HttpURLConnection) target.openConnection();
             c.setInstanceFollowRedirects(false);
             c.setConnectTimeout(10_000);
             c.setReadTimeout(15_000);
             c.setRequestProperty("Icy-MetaData", "1");
             c.setRequestProperty("User-Agent", USER_AGENT);
             c.setRequestProperty("Accept", "*/*");
-            int code = c.getResponseCode();
+            int code;
+            try {
+                code = c.getResponseCode();
+            } catch (IOException e) {
+                c.disconnect();
+                throw e;
+            }
             if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
                 String location = c.getHeaderField("Location");
                 c.disconnect();
@@ -206,54 +215,138 @@ public final class RadioSource implements PcmSource {
                 c.disconnect();
                 throw new IOException("The station answered HTTP " + code);
             }
+
             String type = c.getContentType() == null ? "" : c.getContentType().toLowerCase(Locale.US);
             String path = target.getPath() == null ? "" : target.getPath().toLowerCase(Locale.US);
-            if (isPlaylist(type, path)) {
-                String next = readPlaylistEntry(c.getInputStream());
+            if (isHls(type, path)) {
                 c.disconnect();
+                connectHls(target.toExternalForm());
+                return;
+            }
+            if (isPlaylist(type, path)) {
+                String next;
+                try (InputStream in = c.getInputStream()) {
+                    next = readPlaylistEntry(in);
+                } finally {
+                    c.disconnect();
+                }
                 if (next == null) throw new IOException("This playlist does not contain a playable stream");
                 target = new URL(target, next);
                 continue;
             }
-            break;
-        }
-        if (c == null) throw new IOException("Could not connect");
+            if (type.contains("ogg") || type.contains("opus") || type.contains("flac") || type.contains("vorbis")) {
+                c.disconnect();
+                throw new IOException("This station streams Ogg/FLAC audio, which is not supported yet");
+            }
 
-        String type = c.getContentType() == null ? "" : c.getContentType().toLowerCase(Locale.US);
-        if (type.contains("ogg") || type.contains("opus") || type.contains("flac") || type.contains("vorbis")) {
-            c.disconnect();
-            throw new IOException("This station streams Ogg/FLAC audio, which is not supported yet");
+            String name = c.getHeaderField("icy-name");
+            if (name != null && !name.trim().isEmpty() && listener != null) listener.onStationName(name.trim());
+            int metaInt = 0;
+            try {
+                String header = c.getHeaderField("icy-metaint");
+                if (header != null) metaInt = Integer.parseInt(header.trim());
+            } catch (NumberFormatException ignored) {
+                metaInt = 0;
+            }
+            InputStream raw;
+            try {
+                raw = c.getInputStream();
+            } catch (IOException e) {
+                c.disconnect();
+                throw e;
+            }
+            if (metaInt > 0) {
+                raw = new IcyInputStream(raw, metaInt, new IcyInputStream.Listener() {
+                    @Override
+                    public void onTitle(String streamTitle) {
+                        if (listener != null) listener.onTitle(streamTitle);
+                    }
+                });
+            }
+            synchronized (this) {
+                if (aborted) {
+                    c.disconnect();
+                    throw new IOException("Stopped");
+                }
+                connection = c;
+            }
+            try {
+                configureAudio(raw, type);
+            } catch (IOException e) {
+                closeDirectConnection(c);
+                throw e;
+            }
+            return;
         }
-        if (type.contains("mpegurl") && !type.contains("x-mpegurl")) {
-            c.disconnect();
-            throw new IOException("HLS (.m3u8) streams are not supported yet");
+        throw new IOException("Too many redirects or playlists from " + url);
+    }
+
+    /** Opens the HLS media playlist and sniffs its elementary audio (raw AAC/MP3 or AAC/MP3 in MPEG-TS). */
+    private void connectHls(String address) throws IOException {
+        final HlsStream.HttpFetcher fetcher = new HlsStream.HttpFetcher(USER_AGENT, 15_000);
+        synchronized (this) {
+            if (aborted) {
+                fetcher.close();
+                throw new IOException("Stopped");
+            }
+            hlsFetcher = fetcher;
         }
-        String name = c.getHeaderField("icy-name");
-        if (name != null && !name.trim().isEmpty() && listener != null) listener.onStationName(name.trim());
-        int metaInt = 0;
+
+        HlsStream stream = null;
         try {
-            String header = c.getHeaderField("icy-metaint");
-            if (header != null) metaInt = Integer.parseInt(header.trim());
-        } catch (NumberFormatException ignored) {
-            metaInt = 0;
-        }
-        InputStream raw = c.getInputStream();
-        if (metaInt > 0) {
-            raw = new IcyInputStream(raw, metaInt, new IcyInputStream.Listener() {
+            stream = HlsStream.open(address, fetcher, new HlsStream.Listener() {
                 @Override
-                public void onTitle(String streamTitle) {
-                    if (listener != null) listener.onTitle(streamTitle);
+                public void onInfo(String info) {
+                    status(info);
                 }
             });
+            synchronized (this) {
+                if (aborted || hlsFetcher != fetcher) {
+                    stream.close();
+                    throw new IOException("Stopped");
+                }
+                hlsStream = stream;
+            }
+            configureAudio(stream, "application/vnd.apple.mpegurl");
+        } catch (IOException e) {
+            if (stream != null) stream.close();
+            fetcher.close();
+            synchronized (this) {
+                if (hlsStream == stream) hlsStream = null;
+                if (hlsFetcher == fetcher) hlsFetcher = null;
+            }
+            throw e;
+        } catch (RuntimeException e) {
+            if (stream != null) stream.close();
+            fetcher.close();
+            synchronized (this) {
+                if (hlsStream == stream) hlsStream = null;
+                if (hlsFetcher == fetcher) hlsFetcher = null;
+            }
+            throw new IOException("Could not open the HLS stream", e);
         }
-        PeekStream peek = new PeekStream(raw);
+    }
 
-        int mp3Offset = Mp3FrameReader.probe(peek, SNIFF_BYTES);
-        int aacOffset = AdtsFrameReader.probe(peek, SNIFF_BYTES);
+    /** Detects the transport container, then selects the matching MP3 or AAC frame reader. */
+    private void configureAudio(InputStream raw, String type) throws IOException {
+        PeekStream initial = new PeekStream(raw);
+        MpegTsReader transport = null;
+        PeekStream audio = initial;
+        if (MpegTsReader.looksLikeTransportStream(initial)) {
+            transport = new MpegTsReader(initial);
+            audio = new PeekStream(transport);
+        }
+
+        int mp3Offset = Mp3FrameReader.probe(audio, SNIFF_BYTES);
+        int aacOffset = AdtsFrameReader.probe(audio, SNIFF_BYTES);
         boolean useAac;
         if (mp3Offset < 0 && aacOffset < 0) {
-            c.disconnect();
-            String sent = type.isEmpty() ? "an unknown format" : type;
+            String sent;
+            if (transport != null) {
+                sent = transport.describe();
+            } else {
+                sent = type.isEmpty() ? "an unknown format" : type;
+            }
             throw new IOException("Could not find MP3 or AAC audio in this stream (it sent " + sent + ")");
         } else if (mp3Offset < 0) {
             useAac = true;
@@ -264,36 +357,50 @@ public final class RadioSource implements PcmSource {
         } else {
             useAac = type.contains("aac");
         }
+
         Mp3FrameReader newMp3 = null;
         AdtsFrameReader newAdts = null;
         if (useAac) {
-            newAdts = new AdtsFrameReader(peek);
-            if (!newAdts.prime(SNIFF_BYTES)) {
-                c.disconnect();
-                throw new IOException("Could not read the AAC stream");
-            }
+            newAdts = new AdtsFrameReader(audio);
+            if (!newAdts.prime(SNIFF_BYTES)) throw new IOException("Could not read the AAC stream");
         } else {
-            newMp3 = new Mp3FrameReader(peek);
-            if (!newMp3.prime(SNIFF_BYTES)) {
-                c.disconnect();
-                throw new IOException("Could not read the MP3 stream");
-            }
+            newMp3 = new Mp3FrameReader(audio);
+            if (!newMp3.prime(SNIFF_BYTES)) throw new IOException("Could not read the MP3 stream");
         }
         synchronized (this) {
-            if (aborted) {
-                c.disconnect();
-                throw new IOException("Stopped");
-            }
-            connection = c;
+            if (aborted) throw new IOException("Stopped");
             aac = useAac;
             mp3 = newMp3;
             adts = newAdts;
         }
     }
 
-    private synchronized void closeConnection() {
-        HttpURLConnection c = connection;
-        connection = null;
+    private void closeDirectConnection(HttpURLConnection target) {
+        synchronized (this) {
+            if (connection != target) return;
+            connection = null;
+        }
+        try {
+            target.disconnect();
+        } catch (RuntimeException ignored) {
+            // nothing to do
+        }
+    }
+
+    private void closeConnection() {
+        HttpURLConnection c;
+        HlsStream stream;
+        HlsStream.HttpFetcher fetcher;
+        synchronized (this) {
+            c = connection;
+            connection = null;
+            stream = hlsStream;
+            hlsStream = null;
+            fetcher = hlsFetcher;
+            hlsFetcher = null;
+        }
+        if (stream != null) stream.abort();
+        if (fetcher != null) fetcher.close();
         if (c != null) {
             try {
                 c.disconnect();
@@ -303,9 +410,13 @@ public final class RadioSource implements PcmSource {
         }
     }
 
+    private static boolean isHls(String type, String path) {
+        return path.endsWith(".m3u8") || (type.contains("mpegurl") && !path.endsWith(".m3u"));
+    }
+
     private static boolean isPlaylist(String type, String path) {
-        return type.contains("x-scpls") || type.contains("pls+xml") || type.contains("x-mpegurl") || path.endsWith(".pls")
-                || path.endsWith(".m3u");
+        return type.contains("x-scpls") || type.contains("pls+xml") || type.contains("x-mpegurl")
+                || path.endsWith(".pls") || path.endsWith(".m3u");
     }
 
     /** Returns the first stream address of a .pls / .m3u playlist. */

@@ -95,7 +95,7 @@ public final class GroupHost {
         }
     }
 
-    /** Beyond this the speaker cannot keep up (about 3.5 s of CD-quality stereo) and is dropped to reconnect. */
+    /** High-water mark for pending audio (about 3.5 s of CD-quality stereo at 44.1 kHz). */
     private static final int MAX_QUEUED_BYTES = 640 * 1024;
 
     private final Listener listener;
@@ -142,6 +142,7 @@ public final class GroupHost {
                 + "Connection: close\r\n\r\n").getBytes(MiniHttpServer.UTF8));
         out.flush();
         socket.setSoTimeout(15_000);
+        socket.setKeepAlive(true);
         socket.setSendBufferSize(512 * 1024);
 
         client.enqueue(FrameCodec.encodeText(FrameCodec.T_WELCOME, listener.welcomeJson(client)));
@@ -214,6 +215,12 @@ public final class GroupHost {
                 if (json != null) listener.onClientCommand(client, json);
                 break;
             }
+            case FrameCodec.T_PING:
+                client.enqueue(FrameCodec.encode(FrameCodec.T_PONG, new byte[0]));
+                break;
+            case FrameCodec.T_PONG:
+                // The peer answered our keep-alive probe; lastSeen was refreshed by handleStream.
+                break;
             default:
                 break;
         }
@@ -245,10 +252,17 @@ public final class GroupHost {
         byte[] frame = FrameCodec.encodeAudio(chunk);
         for (ClientInfo client : clients.values()) {
             if (client.queuedBytes() > MAX_QUEUED_BYTES) {
-                client.close();
-            } else {
-                client.enqueue(frame);
+                // The audio chunks are timestamped independently, so queued audio that is already late is
+                // less useful than keeping the room connection alive. Drop that backlog and continue with
+                // the live edge; ScheduledPlayer will skip any stale chunks already in the socket buffer.
+                client.dropQueuedAudio();
+                if (client.queuedBytes() > MAX_QUEUED_BYTES) {
+                    // Control frames should never reach this limit, but keep a hard bound if they do.
+                    client.close();
+                    continue;
+                }
             }
+            client.enqueue(frame);
         }
     }
 
