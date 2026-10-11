@@ -195,6 +195,9 @@ def main():
     parser.add_argument("--sample", type=int, default=0, help="probe every Nth station of large catalogs")
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--out", default="ci-output")
+    parser.add_argument("--report", default="radio-probe.json", help="report file name inside --out")
+    parser.add_argument("--filter-out", default="", help="write only the stations that answered to this catalog file")
+    parser.add_argument("--dropped-out", default="", help="write the stations that did not answer to this file")
     args = parser.parse_args()
 
     stations = []
@@ -229,7 +232,7 @@ def main():
             segments[key] = segments.get(key, 0) + 1
 
     os.makedirs(args.out, exist_ok=True)
-    report = os.path.join(args.out, "radio-probe.json")
+    report = os.path.join(args.out, args.report)
     with open(report, "w", encoding="utf-8") as handle:
         json.dump({"total": len(results), "ok": len(good), "failed": len(bad),
                    "kinds": kinds, "segment_kinds": segments, "results": results}, handle, indent=1)
@@ -242,6 +245,28 @@ def main():
     for r in good[:25]:
         extra = r.get("segment_kind", "") or r.get("content_type", "")[:34]
         print("  OK   %-42s %-14s %s" % (r["name"][:42], r.get("kind", "?"), extra))
+
+    if args.filter_out:
+        working = [r for r in good]
+        by_url = {}
+        for r in working:
+            by_url.setdefault(r["url"], r)
+        kept, dropped = [], []
+        for station in stations:
+            url = station.get("url") or station.get("stream_url") or ""
+            if url in by_url:
+                kept.append(station)
+            else:
+                dropped.append(station)
+        os.makedirs(os.path.dirname(args.filter_out) or ".", exist_ok=True)
+        with open(args.filter_out, "w", encoding="utf-8") as handle:
+            json.dump(kept, handle, ensure_ascii=False, indent=1)
+            handle.write("\n")
+        print("kept %d stations in %s (dropped %d)" % (len(kept), args.filter_out, len(dropped)))
+        if args.dropped_out:
+            with open(args.dropped_out, "w", encoding="utf-8") as handle:
+                json.dump(dropped, handle, ensure_ascii=False, indent=1)
+                handle.write("\n")
 
     summary = "radio probe: %d/%d ok; %s; hls segments: %s" % (
         len(good), len(results), json.dumps(kinds, sort_keys=True), json.dumps(segments, sort_keys=True))

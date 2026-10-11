@@ -74,20 +74,29 @@ jobs:
 
       # The runner has internet access, which the sandbox where Syncora is developed does not:
       # this is where the bundled station lists are verified (and, on request, rebuilt).
-      - name: Check that the bundled radio stations really stream
+      - name: Rebuild the station catalogs from radio-browser.info (only for "[catalog]" commits)
+        if: contains(github.event.head_commit.message, '[catalog]')
+        continue-on-error: true
+        run: python3 .github/scripts/radio_catalog.py --refresh
+
+      - name: Check that every All India Radio station still streams
         continue-on-error: true
         run: |
           set -o pipefail
           python3 .github/scripts/radio_probe.py \
             --catalog app/src/main/assets/radio/akashvani.json \
+            --report akashvani-probe.json \
+            --filter-out ci-output/akashvani-working.json \
+            --dropped-out ci-output/akashvani-dead.json 2>&1 | tee akashvani-probe.log
+
+      - name: Check the other bundled radio stations
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python3 .github/scripts/radio_probe.py \
             --catalog app/src/main/assets/radio/india.json \
             --catalog app/src/main/assets/radio/world.json \
-            --sample 4 --limit 260 2>&1 | tee radio-probe.log
-
-      - name: Rebuild the station catalogs from radio-browser.info (only for "[catalog]" commits)
-        if: contains(github.event.head_commit.message, '[catalog]')
-        continue-on-error: true
-        run: python3 .github/scripts/radio_catalog.py --refresh
+            --report radio-probe.json 2>&1 | tee radio-probe.log
 
       - name: Publish the radio probe (and rebuilt catalogs) to the branch
         if: always() && github.event_name == 'push' && contains(github.event.head_commit.message, '[ci-shots]')
