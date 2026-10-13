@@ -829,6 +829,25 @@ public final class SyncoraService extends Service {
         return youtube;
     }
 
+    /** Selects a specific caption / subtitle track for the current YouTube playback. */
+    public void selectYouTubeCaption(final YouTubeVideo.Caption caption) {
+        if (source == Source.SPEAKER) return;
+        final YouTubeVideo v = youtube;
+        if (v == null || caption == null) return;
+        cancelLyricsRequest();
+        String key = "y" + v.id + "_" + caption.languageCode;
+        synchronized (lyricsMisses) {
+            lyricsMisses.remove(key);
+            lyricsMisses.remove("y" + v.id);
+        }
+        requestLyrics(key, new LyricsWork() {
+            @Override
+            public Lyrics load(LyricsClient.Request request) {
+                return YouTubeLyrics.captions(v, caption);
+            }
+        }, true);
+    }
+
     // ================================================================= public API: microphone / aux
 
     public void startMic(AudioDeviceInfo input, boolean unprocessed, String label) {

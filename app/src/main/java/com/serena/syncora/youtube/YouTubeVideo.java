@@ -75,6 +75,15 @@ public final class YouTubeVideo {
                 return preference != 0 ? preference : Long.compare(b.bitrate, a.bitrate);
             }
         });
+        // If no audio-only stream is present (common for some international or legacy formats),
+        // include progressive muxed formats that carry an audio track as fallback.
+        if (out.isEmpty()) {
+            for (YouTubeFormat f : formats) {
+                if (f.kind == YouTubeFormat.Kind.MUXED && !f.url.isEmpty()) {
+                    out.add(f);
+                }
+            }
+        }
         List<YouTubeFormat> unique = new ArrayList<>();
         for (YouTubeFormat f : out) {
             boolean seen = false;

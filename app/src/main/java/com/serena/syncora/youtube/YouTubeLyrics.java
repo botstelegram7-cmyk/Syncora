@@ -30,11 +30,27 @@ public final class YouTubeLyrics {
 
     /** The caption track as timed lyrics. Null when there is no usable track. */
     public static Lyrics captions(YouTubeVideo video) {
-        YouTubeVideo.Caption caption = pickCaption(video.captions);
+        return captions(video, null);
+    }
+
+    /** The specified caption track (or best available fallback) as timed lyrics. Null when there is no usable track. */
+    public static Lyrics captions(YouTubeVideo video, YouTubeVideo.Caption preferred) {
+        if (video == null || video.captions == null || video.captions.isEmpty()) return null;
+        YouTubeVideo.Caption caption = preferred != null ? preferred : pickCaption(video.captions);
         if (caption == null) return null;
         List<SubtitleParser.Cue> cues = YouTubeClient.fetchCues(caption, video.userAgent);
-        if (cues.isEmpty()) return null;
-        return SubtitleParser.toLyrics(cues, "YouTube captions");
+        String label = caption.name != null && !caption.name.isEmpty() ? caption.name : "YouTube captions";
+        if (!cues.isEmpty()) return SubtitleParser.toLyrics(cues, label);
+        // If the preferred track returned no cues, fallback to any valid track
+        for (YouTubeVideo.Caption alt : video.captions) {
+            if (alt == caption) continue;
+            cues = YouTubeClient.fetchCues(alt, video.userAgent);
+            if (!cues.isEmpty()) {
+                String altLabel = alt.name != null && !alt.name.isEmpty() ? alt.name : "YouTube captions";
+                return SubtitleParser.toLyrics(cues, altLabel);
+            }
+        }
+        return null;
     }
 
     /**

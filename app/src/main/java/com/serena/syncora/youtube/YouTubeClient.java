@@ -63,9 +63,13 @@ public final class YouTubeClient {
         String country = locale.getCountry();
         if (country == null || !country.matches("[A-Za-z]{2}")) country = "US";
         country = country.toUpperCase(Locale.US);
-        // Respect the phone's selected region: the old hard-coded US gl caused foreign catalog and caption
-        // responses to differ from what is available to the user locally.
+        // Try the device's selected region first
         addProfiles(list, language, country);
+        // Also provide generic international / US profiles as fallback so international
+        // videos with region licensing restrictions or missing streams in the local region play seamlessly.
+        if (!"US".equalsIgnoreCase(country)) {
+            addProfiles(list, "en", "US");
+        }
         return list;
     }
 
@@ -550,7 +554,7 @@ public final class YouTubeClient {
         }
         // A supplied fmt can be part of YouTube's signed sparams. Keep that URL intact rather than invalidating it.
         if (hasFormatParameter(caption.baseUrl)) return empty;
-        String[] formats = {"json3", "vtt", "ttml", "srv3"};
+        String[] formats = {"json3", "vtt", "ttml", "srv3", "srv1"};
         for (String format : formats) {
             try {
                 List<SubtitleParser.Cue> cues = parseCaptionBody(
@@ -561,6 +565,25 @@ public final class YouTubeClient {
             }
         }
         return empty;
+    }
+
+    /**
+     * Attempts to fetch cues for the given caption track, falling back across other available tracks
+     * in the video if the chosen track produces no cues.
+     */
+    public static List<SubtitleParser.Cue> fetchCuesWithFallback(YouTubeVideo.Caption requested, List<YouTubeVideo.Caption> allTracks, String userAgent) {
+        if (requested != null) {
+            List<SubtitleParser.Cue> cues = fetchCues(requested, userAgent);
+            if (!cues.isEmpty()) return cues;
+        }
+        if (allTracks != null) {
+            for (YouTubeVideo.Caption candidate : allTracks) {
+                if (candidate == requested) continue;
+                List<SubtitleParser.Cue> cues = fetchCues(candidate, userAgent);
+                if (!cues.isEmpty()) return cues;
+            }
+        }
+        return new ArrayList<>();
     }
 
     private static List<SubtitleParser.Cue> parseCaptionBody(String body) {

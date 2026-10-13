@@ -152,6 +152,14 @@ public final class PlayerPage extends FrameLayout implements StateListener {
             }
         });
         lyricsActions.addView(refreshLyrics, Ui.lin(Ui.dp(42), Ui.dp(42)));
+        ImageView subtitlesBtn = Ui.iconButton(c, R.drawable.ic_subtitles, 42, 20, Theme.muted, "Select subtitles");
+        subtitlesBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Sheets.subtitles(host);
+            }
+        });
+        lyricsActions.addView(subtitlesBtn, Ui.lin(Ui.dp(42), Ui.dp(42), 2, 0, 2, 0));
         ImageView lyricsStyle = Ui.iconButton(c, R.drawable.ic_tune, 42, 20, Theme.accent, "Lyrics appearance");
         lyricsStyle.setOnClickListener(new OnClickListener() {
             @Override
