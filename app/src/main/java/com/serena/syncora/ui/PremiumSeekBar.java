@@ -107,7 +107,10 @@ public final class PremiumSeekBar extends View {
         float inset = Ui.dpf(10);
         float span = getWidth() - 2 * inset;
         if (span <= 0) return 0f;
-        return Math.max(0f, Math.min(1f, (x - inset) / span));
+        float fraction = (x - inset) / span;
+        if (fraction <= 0.005f) return 0f;
+        if (fraction >= 0.995f) return 1f;
+        return Math.max(0f, Math.min(1f, fraction));
     }
 
     private void animatePress(float to) {
@@ -146,12 +149,26 @@ public final class PremiumSeekBar extends View {
                 return true;
             case MotionEvent.ACTION_MOVE:
                 if (dragging) {
-                    progress = fractionAt(event.getX());
-                    if (listener != null) listener.onChange(progress);
-                    invalidate();
+                    float newProgress = fractionAt(event.getX());
+                    if (Math.abs(newProgress - progress) > 0.0001f) {
+                        progress = newProgress;
+                        if (listener != null) listener.onChange(progress);
+                        invalidate();
+                    }
                 }
                 return true;
             case MotionEvent.ACTION_UP:
+                if (dragging) {
+                    dragging = false;
+                    progress = fractionAt(event.getX());
+                    animatePress(0f);
+                    if (listener != null) {
+                        listener.onChange(progress);
+                        listener.onStop(progress);
+                    }
+                    invalidate();
+                }
+                return true;
             case MotionEvent.ACTION_CANCEL:
                 if (dragging) {
                     dragging = false;

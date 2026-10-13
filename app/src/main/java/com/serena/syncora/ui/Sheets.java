@@ -832,4 +832,36 @@ public final class Sheets {
     public static int urlInput() {
         return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI;
     }
+
+    public static void subtitles(final UiHost host) {
+        SyncoraService service = host.service();
+        if (service == null) return;
+        final com.serena.syncora.youtube.YouTubeVideo video = service.currentYouTube();
+        if (video == null || video.captions == null || video.captions.isEmpty()) {
+            host.message("No subtitles or captions available for this track");
+            return;
+        }
+        final List<com.serena.syncora.youtube.YouTubeVideo.Caption> tracks = video.captions;
+        String[] titles = new String[tracks.size()];
+        String[] descs = new String[tracks.size()];
+        for (int i = 0; i < tracks.size(); i++) {
+            com.serena.syncora.youtube.YouTubeVideo.Caption c = tracks.get(i);
+            String title = c.name != null && !c.name.isEmpty() ? c.name : (c.languageCode.toUpperCase() + " Subtitles");
+            titles[i] = title;
+            descs[i] = c.auto ? "Auto-generated" : "Standard captions";
+        }
+        choice(host, "Select Subtitles", "Display synchronized lyrics / subtitles", titles, descs, -1, new ChoiceListener() {
+            @Override
+            public void onChoice(int index) {
+                if (index >= 0 && index < tracks.size()) {
+                    SyncoraService s = host.service();
+                    if (s != null) {
+                        s.selectYouTubeCaption(tracks.get(index));
+                        host.message("Loaded " + titles[index]);
+                    }
+                }
+            }
+        });
+    }
+
 }

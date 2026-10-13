@@ -124,10 +124,25 @@ public final class YouTubeActions {
             @Override
             public void run(DownloadQueue.Job job) throws Exception {
                 List<SubtitleParser.Cue> cues = YouTubeClient.fetchCues(caption, video.userAgent);
-                if (cues.isEmpty()) throw new IOException("YouTube has no text for this subtitle track");
+                YouTubeVideo.Caption usedCaption = caption;
+                if (cues.isEmpty() && video.captions != null && !video.captions.isEmpty()) {
+                    for (YouTubeVideo.Caption alt : video.captions) {
+                        if (alt != caption) {
+                            List<SubtitleParser.Cue> altCues = YouTubeClient.fetchCues(alt, video.userAgent);
+                            if (!altCues.isEmpty()) {
+                                cues = altCues;
+                                usedCaption = alt;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (cues.isEmpty()) {
+                    throw new IOException("YouTube has no text for this subtitle track. Please select another available subtitle track or language.");
+                }
                 progressOf(job, 0.8f);
                 String text = srt ? SubtitleParser.toSrt(cues) : SubtitleParser.toVtt(cues);
-                String lang = caption.languageCode.isEmpty() ? "" : "." + caption.languageCode;
+                String lang = usedCaption.languageCode.isEmpty() ? "" : "." + usedCaption.languageCode;
                 String name = DownloadStore.safeName(video.title, video.id + lang, srt ? "srt" : "vtt");
                 job.location = DownloadStore.saveText(context, text, name, srt ? "application/x-subrip" : "text/vtt").location;
             }
