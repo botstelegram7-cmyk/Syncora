@@ -838,7 +838,7 @@ public final class Sheets {
         if (service == null) return;
         final com.serena.syncora.youtube.YouTubeVideo video = service.currentYouTube();
         if (video == null || video.captions == null || video.captions.isEmpty()) {
-            host.message("No subtitles or captions available for this track");
+            host.toast("No subtitles or captions available for this track");
             return;
         }
         final List<com.serena.syncora.youtube.YouTubeVideo.Caption> tracks = video.captions;
@@ -857,7 +857,7 @@ public final class Sheets {
                     SyncoraService s = host.service();
                     if (s != null) {
                         s.selectYouTubeCaption(tracks.get(index));
-                        host.message("Loaded " + titles[index]);
+                        host.toast("Loaded " + titles[index]);
                     }
                 }
             }
